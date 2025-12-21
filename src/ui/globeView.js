@@ -176,7 +176,7 @@ export async function initGlobe(container) {
 
   globe.pointOfView({ lat: 20, lng: 0, altitude: 2.2 });
 
-  setInterval(updateISS, 5000);
+  setInterval(updateISS, 10000); // 10 saniye - Rate limit'i önlemek için
   updateISS();
 
   if (navigator.geolocation) {
