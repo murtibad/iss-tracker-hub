@@ -660,6 +660,144 @@ body {
   margin-bottom: 4px;
 }
 
+/* Enhanced Crew Cards with Photos */
+.crew-item-enhanced {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--ring);
+  transition: all 200ms;
+  margin-bottom: 12px;
+}
+
+.crew-item-enhanced:hover {
+  background: var(--card2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow), var(--glass-glow);
+  border-color: var(--accent);
+}
+
+.crew-photo {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--ring);
+}
+
+.crew-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crew-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card2);
+}
+
+.crew-photo-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.crew-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.crew-name-enhanced {
+  font-weight: 900;
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.crew-description {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.crew-craft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--card2);
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  border: 1px solid var(--ring);
+}
+
+.crew-craft-icon {
+  font-size: 14px;
+}
+
+.crew-bio {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.crew-wiki-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #000;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 150ms;
+}
+
+.crew-wiki-link:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.4);
+}
+
+/* Mobile Adjustments for Crew Cards */
+@media (max-width: 600px) {
+  .crew-item-enhanced {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .crew-photo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+  }
+
+  .crew-details {
+    text-align: center;
+  }
+
+  .crew-craft-tag {
+    margin: 0 auto 10px;
+  }
+
+  .crew-bio {
+    text-align: left;
+  }
+}
+
 /* -----------------------------------------------------
    Utilities
 ----------------------------------------------------- */
