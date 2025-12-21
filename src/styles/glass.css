@@ -1,0 +1,573 @@
+/* =====================================================
+   ISS Tracker HUB – Glass UI (Fixed)
+   - data-theme: light/dark (sistem teması)
+   - data-skin : cyberpunk/liquid/realistic (stil skin)
+   ===================================================== */
+
+:root {
+  /* Dinamik Glass Renkleri (JavaScript'ten güncellenebilir) */
+  --glass-hue: 190;
+  --glass-sat: 85%;
+
+  /* Base tokens (boot.js + ui dosyaları bunları kullanıyor) */
+  --bg: #0b0f17;
+  --card: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.08);
+  --card2: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.12);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --border: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.15);
+  --ring: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.25);
+
+  --good: #22c55e;
+  --bad: #ef4444;
+  --warn: #fbbf24;
+
+  --accent: #22d3ee;
+  --accent2: #60a5fa;
+
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+  /* Glass glow effect */
+  --glass-glow: 0 0 20px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.2);
+}
+
+/* Light mode */
+:root[data-theme="light"] {
+  --bg: #f6f7fb;
+  --card: hsla(var(--glass-hue), var(--glass-sat), 50%, 0.15);
+  --card2: hsla(var(--glass-hue), var(--glass-sat), 50%, 0.20);
+  --text: rgba(0, 0, 0, 0.88);
+  --muted: rgba(0, 0, 0, 0.55);
+  --border: hsla(var(--glass-hue), var(--glass-sat), 50%, 0.25);
+  --ring: hsla(var(--glass-hue), var(--glass-sat), 50%, 0.30);
+  --shadow: 0 10px 26px rgba(0, 0, 0, 0.1);
+  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.14);
+}
+
+/* Skins (3 seçenek) */
+:root[data-skin="cyberpunk"] {
+  --accent: #ff36ff;
+  --accent2: #39ff14;
+  --text: rgba(57, 255, 20, 0.92);
+  --muted: rgba(57, 255, 20, 0.65);
+  --ring: rgba(120, 255, 170, 0.22);
+  --border: rgba(120, 255, 170, 0.22);
+}
+
+:root[data-skin="liquid"] {
+  --accent: #38bdf8;
+  --accent2: #3b82f6;
+  --text: rgba(10, 20, 40, 0.92);
+  --muted: rgba(10, 20, 40, 0.62);
+  --ring: rgba(0, 0, 0, 0.1);
+  --border: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-skin="realistic"] {
+  /* zaten base */
+}
+
+/* -----------------------------------------------------
+   Reset + body
+----------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  overflow: hidden;
+}
+
+/* -----------------------------------------------------
+   Base layout wrappers
+----------------------------------------------------- */
+.hub {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.hub-map {
+  position: absolute;
+  inset: 0;
+}
+
+.hub-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* -----------------------------------------------------
+   Glass base
+----------------------------------------------------- */
+.hub-glass {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  box-shadow: var(--shadow), var(--glass-glow);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+}
+
+/* -----------------------------------------------------
+   Topbar
+----------------------------------------------------- */
+.hub-topbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 12px;
+  pointer-events: auto;
+}
+
+.hub-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.hub-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+      rgba(45, 212, 191, 0.9),
+      rgba(99, 102, 241, 0.7));
+  box-shadow: var(--shadow2);
+}
+
+:root[data-skin="cyberpunk"] .hub-logo {
+  background: linear-gradient(135deg, rgba(255, 54, 255, 0.9), rgba(57, 255, 20, 0.8));
+}
+
+.hub-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.hub-title .t {
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+.hub-title .s {
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hub-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* -----------------------------------------------------
+   Buttons + selects
+----------------------------------------------------- */
+.btn,
+.button {
+  border: 1px solid var(--ring);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+:root[data-theme="light"] .btn,
+:root[data-theme="light"] .button {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn:hover,
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active,
+.button:active {
+  transform: translateY(0);
+  opacity: 0.92;
+}
+
+.hub-actions select {
+  border: 1px solid var(--ring);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 12px;
+  outline: none;
+}
+
+:root[data-theme="light"] .hub-actions select {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* -----------------------------------------------------
+   Follow pill
+----------------------------------------------------- */
+.hub-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ring);
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 900;
+  font-size: 12px;
+  pointer-events: auto;
+  user-select: none;
+}
+
+:root[data-theme="light"] .hub-pill {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.hub-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--good);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+}
+
+/* -----------------------------------------------------
+   HUD cards (left)
+----------------------------------------------------- */
+.hub-cards {
+  position: absolute;
+  top: 72px;
+  left: 12px;
+  width: min(360px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  z-index: 2000;
+}
+
+.card {
+  padding: 10px 12px;
+}
+
+.card .row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card .k {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.card .v {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.card .sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.card .sub strong {
+  color: var(--text);
+}
+
+.pass-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.pass-badge .b {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bad);
+}
+
+.pass-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.pass-mini {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.95;
+  font-weight: 800;
+}
+
+/* -----------------------------------------------------
+   Terminal (log)
+----------------------------------------------------- */
+.hub-terminal {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: min(520px, calc(100% - 24px));
+  max-width: 520px;
+  height: 180px;
+  padding: 10px;
+  pointer-events: auto;
+  z-index: 2000;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+.term-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.term-title {
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.term-sub {
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.term-body {
+  height: calc(100% - 24px);
+  overflow: auto;
+  white-space: pre;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text);
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="light"] .term-body {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* -----------------------------------------------------
+   Version label
+----------------------------------------------------- */
+.hub-ver,
+.version-label {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+  pointer-events: none;
+  border: 1px solid var(--ring);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+}
+
+:root[data-theme="light"] .hub-ver,
+:root[data-theme="light"] .version-label {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* -----------------------------------------------------
+   View toggle (2D / 3D)
+----------------------------------------------------- */
+.view-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 56px;
+  z-index: 1300;
+
+  background: rgba(31, 41, 55, 0.85);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  font-weight: 800;
+  pointer-events: auto;
+}
+
+.view-toggle:hover {
+  background: rgba(55, 65, 81, 0.9);
+}
+
+/* -----------------------------------------------------
+   Crew modal
+----------------------------------------------------- */
+.crew-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+}
+
+.crew-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 260px;
+  max-width: min(520px, calc(100% - 24px));
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+
+  background: var(--card2);
+  border: 1px solid var(--ring);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  color: var(--text);
+}
+
+.crew-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.crew-modal-title {
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+.crew-modal-close {
+  font-size: 20px;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.crew-list {
+  text-align: left;
+  margin-top: 10px;
+}
+
+.crew-item {
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: 900;
+  border-bottom: 1px solid var(--ring);
+}
+
+.crew-item:last-child {
+  border-bottom: none;
+}
+
+.crew-item .crew-craft {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* -----------------------------------------------------
+   Utilities
+----------------------------------------------------- */
+.hidden {
+  display: none !important;
+}
+
+/* Mobile - Touch-Friendly */
+@media (max-width: 720px) {
+  .hub-topbar {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .hub-actions {
+    gap: 6px;
+  }
+
+  .btn,
+  .button {
+    min-width: 44px;
+    /* iOS touch target */
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .hub-cards {
+    width: calc(100% - 24px);
+    top: 64px;
+  }
+
+  .hub-terminal {
+    height: 140px;
+    font-size: 10px;
+  }
+
+  .view-toggle {
+    bottom: 48px;
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .btn,
+  .button {
+    transition: none;
+  }
+}

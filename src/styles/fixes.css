@@ -1,0 +1,29 @@
+/* src/styles/fixes.css */
+/* TR: Leaflet katmanları bazen HUD’un üstüne biniyordu.
+   Bu dosya HUD’u her zaman en üstte tutar.
+   EN: Force HUD layers above Leaflet panes/controls reliably. */
+
+/* --- Leaflet’i aşağı al --- */
+.leaflet-container { z-index: 0 !important; }
+.leaflet-pane { z-index: 1 !important; }
+.leaflet-tile-pane { z-index: 2 !important; }
+.leaflet-overlay-pane { z-index: 3 !important; }
+.leaflet-shadow-pane { z-index: 4 !important; }
+.leaflet-marker-pane { z-index: 5 !important; }
+
+/* Leaflet UI kontrolleri (zoom/attribution) HUD’un üstüne çıkmasın */
+.leaflet-top,
+.leaflet-bottom { z-index: 50 !important; }
+
+.leaflet-control { z-index: 60 !important; }
+
+/* --- HUD’u en üste kilitle --- */
+.glass-header { z-index: 5000 !important; }
+.pass-card { z-index: 4800 !important; }
+
+/* Terminal ve kontrol paneli classları projede var */
+.terminal { z-index: 4700 !important; }
+.cp { z-index: 4600 !important; }
+
+/* Konum overlay / modal gibi şeyler en üstte kalsın */
+.loc-overlay { z-index: 9999 !important; }
