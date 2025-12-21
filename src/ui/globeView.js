@@ -6,7 +6,7 @@ let followTimer = null;
 let followEnabled = false;
 let animationFrameId = null;
 
-const issData = { lat: 0, lng: 0, alt: 0.04, type: "iss" };
+const issData = { lat: 0, lng: 0, alt: 0.06, type: "iss" };
 let userData = null;
 const trail = [];
 
@@ -22,46 +22,46 @@ function normLng(lng) {
 function createISSModel() {
   const group = new THREE.Group();
 
-  // Ana modül (gövde) - Görünür boyut
+  // Ana modül (gövde) - 2x DAHA BÜYÜK
   const mainModule = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.15, 0.15, 1.2, 16),
+    new THREE.CylinderGeometry(0.3, 0.3, 2.4, 16),
     new THREE.MeshStandardMaterial({
       color: 0xeeeeee,
       metalness: 0.7,
       roughness: 0.3,
       emissive: 0xffffff,
-      emissiveIntensity: 0.3
+      emissiveIntensity: 0.4
     })
   );
   mainModule.rotation.z = Math.PI / 2;
   group.add(mainModule);
 
-  // Güneş panelleri - Görünür boyut
-  const panelGeo = new THREE.BoxGeometry(1, 0.05, 3);
+  // Güneş panelleri - 2x DAHA BÜYÜK
+  const panelGeo = new THREE.BoxGeometry(2, 0.1, 6);
   const panelMat = new THREE.MeshStandardMaterial({
     color: 0x2266ff,
     metalness: 0.9,
     roughness: 0.1,
     emissive: 0x1144aa,
-    emissiveIntensity: 0.6
+    emissiveIntensity: 0.7
   });
 
   // Sol panel set
   const leftPanelGroup = new THREE.Group();
   const lp1 = new THREE.Mesh(panelGeo, panelMat);
   const lp2 = new THREE.Mesh(panelGeo, panelMat);
-  lp2.position.z = 3.2;
+  lp2.position.z = 6.4;
   leftPanelGroup.add(lp1, lp2);
-  leftPanelGroup.position.x = -1.2;
+  leftPanelGroup.position.x = -2.4;
   group.add(leftPanelGroup);
 
   // Sağ panel set
   const rightPanelGroup = new THREE.Group();
   const rp1 = new THREE.Mesh(panelGeo, panelMat);
   const rp2 = new THREE.Mesh(panelGeo, panelMat);
-  rp2.position.z = 3.2;
+  rp2.position.z = 6.4;
   rightPanelGroup.add(rp1, rp2);
-  rightPanelGroup.position.x = 1.2;
+  rightPanelGroup.position.x = 2.4;
   group.add(rightPanelGroup);
 
   // Parlak anten
@@ -71,15 +71,15 @@ function createISSModel() {
     emissiveIntensity: 0.8
   });
   const antenna1 = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8),
+    new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8),
     antennaMat
   );
-  antenna1.position.set(0, 0.2, 0);
+  antenna1.position.set(0, 0.4, 0);
   group.add(antenna1);
 
   // PARLAK BEACON - Uzaktan da görünsün!
   const beacon = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 16, 16),
+    new THREE.SphereGeometry(0.6, 16, 16),
     new THREE.MeshBasicMaterial({
       color: 0x00ffff,
       transparent: true,
@@ -316,7 +316,7 @@ async function updateISS() {
     const j = await r.json();
     issData.lat = clampLat(j.latitude);
     issData.lng = normLng(j.longitude);
-    issData.alt = 0.04; // Dünya yüzeyinin üzerinde
+    issData.alt = 0.06; // Daha yüksek - daha görünür
 
     trail.push({ lat: issData.lat, lng: issData.lng });
     if (trail.length > 80) trail.shift();
@@ -333,7 +333,7 @@ async function updateISS() {
       .pathPointLng(p => p.lng)
       .pathColor(() => ["rgba(45,212,191,0.8)"]) // Daha parlak renk
       .pathStroke(2) // Daha kalın
-      .pathPointAlt(() => 0.04); // ISS ile aynı yükseklikte
+      .pathPointAlt(() => 0.06); // ISS ile aynı yükseklikte
   } catch (e) {
     console.error("ISS update error", e);
   }
