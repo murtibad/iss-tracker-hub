@@ -1,29 +1,51 @@
 // src/ui/crewWidgetView.js
 export function openCrewModal() {
-  if (document.querySelector(".crew-back")) return;
+  if (document.querySelector(".crew-overlay")) return;
 
-  const back = document.createElement("div");
-  back.className = "crew-back";
-  const box = document.createElement("div");
-  box.className = "crew-box glass";
+  const overlay = document.createElement("div");
+  overlay.className = "crew-overlay";
+  overlay.style.display = "flex";
 
-  box.innerHTML = `<h3>ISS Mürettebatı</h3><div>Yükleniyor...</div>`;
-  back.appendChild(box);
-  document.body.appendChild(back);
+  const card = document.createElement("div");
+  card.className = "crew-card hub-glass";
 
-  back.onclick = () => back.remove();
-  box.onclick = e => e.stopPropagation();
+  card.innerHTML = `
+    <div class="crew-top">
+      <div class="crew-title">ISS Mürettebatı</div>
+      <button type="button" class="btn crew-close">✕</button>
+    </div>
+    <div class="crew-content">Yükleniyor...</div>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  const closeBtn = card.querySelector(".crew-close");
+  closeBtn.onclick = () => overlay.remove();
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+  card.onclick = (e) => e.stopPropagation();
 
   fetch("http://api.open-notify.org/astros.json")
     .then(r => r.json())
     .then(d => {
       const iss = d.people.filter(p => p.craft === "ISS");
-      box.innerHTML =
-        `<h3>ISS Mürettebatı (${iss.length})</h3>` +
-        iss.map(p => `<div>${p.name}</div>`).join("");
+      const content = card.querySelector(".crew-content");
+      content.innerHTML = `
+        <div class="crew-list">
+          ${iss.map(p => `
+            <div class="crew-item">
+              <div class="crew-name">${p.name}</div>
+              <div class="crew-craft">${p.craft}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     })
     .catch(() => {
-      box.innerHTML = "<h3>Yüklenemedi</h3>";
+      const content = card.querySelector(".crew-content");
+      content.innerHTML = "❌ Yüklenemedi";
     });
 }
 
