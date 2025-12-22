@@ -310,90 +310,34 @@ export async function boot(store, rootEl) {
 
   const actions = buildEl("div", "hub-actions", topbar);
 
+  // Follow pill (the only essential control in top bar)
   const followPill = buildEl("div", "hub-pill", actions);
   const followDot = buildEl("div", "hub-dot", followPill);
   const followTxt = buildEl("div", "", followPill);
   followTxt.textContent = t('follow') + ": " + t('on');
 
-  // Skin select (✅ fixed)
-  const skinSelect = document.createElement("select");
-  skinSelect.innerHTML = `
-    <option value="realistic">Skin: Realistic</option>
-    <option value="liquid">Skin: Liquid</option>
-    <option value="cyberpunk">Skin: Cyberpunk</option>
-  `;
-  const initialSkin = getInitialSkin();
-  skinSelect.value = initialSkin;
-  actions.appendChild(skinSelect);
+  // Settings button (opens settings modal - to be implemented)
+  const settingsBtn = buildEl("button", "btn settings-btn", actions);
+  settingsBtn.type = "button";
+  settingsBtn.innerHTML = "⚙️";
+  settingsBtn.title = t('settings') || "Ayarlar";
+  settingsBtn.style.cssText = "font-size: 18px; padding: 8px 12px;";
 
-  // Theme button (system/dark/light)
-  const themeBtn = buildEl("button", "btn", actions);
-  themeBtn.type = "button";
-  themeBtn.textContent = t('theme') + ": " + t('system');
-
-  const cityBtn = buildEl("button", "btn", actions);
-  cityBtn.type = "button";
-  cityBtn.textContent = t('city');
-
-  const crewBtn = buildEl("button", "btn", actions);
-  crewBtn.type = "button";
-  crewBtn.textContent = t('crew');
-
-  const colorBtn = buildEl("button", "btn", actions);
-  colorBtn.type = "button";
-  colorBtn.textContent = t('colorPicker');
-  colorBtn.title = t('colorPicker');
-
-  // Language picker button
-  const langBtn = buildEl("button", "btn", actions);
-  langBtn.type = "button";
-  langBtn.textContent = t('language');
-  langBtn.title = t('language');
-
-  crewBtn.addEventListener("click", () => openCrewModal());
-
-  // Theme picker modal
-  const themePicker = createThemePicker();
-  rootEl.appendChild(themePicker.el);
-
-  colorBtn.addEventListener("click", () => {
-    themePicker.open();
-  });
-
-  // Language picker modal
-  const languagePicker = createLanguagePicker();
-  rootEl.appendChild(languagePicker.el);
-
-  langBtn.addEventListener("click", () => {
-    languagePicker.open();
-  });
-
-  // Apply initial theme/skin/glass color
+  // Theme state (internal - no button)
   let themeMode = getInitialThemeMode();
   let resolvedTheme = setThemeMode(themeMode);
-  applySkin(initialSkin);
-  applyGlassColor(getGlassColor()); // Kaydedilmiş rengi uygula
 
-  skinSelect.addEventListener("change", () => {
-    setSkin(skinSelect.value);
-  });
-
-  function updateThemeButton() {
-    const label = themeMode === "system" ? t('system') : themeMode === "dark" ? t('dark') : t('light');
-    themeBtn.textContent = t('theme') + ": " + label;
-  }
-  updateThemeButton();
-
-  themeBtn.addEventListener("click", () => {
+  // Settings click handler (placeholder - shows theme cycle for now)
+  settingsBtn.addEventListener("click", () => {
     themeMode = themeMode === "system" ? "dark" : themeMode === "dark" ? "light" : "system";
     resolvedTheme = setThemeMode(themeMode);
-    updateThemeButton();
     updateTileTheme();
     log(t('themeChanged') + `: ${themeMode} (${resolvedTheme})`);
   });
 
-  // ========== DOCKED UI: Cinematic Dashboard v0.2.2 ==========
-  // Full-width bottom bar with telemetry + terminal + actions
+  // ========== DOCKED UI: Command Deck v0.3.0 ==========
+  // Grid: 25% (Data) | 50% (Status) | 25% (Controls)
+  // Dashboard contains 2D/3D toggle - will connect after applyViewMode defined
   const dashboard = createDockedDashboard();
   rootEl.appendChild(dashboard.el);
 
@@ -591,12 +535,17 @@ export async function boot(store, rootEl) {
     // MapLibre auto-resizes, no need for invalidateSize
   }
 
-  const viewToggle = createViewModeToggle({
-    initialMode: viewMode,
-    onChange: (m) => applyViewMode(m),
+  // Wire dashboard's 2D/3D toggle to view mode switcher
+  // Dashboard buttons trigger this via querySelectorAll event listeners
+  const viewBtns = dashboard.el.querySelectorAll("[data-view]");
+  viewBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.view;
+      applyViewMode(mode);
+      viewBtns.forEach(b => b.classList.toggle("active", b.dataset.view === mode));
+    });
   });
-  viewToggleRef = viewToggle;
-  rootEl.appendChild(viewToggle.el);
+
   applyViewMode(viewMode);
 
   // ---------- Weather badge (ISS altı hava) ----------
