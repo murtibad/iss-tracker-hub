@@ -1,8 +1,7 @@
 // src/app/boot.js
 // TR: Uygulamanın giriş noktası. UI + harita + telemetry + pass prediction + 2D/3D toggle.
 
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import { createMapLibreView } from "../ui/maplibreView.js";
 
 import { CONFIG } from "../constants/config.js";
 import cities from "../assets/cities.tr.json";
@@ -22,21 +21,8 @@ import { openCrewModal } from "../ui/crewWidgetView.js";
 import { createFlightDataWidget } from "../ui/widgets/flightDataWidget.js";
 import { createSystemsWidget } from "../ui/widgets/systemsWidget.js";
 
-// Leaflet marker default icon fix (Vite + Leaflet klasik)
-import icon2x from "leaflet/dist/images/marker-icon-2x.png";
-import icon1x from "leaflet/dist/images/marker-icon.png";
-import shadow from "leaflet/dist/images/marker-shadow.png";
-
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
-
-// ------- Leaflet icon fix -------
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: icon2x,
-  iconUrl: icon1x,
-  shadowUrl: shadow,
-});
 
 // ------- Utils -------
 function fmtNum(n, digits = 2) {
@@ -533,51 +519,22 @@ export async function boot(store, rootEl) {
     // Widget update Logic moved to flightDataWidget.update() called in renderTelemetry
   }
 
-  // ------- Leaflet map -------
-  const map = L.map(mapEl, {
-    zoomControl: false,
-    attributionControl: false,
-  }).setView(CONFIG?.DEFAULT_CENTER || [39, 35], CONFIG?.DEFAULT_ZOOM || 4);
-
-  const tileLight = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
+  // ------- MapLibre GL map -------
+  const mapView = createMapLibreView(mapEl, {
+    center: CONFIG?.DEFAULT_CENTER || [35, 39], // [lng, lat] in MapLibre
+    zoom: CONFIG?.DEFAULT_ZOOM || 4
   });
-  const tileDark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    maxZoom: 18,
-  });
+  const { map, issMarker } = mapView;
 
+  // Theme updates handled by MapTiler Dark Matter style
   function updateTileTheme() {
-    const current = document.documentElement.getAttribute("data-theme") || "dark";
-    if (current === "light") {
-      try { map.removeLayer(tileDark); } catch { }
-      try { tileLight.addTo(map); } catch { }
-    } else {
-      try { map.removeLayer(tileLight); } catch { }
-      try { tileDark.addTo(map); } catch { }
-    }
+    // MapLibre uses single style, no tile switching needed
+    // Dark Matter theme auto-adapts
   }
-  updateTileTheme();
-
-  // Track mode
-  const issIcon = L.divIcon({
-    className: "",
-    html: `<div style="
-      width:18px;height:18px;border-radius:999px;
-      background: rgba(45,212,191,0.95);
-      box-shadow: 0 0 0 4px rgba(45,212,191,0.18), 0 8px 24px rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.25);
-    "></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-  });
-
-  const marker = L.marker([0, 0], { icon: issIcon }).addTo(map);
 
   let trackEnabled = true;
   let lastPanLatLng = null;
   let lastPanAt = 0;
-
-  const trackPolyline = L.polyline([], { weight: 2, opacity: 0.9 }).addTo(map);
 
   // ---------- 2D / 3D ----------
   let viewMode = getInitialViewMode(); // "2d" | "3d"
@@ -660,11 +617,7 @@ export async function boot(store, rootEl) {
       try { globe?.stopFollow(); } catch { }
     }
 
-    if (viewMode === "2d") {
-      setTimeout(() => {
-        try { map.invalidateSize(false); } catch { }
-      }, 0);
-    }
+    // MapLibre auto-resizes, no need for invalidateSize
   }
 
   const viewToggle = createViewModeToggle({
@@ -1055,10 +1008,23 @@ export async function boot(store, rootEl) {
     const lo = normalizeLon(tel.longitude);
     localState.lastIssLat = la;
     localState.lastIssLon = lo;
-    const latlng = L.latLng(la, lo);
-    marker.setLatLng(latlng);
 
-    // 3D
+    // Update MapLibre marker
+    mapView.updateISSPosition(la, lo);
+
+    // Auto-pan to ISS if tracking enabled
+    if (trackEnabled) {
+      const now = Date.now();
+      const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 4000);
+      const canTime = now - lastPanAt >= minInterval;
+
+      if (canTime) {
+        lastPanAt = now;
+        mapView.panTo(la, lo, 4); // Zoom level 4
+      }
+    }
+
+    // 3D globe update
     try { if (viewMode === "3d") globe?.setIssPosition(la, lo); } catch { }
   }
 
