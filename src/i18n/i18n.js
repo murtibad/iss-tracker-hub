@@ -93,7 +93,13 @@ const DICTIONARY = {
         "hero.subline.unavailable": "Pass calculation unavailable",
         "hero.cta.showPass": "Show Pass",
         "hero.cta.liveTrack": "Live Track",
-        "hero.passCardComing": "Pass card is being prepared..."
+        "hero.passCardComing": "Pass card is being prepared...",
+
+        // HUD Simplification
+        "hudShowDetails": "Show details",
+        "hudHideDetails": "Hide details",
+        "hudDebug": "Debug",
+        "hudDebugReady": "Debug console ready"
     },
     tr: {
         // Genel
@@ -182,7 +188,13 @@ const DICTIONARY = {
         "hero.subline.unavailable": "Geçiş hesaplaması kullanılamıyor",
         "hero.cta.showPass": "Geçişi Göster",
         "hero.cta.liveTrack": "Canlı Takip Et",
-        "hero.passCardComing": "Geçiş kartı hazırlanıyor..."
+        "hero.passCardComing": "Geçiş kartı hazırlanıyor...",
+
+        // HUD Simplification
+        "hudShowDetails": "Detayları göster",
+        "hudHideDetails": "Detayları gizle",
+        "hudDebug": "Hata Ayıklama",
+        "hudDebugReady": "Hata ayıklama konsolu hazır"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},
