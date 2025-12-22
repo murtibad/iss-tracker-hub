@@ -19,9 +19,8 @@ import { initI18n, t, getCurrentLanguage, getSpeedUnit, getDistanceUnit } from "
 
 import { openCrewModal } from "../ui/crewWidgetView.js";
 
-// Widgets (Professional V2)
-import { createFlightDataWidget } from "../ui/widgets/flightDataWidget.js";
-import { createSystemsWidget } from "../ui/widgets/systemsWidget.js";
+// Smart Info Card (Minimalist UI)
+import { createSmartInfoCard } from "../ui/widgets/smartInfoCard.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -393,29 +392,24 @@ export async function boot(store, rootEl) {
     log(t('themeChanged') + `: ${themeMode} (${resolvedTheme})`);
   });
 
-  // 3-Panel Grid Layout
-  const mainLayout = buildEl("div", "hub-main-layout", overlay);
+  // ========== MINIMALIST UI: Smart Info Card ==========
+  // Single floating card replaces complex 3-panel grid
+  const smartCard = createSmartInfoCard();
+  rootEl.appendChild(smartCard.el);
 
-  const leftCol = buildEl("div", "hub-col hub-left", mainLayout);
-  const centerCol = buildEl("div", "hub-col hub-center", mainLayout);
-  const rightCol = buildEl("div", "hub-col hub-right", mainLayout);
-  const bottomRow = buildEl("div", "hub-bottom", mainLayout);
+  // Terminal layout (simplified - just terminal at bottom)
+  const bottomLayout = buildEl("div", "hub-bottom-simple", overlay);
+  bottomLayout.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    pointer-events: none;
+  `;
 
-  // Left Panel Widgets (Unified Flight Data)
-  const flightDataWidget = createFlightDataWidget();
-  leftCol.appendChild(flightDataWidget.el);
-
-  // Right Panel Widgets (Unified Systems)
-  const systemsWidget = createSystemsWidget();
-  rightCol.appendChild(systemsWidget.el);
-
-  // -- Old Cards Removed --
-
-  // -- Old Cards Removed --
-
-  // Terminal (log)
-  // Terminal (log)
-  const terminal = buildEl("div", "hub-terminal hub-glass", bottomRow);
+  // Terminal (log) - simplified single column layout
+  const terminal = buildEl("div", "hub-terminal hub-glass", bottomLayout);
   const termHead = buildEl("div", "term-head", terminal);
   const termTitle = buildEl("div", "term-title", termHead);
   termTitle.textContent = "TERMINAL";
@@ -996,16 +990,12 @@ export async function boot(store, rootEl) {
   }
 
   function renderTelemetry(tel) {
-    // Widget updates (Unified)
-    flightDataWidget.update({
+    // Smart Info Card update
+    smartCard.update({
       altitude: tel.altitude,
       velocity: tel.velocity,
-      latitude: tel.latitude,
-      longitude: tel.longitude,
-      footprint: tel.footprint || "Ocean",
-      pass: localState.prediction // Pass data passed here
+      visibility: tel.footprint // "daylight" or "eclipsed"
     });
-    systemsWidget.update();
 
     // Common updates
     const la = clampLat(tel.latitude);
@@ -1175,17 +1165,11 @@ export async function boot(store, rootEl) {
         mapView.updateISSPosition(la, lo);
       }
 
-      // Update widgets with fresh data
-      flightDataWidget.update({
+      // Update Smart Info Card
+      smartCard.update({
         altitude: data.altKm,
         velocity: data.velKmh || 27580,
-        latitude: data.lat,
-        longitude: data.lon,
-        footprint: "--"
-      });
-
-      systemsWidget.update({
-        altitude: data.altKm
+        visibility: "daylight" // Default, API may provide this
       });
 
       // Update terminal timestamp

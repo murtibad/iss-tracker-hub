@@ -1006,3 +1006,146 @@ body {
     transition: none;
   }
 }
+
+/* =====================================================
+   Smart Info Card - Minimalist Floating Glass Panel
+   ===================================================== */
+.smart-info-card {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1500;
+
+  /* Glassmorphism */
+  background: rgba(10, 14, 39, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  /* Electric Blue border */
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  border-radius: 16px;
+
+  /* Shadow */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 212, 255, 0.1) inset;
+
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+:root[data-theme="light"] .smart-info-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 119, 182, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 30, 60, 0.15);
+}
+
+.sic-main {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Speed - Hero Display */
+.sic-speed {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sic-speed-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.5));
+}
+
+.sic-speed-value {
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #00d4ff;
+  letter-spacing: -1px;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.sic-speed-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* Secondary Row */
+.sic-secondary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sic-altitude {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.sic-alt-icon {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.sic-altitude [data-altitude] {
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sic-alt-unit {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+/* Visibility Icon */
+.sic-visibility {
+  font-size: 20px;
+  margin-left: auto;
+  cursor: help;
+}
+
+/* Crew Button */
+.sic-crew-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.sic-crew-btn:hover {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: rgba(0, 212, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .smart-info-card {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+  }
+
+  .sic-speed-value {
+    font-size: 26px;
+  }
+
+  .sic-altitude [data-altitude] {
+    font-size: 16px;
+  }
+}
