@@ -1097,13 +1097,18 @@ export async function boot(store, rootEl) {
         stepSeconds: 30  // 30 second steps for smooth line
       });
 
-      // Convert to GeoJSON
+      // Convert to GeoJSON for 2D MapLibre
       const pastGeoJSON = trajectoryToGeoJSON(trajectory.past);
       const futureGeoJSON = trajectoryToGeoJSON(trajectory.future);
 
       // Update 2D MapLibre
       if (mapView && mapView.updateTrajectory) {
         mapView.updateTrajectory(pastGeoJSON, futureGeoJSON);
+      }
+
+      // Update 3D Globe
+      if (globe && globe.updateTrajectory) {
+        globe.updateTrajectory(trajectory.past, trajectory.future);
       }
 
       log(`[Trajectory] ✅ ${trajectory.past.length} geçmiş + ${trajectory.future.length} gelecek nokta`);

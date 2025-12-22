@@ -302,6 +302,60 @@ export async function createGlobe(container) {
         animationFrameId = null;
       }
     },
+
+    /**
+     * Update trajectory lines on 3D globe
+     * @param {Array} pastPoints - Array of {lat, lng} for past trajectory
+     * @param {Array} futurePoints - Array of {lat, lng} for future trajectory
+     */
+    updateTrajectory(pastPoints, futurePoints) {
+      if (!globeInstance) {
+        console.warn('[Globe] Not initialized yet');
+        return;
+      }
+
+      try {
+        // Combine past and future as separate path objects
+        const trajectoryPaths = [];
+
+        // Past trajectory (cyan, solid)
+        if (pastPoints && pastPoints.length > 1) {
+          trajectoryPaths.push({
+            coords: pastPoints.map(p => ({ lat: p.lat, lng: p.lng })),
+            type: 'past'
+          });
+        }
+
+        // Future trajectory (orange)
+        if (futurePoints && futurePoints.length > 1) {
+          trajectoryPaths.push({
+            coords: futurePoints.map(p => ({ lat: p.lat, lng: p.lng })),
+            type: 'future'
+          });
+        }
+
+        // Update globe paths
+        globeInstance.pathsData(trajectoryPaths)
+          .pathPoints('coords')
+          .pathPointLat(p => p.lat)
+          .pathPointLng(p => p.lng)
+          .pathColor(path => {
+            if (path.type === 'past') {
+              return ['rgba(0, 212, 255, 0.9)', 'rgba(0, 180, 220, 0.6)']; // Cyan gradient
+            }
+            return ['rgba(255, 165, 0, 0.6)', 'rgba(255, 140, 0, 0.3)']; // Orange gradient
+          })
+          .pathStroke(path => path.type === 'past' ? 2.5 : 1.5)
+          .pathDashLength(path => path.type === 'past' ? 0 : 0.3)  // Dashed for future
+          .pathDashGap(path => path.type === 'past' ? 0 : 0.15)
+          .pathPointAlt(() => 0.005); // Slightly above globe surface
+
+        console.log(`[Globe] 🛤️ Trajectory updated: ${pastPoints?.length || 0} past, ${futurePoints?.length || 0} future`);
+      } catch (e) {
+        console.error('[Globe] Trajectory update error:', e);
+      }
+    },
+
     get instance() {
       return globeInstance;
     }
