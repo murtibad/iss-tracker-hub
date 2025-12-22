@@ -107,7 +107,9 @@ function createUserPin() {
 export async function initGlobe(container) {
   if (globe) return globe;
 
-  const [{ default: Globe }] = await Promise.all([import("globe.gl")]);
+  // Dinamik import - Vite uyumlu
+  const globeModule = await import("globe.gl");
+  const Globe = globeModule.default || globeModule;
 
   globe = Globe()(container)
     .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg")
@@ -219,13 +221,29 @@ export async function initGlobe(container) {
 
 // boot.js tarafından beklenen API wrapper
 let globeWrapper = null;
+let globeContainer = null; // Container referansını sakla
 
 export async function createGlobe(container) {
-  // Eğer zaten oluşturulmuşsa mevcut wrapper'ı döndür
-  if (globeWrapper) return globeWrapper;
+  // Eğer zaten oluşturulmuşsa
+  if (globeWrapper && globeContainer) {
+    // DOM kontrolü: Eğer container içinde değilse (örn. sayfa yenilendi/boot tekrar çalıştı)
+    if (!container.contains(globeContainer)) {
+      container.appendChild(globeContainer);
+      // Resize tetikle
+      if (globeWrapper.instance) {
+        setTimeout(() => {
+          try {
+            globeWrapper.instance.width(container.clientWidth);
+            globeWrapper.instance.height(container.clientHeight);
+          } catch (e) { }
+        }, 100);
+      }
+    }
+    return globeWrapper;
+  }
 
   // Globe container oluştur
-  const globeContainer = document.createElement("div");
+  globeContainer = document.createElement("div");
   globeContainer.id = "globe-container";
   globeContainer.style.cssText = `
     position: absolute !important;
@@ -235,139 +253,151 @@ export async function createGlobe(container) {
     height: 100%;
     z-index: 0;
     display: none;
+    background: #000; /* Siyah arkaplan garanti olsun */
   `;
   container.appendChild(globeContainer);
 
-  // Globe'u başlat
-  const globeInstance = await initGlobe(globeContainer);
+  try {
+    // Globe'u başlat
+    const globeInstance = await initGlobe(globeContainer);
 
-  // API wrapper oluştur ve kaydet
-  globeWrapper = {
-    setVisible(visible) {
-      globeContainer.style.display = visible ? "block" : "none";
-      if (visible && globeInstance) {
-        // Resize triggered when shown
-        setTimeout(() => {
-          try {
-            if (globeInstance.width) globeInstance.width(globeContainer.clientWidth);
-            if (globeInstance.height) globeInstance.height(globeContainer.clientHeight);
-          } catch (e) {
-            console.warn("Globe resize error:", e);
-          }
-        }, 100);
-      }
-    },
-    setIssPosition(lat, lng) {
-      issData.lat = clampLat(lat);
-      issData.lng = normLng(lng);
-
-      // Direct mesh update - no layer rebuild for frame-sync performance
-      if (issMesh && globeInstance) {
-        try {
-          const c = globeInstance.getCoords(issData.lat, issData.lng, issData.alt);
-          issMesh.position.set(c.x, c.y, c.z);
-        } catch (e) {
-          console.warn("ISS direct position update error:", e);
+    // API wrapper oluştur ve kaydet
+    globeWrapper = {
+      setVisible(visible) {
+        if (!globeContainer) return;
+        globeContainer.style.display = visible ? "block" : "none";
+        if (visible && globeInstance) {
+          // Resize triggered when shown
+          setTimeout(() => {
+            try {
+              if (globeInstance.width) globeInstance.width(globeContainer.clientWidth);
+              if (globeInstance.height) globeInstance.height(globeContainer.clientHeight);
+            } catch (e) {
+              console.warn("Globe resize error:", e);
+            }
+          }, 100);
         }
-      }
-    },
-    startFollow() {
-      followEnabled = true;
+      },
+      setIssPosition(lat, lng) {
+        issData.lat = clampLat(lat);
+        issData.lng = normLng(lng);
 
-      // requestAnimationFrame kullanarak smooth hareket
-      const animate = () => {
-        if (!followEnabled || !globeInstance) {
-          if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
+        // Direct mesh update - no layer rebuild for frame-sync performance
+        if (issMesh && globeInstance) {
+          try {
+            const c = globeInstance.getCoords(issData.lat, issData.lng, issData.alt);
+            issMesh.position.set(c.x, c.y, c.z);
+          } catch (e) {
+            console.warn("ISS direct position update error:", e);
           }
+        }
+      },
+      startFollow() {
+        followEnabled = true;
+
+        // requestAnimationFrame kullanarak smooth hareket
+        const animate = () => {
+          if (!followEnabled || !globeInstance) {
+            if (animationFrameId) {
+              cancelAnimationFrame(animationFrameId);
+              animationFrameId = null;
+            }
+            return;
+          }
+
+          try {
+            const pov = globeInstance.pointOfView();
+            // Daha yavaş interpolasyon - smooth hareket için
+            const lerp = 0.02; // 0.1'den 0.02'ye düşürdük
+            pov.lat += (issData.lat - pov.lat) * lerp;
+            pov.lng += (issData.lng - pov.lng) * lerp;
+            pov.altitude += (1.8 - pov.altitude) * lerp; // Biraz daha uzak
+            globeInstance.pointOfView(pov, 0); // 0 = animasyon yok, manuel kontrol
+          } catch (e) {
+            console.warn("Globe follow error:", e);
+          }
+
+          animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animate();
+      },
+      stopFollow() {
+        followEnabled = false;
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      },
+
+      /**
+       * Update trajectory lines on 3D globe
+       * @param {Array} pastPoints - Array of {lat, lng} for past trajectory
+       * @param {Array} futurePoints - Array of {lat, lng} for future trajectory
+       */
+      updateTrajectory(pastPoints, futurePoints) {
+        if (!globeInstance) {
+          console.warn('[Globe] Not initialized yet');
           return;
         }
 
         try {
-          const pov = globeInstance.pointOfView();
-          // Daha yavaş interpolasyon - smooth hareket için
-          const lerp = 0.02; // 0.1'den 0.02'ye düşürdük
-          pov.lat += (issData.lat - pov.lat) * lerp;
-          pov.lng += (issData.lng - pov.lng) * lerp;
-          pov.altitude += (1.8 - pov.altitude) * lerp; // Biraz daha uzak
-          globeInstance.pointOfView(pov, 0); // 0 = animasyon yok, manuel kontrol
+          // Combine past and future as separate path objects
+          const trajectoryPaths = [];
+
+          // Past trajectory (cyan, solid)
+          if (pastPoints && pastPoints.length > 1) {
+            trajectoryPaths.push({
+              coords: pastPoints.map(p => ({ lat: p.lat, lng: p.lng })),
+              type: 'past'
+            });
+          }
+
+          // Future trajectory (orange)
+          if (futurePoints && futurePoints.length > 1) {
+            trajectoryPaths.push({
+              coords: futurePoints.map(p => ({ lat: p.lat, lng: p.lng })),
+              type: 'future'
+            });
+          }
+
+          // Update globe paths
+          globeInstance.pathsData(trajectoryPaths)
+            .pathPoints('coords')
+            .pathPointLat(p => p.lat)
+            .pathPointLng(p => p.lng)
+            .pathColor(path => {
+              if (path.type === 'past') {
+                return ['rgba(0, 212, 255, 0.9)', 'rgba(0, 180, 220, 0.6)']; // Cyan gradient
+              }
+              return ['rgba(255, 165, 0, 0.6)', 'rgba(255, 140, 0, 0.3)']; // Orange gradient
+            })
+            .pathStroke(path => path.type === 'past' ? 2.5 : 1.5)
+            .pathDashLength(path => path.type === 'past' ? 0 : 0.3)  // Dashed for future
+            .pathDashGap(path => path.type === 'past' ? 0 : 0.15)
+            .pathPointAlt(() => 0.08); // ~ISS orbit altitude for depth perception
+
+          console.log(`[Globe] 🛤️ Trajectory updated: ${pastPoints?.length || 0} past, ${futurePoints?.length || 0} future`);
         } catch (e) {
-          console.warn("Globe follow error:", e);
+          console.error('[Globe] Trajectory update error:', e);
         }
+      },
 
-        animationFrameId = requestAnimationFrame(animate);
-      };
-
-      animate();
-    },
-    stopFollow() {
-      followEnabled = false;
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
+      get instance() {
+        return globeInstance;
       }
-    },
+    };
 
-    /**
-     * Update trajectory lines on 3D globe
-     * @param {Array} pastPoints - Array of {lat, lng} for past trajectory
-     * @param {Array} futurePoints - Array of {lat, lng} for future trajectory
-     */
-    updateTrajectory(pastPoints, futurePoints) {
-      if (!globeInstance) {
-        console.warn('[Globe] Not initialized yet');
-        return;
-      }
-
-      try {
-        // Combine past and future as separate path objects
-        const trajectoryPaths = [];
-
-        // Past trajectory (cyan, solid)
-        if (pastPoints && pastPoints.length > 1) {
-          trajectoryPaths.push({
-            coords: pastPoints.map(p => ({ lat: p.lat, lng: p.lng })),
-            type: 'past'
-          });
-        }
-
-        // Future trajectory (orange)
-        if (futurePoints && futurePoints.length > 1) {
-          trajectoryPaths.push({
-            coords: futurePoints.map(p => ({ lat: p.lat, lng: p.lng })),
-            type: 'future'
-          });
-        }
-
-        // Update globe paths
-        globeInstance.pathsData(trajectoryPaths)
-          .pathPoints('coords')
-          .pathPointLat(p => p.lat)
-          .pathPointLng(p => p.lng)
-          .pathColor(path => {
-            if (path.type === 'past') {
-              return ['rgba(0, 212, 255, 0.9)', 'rgba(0, 180, 220, 0.6)']; // Cyan gradient
-            }
-            return ['rgba(255, 165, 0, 0.6)', 'rgba(255, 140, 0, 0.3)']; // Orange gradient
-          })
-          .pathStroke(path => path.type === 'past' ? 2.5 : 1.5)
-          .pathDashLength(path => path.type === 'past' ? 0 : 0.3)  // Dashed for future
-          .pathDashGap(path => path.type === 'past' ? 0 : 0.15)
-          .pathPointAlt(() => 0.08); // ~ISS orbit altitude for depth perception
-
-        console.log(`[Globe] 🛤️ Trajectory updated: ${pastPoints?.length || 0} past, ${futurePoints?.length || 0} future`);
-      } catch (e) {
-        console.error('[Globe] Trajectory update error:', e);
-      }
-    },
-
-    get instance() {
-      return globeInstance;
+    return globeWrapper;
+  } catch (err) {
+    console.error("Globe initialization failed:", err);
+    // Clean up
+    if (globeContainer && globeContainer.parentNode) {
+      globeContainer.parentNode.removeChild(globeContainer);
     }
-  };
-
-  return globeWrapper;
+    globeContainer = null;
+    throw err;
+  }
 }
 
 async function updateISS() {
