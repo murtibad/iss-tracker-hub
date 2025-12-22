@@ -190,18 +190,35 @@ export function createMapLibreView(container, options = {}) {
             .addTo(map);
     });
 
+    // --- Render-synced marker position ---
+    // Stores position and marker updates on map render event (not every rAF)
+    let storedISSPos = { lat: 0, lng: 0 };
+    let markerNeedsUpdate = false;
+
+    // Bind marker update to map render cycle for perfect camera sync
+    map.on('render', () => {
+        if (markerNeedsUpdate) {
+            issMarker.setLngLat([storedISSPos.lng, storedISSPos.lat]);
+            markerNeedsUpdate = false;
+        }
+    });
+
     return {
         map,
         issMarker,
         popup,
 
         /**
-         * Update ISS position on map
+         * Update ISS position - queues update for next map render
          * @param {number} lat - Latitude
          * @param {number} lng - Longitude
          */
         updateISSPosition(lat, lng) {
-            issMarker.setLngLat([lng, lat]);
+            storedISSPos.lat = lat;
+            storedISSPos.lng = lng;
+            markerNeedsUpdate = true;
+            // Trigger a repaint to ensure render event fires
+            map.triggerRepaint();
         },
 
         /**
