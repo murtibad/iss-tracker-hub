@@ -40,8 +40,10 @@ export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
   let mode = initialMode === "3d" ? "3d" : "2d";
 
   function render() {
+    const label = mode === "3d" ? "Switch to 2D Map" : "Switch to 3D Globe";
     btn.textContent = mode === "3d" ? "3D Globe" : "2D Map";
     btn.title = mode === "3d" ? "2D haritaya geç" : "3D dünyaya geç";
+    btn.setAttribute("aria-label", label);
   }
 
   function setMode(v) {

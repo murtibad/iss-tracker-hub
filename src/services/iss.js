@@ -136,14 +136,32 @@ export async function fetchIssTelemetry() {
         console.log('[ISS] ✅ Tertiary (TLE) success');
         return data;
       } catch (e3) {
-        console.error('[ISS] ❌ CRITICAL: All data streams failed');
-        console.error('  Primary:', e1.message);
-        console.error('  Secondary:', e2.message);
-        console.error('  Tertiary:', e3.message);
-        return null;
+        console.error('[ISS] ❌ CRITICAL: All data streams failed. Switching to SIMULATION.');
+        return normalizeData(getSimulatedPosition(), 'simulation');
       }
     }
   }
+}
+
+/**
+ * Quaternary: Simulation Mode (Last resort)
+ * Moves ISS along a simplified orbit so UI is never empty
+ */
+function getSimulatedPosition() {
+  const now = Date.now();
+  // Rough approximation of ISS orbit
+  // Period ~93 mins, Inc ~51.6deg
+  const timeScale = now / 1000 / 5560 * (Math.PI * 2);
+  const lat = Math.sin(timeScale) * 51.6;
+  const lon = (now / 1000 / 10) % 360 - 180; // Moves west to east
+
+  return {
+    lat,
+    lon,
+    altKm: 420 + Math.sin(now / 10000) * 10,
+    velKmh: 27580 + Math.cos(now / 10000) * 50,
+    source: 'simulation'
+  };
 }
 
 // Legacy export for backward compatibility

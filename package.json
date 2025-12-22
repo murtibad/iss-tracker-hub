@@ -1,6 +1,6 @@
 {
   "name": "iss-tracker-hub",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "Real-time ISS tracker with 3D visualization and personalized home location",
   "author": "murtibad",
   "license": "MIT",
@@ -20,11 +20,9 @@
   },
   "dependencies": {
     "date-fns": "^2.30.0",
-    "firebase": "^10.7.1",
     "globe.gl": "^2.45.0",
     "maplibre-gl": "^5.15.0",
     "satellite.js": "^6.0.1",
-    "three": "^0.182.0",
-    "toastify-js": "^1.12.0"
+    "three": "^0.182.0"
   }
 }

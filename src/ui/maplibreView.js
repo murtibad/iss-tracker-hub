@@ -52,6 +52,17 @@ export function createMapLibreView(container, options = {}) {
     map.on('load', () => {
         console.log('[MapLibre] ✅ Map loaded successfully!');
 
+        // Find the first symbol layer to place trajectory below labels
+        const layers = map.getStyle().layers;
+        let firstSymbolId;
+        for (const layer of layers) {
+            if (layer.type === 'symbol') {
+                firstSymbolId = layer.id;
+                break;
+            }
+        }
+        console.log('[MapLibre] Placing trajectory below layer:', firstSymbolId);
+
         // Past trajectory source (cyan)
         map.addSource('trajectory-past', {
             type: 'geojson',
@@ -64,22 +75,22 @@ export function createMapLibreView(container, options = {}) {
             source: 'trajectory-past',
             paint: {
                 'line-color': '#00d4ff',
-                'line-width': 6,
-                'line-opacity': 0.2,
-                'line-blur': 3
+                'line-width': 8,
+                'line-opacity': 0.4,
+                'line-blur': 4
             }
-        });
+        }, firstSymbolId);
 
         map.addLayer({
             id: 'trajectory-past-line',
             type: 'line',
             source: 'trajectory-past',
             paint: {
-                'line-color': '#00d4ff',  // Electric blue
-                'line-width': 2,
-                'line-opacity': 0.8
+                'line-color': '#00d4ff',  // Electric blue (PAST)
+                'line-width': 3,
+                'line-opacity': 1.0
             }
-        });
+        }, firstSymbolId);
 
         // Future trajectory source (orange dashed)
         map.addSource('trajectory-future', {
@@ -92,12 +103,12 @@ export function createMapLibreView(container, options = {}) {
             type: 'line',
             source: 'trajectory-future',
             paint: {
-                'line-color': '#ffa500',  // Orange
-                'line-width': 2,
-                'line-opacity': 0.5,
-                'line-dasharray': [4, 4]  // Dashed
+                'line-color': '#ffa500',  // Orange (FUTURE)
+                'line-width': 3,
+                'line-opacity': 0.8,
+                'line-dasharray': [6, 4]  // Dashed
             }
-        });
+        }, firstSymbolId);
 
         trajectoryLayersReady = true;
         console.log('[MapLibre] 🛤️ Trajectory layers initialized');

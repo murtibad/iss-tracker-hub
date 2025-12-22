@@ -1,180 +1,272 @@
 // src/i18n/i18n.js
-// Internationalization system - Çok dilli destek sistemi
-
-import { LANGUAGES, COUNTRY_TO_LANGUAGE } from './languages.js';
+// Internationalization system - Dictionary based v0.3.1
 
 const STORAGE_KEY = 'isshub:language';
+let currentLanguage = 'tr'; // Default logic will overwrite
 
-// Current language state
-let currentLanguage = 'tr'; // default
+// Dictionary
+const DICTIONARY = {
+    en: {
+        // Common
+        speed: "Speed",
+        altitude: "Altitude",
+        lat: "Latitude",
+        lon: "Longitude",
+        close: "Close",
+        save: "Save",
+        cancel: "Cancel",
 
-/**
- * Get language from IP geolocation
- * Uses free IP geolocation API
- */
-export async function detectLanguageFromIP() {
-    try {
-        // Use free IP geolocation service
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
+        // UI Components
+        settings: "Settings",
+        theme: "Theme",
+        language: "Language",
+        units: "Units",
+        crew: "Crew",
+        follow: "Follow",
+        on: "ON",
+        off: "OFF",
 
-        const countryCode = data.country_code; // e.g. "TR", "US", "ES"
+        // Status
+        connectionStable: "Connection stable",
+        daylight: "Daylight",
+        eclipse: "Eclipse",
 
-        // Map country to language
-        const detectedLang = COUNTRY_TO_LANGUAGE[countryCode] || 'en';
+        // Location
+        tools: "Tools",
+        location: "Location",
+        changeLocation: "Change Location",
+        passDepend: "Pass predictions depend on location",
+        locationModalTitle: "Location Settings",
+        locationModalDesc: "Select your location for accurate pass predictions",
+        locGpsRequesting: "Requesting GPS location...",
+        locGpsSuccess: "Location acquired",
+        locGpsFailed: "GPS failed",
+        locSearchFailed: "Search failed",
+        locSaved: "Location saved",
+        useMyLocation: "Use My Location (GPS)",
+        searchLocation: "Search Location",
+        searchPlaceholder: "Search: \"London\" / \"Tokyo\" ...",
+        selection: "Selection",
+        noSelection: "No selection",
+        noResults: "No results. Try broader terms (e.g., \"London\").",
+        searching: "Searching...",
+        selectCity: "Select a city",
+        followActive: "Tracking: ON",
+        followInactive: "Tracking: OFF",
 
-        console.log(`[i18n] IP detection: ${countryCode} → ${detectedLang}`);
-        return detectedLang;
-    } catch (error) {
-        console.warn('[i18n] IP detection failed, using default:', error);
-        return 'en'; // fallback to English
-    }
-}
+        // Pass Predictions
+        passNoLocation: "No location set",
+        passCalculating: "Calculating pass...",
+        passNotFound: "No visible pass found",
+        passError: "Pass calculation error",
 
-/**
- * Initialize i18n system
- * - Check localStorage for saved language
- * - If no saved language, detect from IP
- * - Apply language
- */
+        // Pass Card
+        passCardTitle: "Next Pass",
+        passVisible: "✅ VISIBLE",
+        passPoorAngle: "🔴 DIFFICULT (Low Angle: {deg}°)",
+        passInvisible: "🔴 INVISIBLE",
+        passNone: "No upcoming pass",
+        passDetails: "Details",
+        passClose: "Close",
+        passDuration: "Duration",
+        passFirstVisible: "First visible pass",
+        passHoursMinutes: "{h}h {m}min later ({time})",
+        passNotFoundDetails: "not found",
+        passMinutes: "{min} min",
+
+        // Errors
+        globeLoadFailed: "3D Globe failed to load",
+        globeError: "Globe error",
+        bootReady: "App ready",
+        locationSet: "Location set",
+        offline: "Offline. Retrying...",
+        reconnecting: "Reconnecting...",
+        trajectoryCalculating: "Calculating trajectory...",
+        trajectoryError: "Trajectory error"
+    },
+    tr: {
+        // Genel
+        speed: "Hız",
+        altitude: "İrtifa",
+        lat: "Enlem",
+        lon: "Boylam",
+        close: "Kapat",
+        save: "Kaydet",
+        cancel: "İptal",
+
+        // UI Bileşenleri
+        settings: "Ayarlar",
+        theme: "Tema",
+        language: "Dil",
+        units: "Birimler",
+        crew: "Mürettebat",
+        follow: "Takip",
+        on: "AÇIK",
+        off: "KAPALI",
+
+        // Durum
+        connectionStable: "Bağlantı kararlı",
+        daylight: "Gündüz",
+        eclipse: "Tutulma (Gece)",
+
+        // Konum
+        tools: "Araçlar",
+        location: "Konum",
+        changeLocation: "Konum Değiştir",
+        passDepend: "Geçiş tahminleri konuma bağlıdır",
+        locationModalTitle: "Konum Ayarları",
+        locationModalDesc: "Doğru geçiş tahminleri için konumunuzu seçin",
+        locGpsRequesting: "GPS konumu isteniyor...",
+        locGpsSuccess: "Konum alındı",
+        locGpsFailed: "GPS başarısız",
+        locSearchFailed: "Arama başarısız",
+        locSaved: "Konum kaydedildi",
+        useMyLocation: "Konumumu Kullan (GPS)",
+        searchLocation: "Arama ile Seç",
+        searchPlaceholder: "Ara: \"Bursa\" / \"Istanbul\" ...",
+        selection: "Seçim",
+        noSelection: "Seçim yapılmadı",
+        noResults: "Sonuç yok. Daha genel yaz (örn: \"Bursa\").",
+        searching: "Aranıyor...",
+        selectCity: "Şehir seçin",
+        followActive: "Takip: Açık",
+        followInactive: "Takip: Kapalı",
+
+        // Geçiş Tahminleri
+        passNoLocation: "Konum belirtilmedi",
+        passCalculating: "Geçiş hesaplanıyor...",
+        passNotFound: "Görünür geçiş bulunamadı",
+        passError: "Geçiş hesaplama hatası",
+
+        // Geçiş Kartı
+        passCardTitle: "Sıradaki Geçiş",
+        passVisible: "✅ GÖRÜNÜR",
+        passPoorAngle: "🔴 ZOR (Düşük Açı: {deg}°)",
+        passInvisible: "🔴 GÖRÜNMEZ",
+        passNone: "Yakında geçiş yok",
+        passDetails: "Detaylar",
+        passClose: "Kapat",
+        passDuration: "Süre",
+        passFirstVisible: "İlk görünür geçiş",
+        passHoursMinutes: "{h}sa {m}dk sonra ({time})",
+        passNotFoundDetails: "bulunamadı",
+        passMinutes: "{min} dk",
+
+        // Hatalar
+        globeLoadFailed: "3D Küre yüklenemedi",
+        globeError: "Küre hatası",
+        bootReady: "Uygulama hazır",
+        locationSet: "Konum ayarlandı",
+        offline: "Çevrimdışı. Tekrar deneniyor...",
+        reconnecting: "Yeniden bağlanılıyor...",
+        trajectoryCalculating: "Yörünge hesaplanıyor...",
+        trajectoryError: "Yörünge hatası"
+    },
+    // Scalable Structure for 18 Languages (Restored)
+    de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},
+    ar: {}, bn: {}, ko: {}, nl: {}, pl: {}, ro: {}, sv: {}
+};
+
 export async function initI18n() {
-    // Check localStorage
-    const savedLang = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
 
-    if (savedLang && LANGUAGES[savedLang]) {
-        console.log(`[i18n] Using saved language: ${savedLang}`);
-        currentLanguage = savedLang;
+    if (saved && DICTIONARY[saved]) {
+        // User has explicitly chosen a language
+        currentLanguage = saved;
     } else {
-        // Detect from IP
-        const detectedLang = await detectLanguageFromIP();
-        currentLanguage = detectedLang;
-        localStorage.setItem(STORAGE_KEY, detectedLang);
+        // Detect browser language
+        const browserLang = navigator.language || navigator.userLanguage;
+        const langCode = browserLang.split('-')[0]; // 'en-US' -> 'en'
+
+        if (DICTIONARY[langCode]) {
+            currentLanguage = langCode;
+        } else {
+            // Default to TR if unsupported language
+            currentLanguage = 'tr';
+        }
     }
 
     applyLanguage(currentLanguage);
     return currentLanguage;
 }
 
-/**
- * Set language manually
- */
-export function setLanguage(langCode) {
-    if (!LANGUAGES[langCode]) {
-        console.warn(`[i18n] Unknown language: ${langCode}`);
-        return;
-    }
-
-    currentLanguage = langCode;
-    localStorage.setItem(STORAGE_KEY, langCode);
-    applyLanguage(langCode);
-
-    // Trigger custom event for UI updates
-    window.dispatchEvent(new CustomEvent('languagechange', {
-        detail: { language: langCode }
-    }));
-}
-
-/**
- * Get current language
- */
 export function getCurrentLanguage() {
     return currentLanguage;
 }
 
-/**
- * Get unit system for current language
- * Returns 'metric' or 'imperial'
- */
-export function getUnitSystem() {
-    // US and UK use imperial (mph, miles, etc.)
-    if (currentLanguage === 'en') {
-        // Check if it's specifically US/UK via country detection
-        // For simplicity, default to metric for English, but could be enhanced
-        return 'metric'; // Most English speakers globally use metric
+export function setLanguage(lang) {
+    // if (lang !== 'en' && lang !== 'tr') return; // Allow all supported languages
+    if (!DICTIONARY[lang]) lang = 'en'; // Fallback logic assignment if needed, but current implementation uses keys
+    currentLanguage = lang;
+    localStorage.setItem(STORAGE_KEY, lang);
+    applyLanguage(lang);
+
+    // Broadcast event for reactive components
+    window.dispatchEvent(new CustomEvent('language-change', { detail: lang }));
+}
+
+export function t(key) {
+    const dict = DICTIONARY[currentLanguage];
+
+    // Primary: Current language
+    if (dict && dict[key]) {
+        return dict[key];
     }
 
-    // All other languages use metric
-    return 'metric';
-}
-
-/**
- * Get speed unit label
- */
-export function getSpeedUnit() {
-    return getUnitSystem() === 'imperial' ? 'mph' : 'km/h';
-}
-
-/**
- * Get distance unit label  
- */
-export function getDistanceUnit() {
-    return getUnitSystem() === 'imperial' ? 'mi' : 'km';
-}
-
-/**
- * Convert km/h to appropriate unit
- */
-export function formatSpeed(kmh) {
-    if (!Number.isFinite(kmh)) return '--';
-
-    if (getUnitSystem() === 'imperial') {
-        const mph = kmh * 0.621371;
-        return Math.round(mph);
+    // Fallback 1: TR (default)
+    if (currentLanguage !== 'tr' && DICTIONARY['tr'][key]) {
+        console.warn(`[i18n] Missing "${key}" in "${currentLanguage}", using TR fallback`);
+        return DICTIONARY['tr'][key];
     }
 
-    return Math.round(kmh);
-}
-
-/**
- * Convert km to appropriate unit
- */
-export function formatDistance(km) {
-    if (!Number.isFinite(km)) return '--';
-
-    if (getUnitSystem() === 'imperial') {
-        const miles = km * 0.621371;
-        return miles.toFixed(1);
+    // Fallback 2: EN
+    if (currentLanguage !== 'en' && DICTIONARY['en'][key]) {
+        console.warn(`[i18n] Missing "${key}" in "${currentLanguage}", using EN fallback`);
+        return DICTIONARY['en'][key];
     }
 
-    return km.toFixed(1);
+    // Last resort: return key itself
+    console.warn(`[i18n] Missing translation key: "${key}"`);
+    return key;
 }
 
-/**
- * Get translation for a key
- */
-export function t(key, fallback = key) {
-    const lang = LANGUAGES[currentLanguage];
-    if (!lang || !lang.translations) {
-        return fallback;
-    }
+// Helper: Smart Unit Conversion
+// EN -> Imperial (mph, mi)
+// TR -> Metric (km/h, km)
+export function getSmartUnits(velocityKmh, altitudeKm) {
+    const isImperial = currentLanguage === 'en';
 
-    return lang.translations[key] || fallback;
-}
-
-/**
- * Get all available languages
- */
-export function getAvailableLanguages() {
-    return Object.entries(LANGUAGES).map(([code, lang]) => ({
-        code,
-        name: lang.name,
-        flag: lang.flag
-    }));
-}
-
-/**
- * Apply language to DOM
- * Sets lang attribute for RTL support etc.
- */
-function applyLanguage(langCode) {
-    document.documentElement.lang = langCode;
-
-    // RTL support for Arabic
-    if (langCode === 'ar') {
-        document.documentElement.setAttribute('dir', 'rtl');
+    if (isImperial) {
+        return {
+            speed: Math.round(velocityKmh * 0.621371).toLocaleString('en-US'),
+            speedUnit: 'mph',
+            altitude: (altitudeKm * 0.621371).toFixed(1),
+            altUnit: 'mi'
+        };
     } else {
-        document.documentElement.setAttribute('dir', 'ltr');
+        return {
+            speed: Math.round(velocityKmh).toLocaleString('tr-TR'),
+            speedUnit: 'km/h',
+            altitude: altitudeKm.toFixed(1),
+            altUnit: 'km'
+        };
     }
+}
 
-    console.log(`[i18n] Applied language: ${langCode}`);
+// Helper: Get plain units
+export function getSpeedUnit() {
+    return currentLanguage === 'en' ? 'mph' : 'km/h';
+}
+
+export function getDistanceUnit() {
+    return currentLanguage === 'en' ? 'mi' : 'km';
+}
+
+function applyLanguage(lang) {
+    document.documentElement.lang = lang;
+    // Update simple text elements marked with [data-i18n]
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (key) el.textContent = t(key);
+    });
 }

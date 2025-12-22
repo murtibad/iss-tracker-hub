@@ -14,13 +14,15 @@ import { createWeatherBadge } from "../ui/weatherBadgeView.js";
 import { fetchCurrentWeather, weatherCodeLabel } from "../services/weather.js";
 import { createThemePicker, applyGlassColor, getGlassColor } from "../ui/themePickerView.js";
 import { showLocationWelcome } from "../ui/locationWelcomeModal.js";
-import { createLanguagePicker } from "../ui/languagePickerView.js";
+// languagePickerView removed - succeeded by Settings Modal
 import { initI18n, t, getCurrentLanguage, getSpeedUnit, getDistanceUnit } from "../i18n/i18n.js";
 
 import { openCrewModal } from "../ui/crewWidgetView.js";
+import { ICONS } from "../ui/icons.js";
 
-// Docked Dashboard (Cinematic UI v0.2.2)
-import { createDockedDashboard } from "../ui/components/dockedDashboard.js";
+// Floating HUD (Compact Telemetry v0.3.3)
+import { createFloatingHUD } from "../ui/components/floatingHUD.js";
+import { createSettingsModal } from "../ui/settingsModal.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -316,32 +318,30 @@ export async function boot(store, rootEl) {
   const followTxt = buildEl("div", "", followPill);
   followTxt.textContent = t('follow') + ": " + t('on');
 
-  // Settings button (opens settings modal - to be implemented)
+  // Settings button (opens settings modal)
   const settingsBtn = buildEl("button", "btn settings-btn", actions);
   settingsBtn.type = "button";
-  settingsBtn.innerHTML = "⚙️";
-  settingsBtn.title = t('settings') || "Ayarlar";
+  settingsBtn.innerHTML = ICONS.settings;
+  settingsBtn.title = t('settings');
+  settingsBtn.setAttribute("aria-label", t('settings'));
   settingsBtn.style.cssText = "font-size: 18px; padding: 8px 12px;";
 
-  // Theme state (internal - no button)
-  let themeMode = getInitialThemeMode();
-  let resolvedTheme = setThemeMode(themeMode);
+  // Create Settings Modal
+  const settingsModal = createSettingsModal({
+    onOpenLocation: () => openLocModal()
+  });
+  rootEl.appendChild(settingsModal.el);
 
-  // Settings click handler (placeholder - shows theme cycle for now)
+  // Settings click handler
   settingsBtn.addEventListener("click", () => {
-    themeMode = themeMode === "system" ? "dark" : themeMode === "dark" ? "light" : "system";
-    resolvedTheme = setThemeMode(themeMode);
-    updateTileTheme();
-    log(t('themeChanged') + `: ${themeMode} (${resolvedTheme})`);
+    settingsModal.open();
   });
 
-  // ========== DOCKED UI: Command Deck v0.3.0 ==========
-  // Grid: 25% (Data) | 50% (Status) | 25% (Controls)
-  // Dashboard contains 2D/3D toggle - will connect after applyViewMode defined
-  const dashboard = createDockedDashboard();
+  // ========== FLOATING HUD: Compact Telemetry Display ==========
+  const dashboard = createFloatingHUD();
   rootEl.appendChild(dashboard.el);
 
-  // Use dashboard's integrated terminal for logging
+  // Use dashboard's integrated log for status updates
   const log = dashboard.getLogFn();
 
   // Reference for terminal subtitle updates
@@ -458,7 +458,7 @@ export async function boot(store, rootEl) {
   function setFollowUI(on) {
     trackEnabled = Boolean(on);
     followDot.style.opacity = on ? "1" : "0.35";
-    followTxt.textContent = on ? "Takip: Açık" : "Takip: Kapalı";
+    followTxt.textContent = on ? t('followActive') : t('followInactive');
     followPill.style.opacity = on ? "1" : "0.85";
 
     // 3D modda globe takibini kontrol et
@@ -537,14 +537,12 @@ export async function boot(store, rootEl) {
 
   // Wire dashboard's 2D/3D toggle to view mode switcher
   // Dashboard buttons trigger this via querySelectorAll event listeners
-  const viewBtns = dashboard.el.querySelectorAll("[data-view]");
-  viewBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const mode = btn.dataset.view;
-      applyViewMode(mode);
-      viewBtns.forEach(b => b.classList.toggle("active", b.dataset.view === mode));
-    });
+  const viewToggle = createViewModeToggle({
+    initialMode: viewMode,
+    onChange: (mode) => applyViewMode(mode)
   });
+  viewToggleRef = viewToggle;
+  rootEl.appendChild(viewToggle.el);
 
   applyViewMode(viewMode);
 
@@ -587,9 +585,7 @@ export async function boot(store, rootEl) {
     store.actions.openCityPicker = () => openLocModal();
   }
 
-  cityBtn.addEventListener("click", () => {
-    openLocModal();
-  });
+
 
   // ---------- Location Modal (OSM/Nominatim) ----------
   const locOverlay = buildEl("div", "loc-overlay", rootEl);
@@ -612,21 +608,21 @@ export async function boot(store, rootEl) {
   const locRow = buildEl("div", "loc-row", locBody);
   const locGpsBtn = buildEl("button", "btn", locRow);
   locGpsBtn.type = "button";
-  locGpsBtn.textContent = "Konumumu Kullan (GPS)";
+  locGpsBtn.textContent = t('useMyLocation');
   const locManualBtn = buildEl("button", "btn", locRow);
   locManualBtn.type = "button";
-  locManualBtn.textContent = "Arama ile Seç";
+  locManualBtn.textContent = t('searchLocation');
 
   const locSearch = buildEl("input", "loc-search", locBody);
   locSearch.type = "search";
-  locSearch.placeholder = "Ara: “Bursa Osmangazi” / “Istanbul Kadikoy” …";
+  locSearch.placeholder = t('searchPlaceholder');
   locSearch.disabled = true;
 
   const locList = buildEl("div", "loc-list", locBody);
   locList.style.opacity = "0.6";
 
   const pickedBox = buildEl("div", "loc-picked", locBody);
-  pickedBox.textContent = "Seçim: —";
+  pickedBox.textContent = t('selection') + ": —";
   const pickedSmall = buildEl("span", "small", pickedBox);
   pickedSmall.textContent = "";
 
@@ -652,12 +648,12 @@ export async function boot(store, rootEl) {
   function setPicked(place) {
     selectedPlace = place;
     if (!place) {
-      pickedBox.firstChild.textContent = "Seçim: —";
+      pickedBox.firstChild.textContent = `${t('selection')}: —`;
       pickedSmall.textContent = "";
       locSaveBtn.disabled = true;
       return;
     }
-    pickedBox.firstChild.textContent = `Seçim: ${placeLabel(place) || "—"}`;
+    pickedBox.firstChild.textContent = `${t('selection')}: ${placeLabel(place) || "—"}`;
     pickedSmall.textContent = place.displayName ? place.displayName : "";
     locSaveBtn.disabled = !(place.lat != null && place.lon != null);
   }
@@ -704,7 +700,7 @@ export async function boot(store, rootEl) {
       d.style.opacity = "0.85";
       d.style.fontWeight = "900";
       d.style.fontSize = "13px";
-      d.textContent = "Sonuç yok. Daha genel yaz (örn: “Bursa”).";
+      d.textContent = t('noResults');
       locList.appendChild(d);
       return;
     }
@@ -818,134 +814,6 @@ export async function boot(store, rootEl) {
   syncCityText();
 
   // ---------- Telemetry ----------
-  async function fetchTelemetry() {
-    const res = await fetch(ISS_URL, { cache: "no-store" });
-    const txt = await res.text();
-    const data = safeJsonParse(txt);
-    if (!data) throw new Error("bad json");
-
-    const tel = {
-      latitude: Number(data.latitude),
-      longitude: Number(data.longitude),
-      altitude: Number(data.altitude),
-      velocity: Number(data.velocity),
-      timestamp: Number(data.timestamp) * 1000,
-    };
-
-    if (
-      Number.isNaN(tel.latitude) ||
-      Number.isNaN(tel.longitude) ||
-      Number.isNaN(tel.altitude) ||
-      Number.isNaN(tel.velocity)
-    ) {
-      throw new Error("bad telemetry");
-    }
-    return tel;
-  }
-
-  function renderTelemetry(tel) {
-    // Widget updates
-    telemetryWidget.update({
-      altitude: tel.altitude,
-      velocity: tel.velocity,
-      latitude: tel.latitude,
-      longitude: tel.longitude,
-      footprint: "Ocean" // Placeholder, need real geo lookup if possible
-    });
-
-    distancesWidget.update({
-      altitude: tel.altitude
-    });
-
-    commWidget.update({});
-    timeWidget.update({});
-    solarWidget.update({});
-
-    const la = clampLat(tel.latitude);
-    const lo = normalizeLon(tel.longitude);
-    localState.lastIssLat = la;
-    localState.lastIssLon = lo;
-
-    const latlng = L.latLng(la, lo);
-    marker.setLatLng(latlng);
-
-    // 3D (açıksa)
-    try {
-      if (viewMode === "3d") globe?.setIssPosition(la, lo);
-    } catch { }
-
-    // weather
-    refreshWeatherForIss(la, lo);
-
-    // trail
-    trackPolyline.addLatLng(latlng);
-    const pts = trackPolyline.getLatLngs();
-    if (pts.length > 600) trackPolyline.setLatLngs(pts.slice(-600));
-
-    // follow: logic remains same...
-    if (trackEnabled) {
-      const now = Date.now();
-      const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 4000);
-      const minDistM = Number(CONFIG?.FOLLOW_PAN_MIN_DISTANCE_M ?? 30000);
-      const canTime = now - lastPanAt >= minInterval;
-      const distOk = !lastPanLatLng ? true : map.distance(lastPanLatLng, latlng) >= minDistM;
-      if (canTime && distOk) {
-        lastPanAt = now;
-        lastPanLatLng = latlng;
-        map.panTo(latlng, { animate: true, duration: 0.25 });
-      }
-    }
-  }
-
-  async function fetchTelemetry() {
-    // Use real API
-    const res = await fetch(ISS_URL);
-    if (!res.ok) throw new Error("iss api");
-    const d = await res.json();
-    return {
-      altitude: d.altitude,
-      velocity: d.velocity,
-      latitude: d.latitude,
-      longitude: d.longitude,
-      footprint: d.visibility
-    };
-  }
-
-  function renderTelemetry(tel) {
-    // Docked Dashboard update
-    dashboard.update({
-      altitude: tel.altitude,
-      velocity: tel.velocity,
-      latitude: tel.latitude,
-      longitude: tel.longitude,
-      visibility: tel.footprint // "daylight" or "eclipsed"
-    });
-
-    // Common updates
-    const la = clampLat(tel.latitude);
-    const lo = normalizeLon(tel.longitude);
-    localState.lastIssLat = la;
-    localState.lastIssLon = lo;
-
-    // Update MapLibre marker
-    mapView.updateISSPosition(la, lo);
-
-    // Auto-pan to ISS if tracking enabled
-    if (trackEnabled) {
-      const now = Date.now();
-      const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 4000);
-      const canTime = now - lastPanAt >= minInterval;
-
-      if (canTime) {
-        lastPanAt = now;
-        mapView.panTo(la, lo, 4); // Zoom level 4
-      }
-    }
-
-    // 3D globe update
-    try { if (viewMode === "3d") globe?.setIssPosition(la, lo); } catch { }
-  }
-
   // UI tick (countdown)
   let uiTickTimer = null;
   function startUiTick() {
@@ -960,40 +828,67 @@ export async function boot(store, rootEl) {
     }, Number(CONFIG?.INTERVAL_UI_TICK ?? 1000));
   }
 
-  async function refreshOnce() {
-    try {
-      const tel = await fetchTelemetry();
-      renderTelemetry(tel);
+  // ---------- ISS Motion & Telemetry (v0.3.3) ----------
+  function handleMotionUpdate({ lat, lng, alt }) {
+    // 1. Update Map Marker (interpolated)
+    mapView.updateISSPosition(lat, lng);
 
-      localState.lastTelemetryAt = Date.now();
-      const u = new Date(localState.lastTelemetryAt);
-      termSub.textContent = `Son güncelleme: ${pad2(u.getHours())}:${pad2(u.getMinutes())}:${pad2(
-        u.getSeconds()
-      )}`;
+    // 2. Update 3D Globe (interpolated)
+    if (viewMode === "3d" && globe) {
+      try { globe.setIssPosition(lat, lng); } catch { }
+    }
 
-      const logEvery = Number(CONFIG?.TERMINAL_TELEMETRY_LOG_INTERVAL_MS ?? 10000);
-      const nowLog = Date.now();
-      if (nowLog - localState.lastTelemetryLogAt >= logEvery) {
-        localState.lastTelemetryLogAt = nowLog;
-        log(
-          `ISS lat=${fmtNum(tel.latitude, 2)} lon=${fmtNum(tel.longitude, 2)} alt=${fmtNum(
-            tel.altitude,
-            1
-          )}km v=${fmtInt(tel.velocity)}km/h`
-        );
+    // 3. Follow/Tracking Logic
+    if (trackEnabled) {
+      const now = Date.now();
+      const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 2500); // 2.5s for smoother feel
+      if (now - lastPanAt >= minInterval) {
+        lastPanAt = now;
+        // Use current zoom level for better UX
+        mapView.panTo(lat, lng, map.getZoom());
       }
-
-      if (!localState.prediction && Number.isFinite(localState.obsLat) && Number.isFinite(localState.obsLon)) {
-        await calcPredictionNow({ forceLog: false });
-        renderPrediction();
-      }
-    } catch (e) {
-      log(t('telemetryError') + ` (${String(e?.message || e)})`);
     }
   }
 
+  function handleNewData(data) {
+    // 1. Update HUD (Velocity/Alt/etc)
+    dashboard.update({
+      altitude: data.altKm,
+      velocity: data.velKmh,
+      latitude: data.lat,
+      longitude: data.lon,
+      visibility: "daylight" // Todo: connect to real visibility calc if needed
+    });
+
+    // 2. Update Local State
+    localState.lastIssLat = data.lat;
+    localState.lastIssLon = data.lon;
+    localState.lastTelemetryAt = data.ts;
+
+    // 3. Refresh Weather
+    refreshWeatherForIss(data.lat, data.lon);
+
+    // 4. Update Terminal Log (occasional)
+    const logEvery = Number(CONFIG?.TERMINAL_TELEMETRY_LOG_INTERVAL_MS ?? 15000);
+    const nowLog = Date.now();
+    if (nowLog - localState.lastTelemetryLogAt >= logEvery) {
+      localState.lastTelemetryLogAt = nowLog;
+      log(`[ISS] 📡 ${data.source}: lat=${fmtNum(data.lat, 2)} lon=${fmtNum(data.lon, 2)} alt=${fmtInt(data.altKm)}km v=${fmtInt(data.velKmh)}`);
+    }
+
+    // 5. Check Predictions content if needed
+    if (!localState.prediction && Number.isFinite(localState.obsLat)) {
+      calcPredictionNow().catch(() => { });
+    }
+  }
+
+  // Start the motion system
+  startMotion({
+    onPosition: handleMotionUpdate,
+    onData: handleNewData
+  });
+
   renderPrediction();
-  refreshOnce();
   startUiTick();
 
   // ---------- Trajectory Visualization ----------
@@ -1015,6 +910,8 @@ export async function boot(store, rootEl) {
         stepSeconds: 30  // 30 second steps for smooth line
       });
 
+      console.log('[Trajectory] Raw data:', trajectory);
+
       // Cache trajectory for 3D mode switching
       cachedTrajectory = trajectory;
 
@@ -1022,9 +919,14 @@ export async function boot(store, rootEl) {
       const pastGeoJSON = trajectoryToGeoJSON(trajectory.past);
       const futureGeoJSON = trajectoryToGeoJSON(trajectory.future);
 
+      console.log('[Trajectory] Past GeoJSON features:', pastGeoJSON?.geometry?.coordinates?.length || 0);
+      console.log('[Trajectory] Future GeoJSON features:', futureGeoJSON?.geometry?.coordinates?.length || 0);
+
       // Update 2D MapLibre
       if (mapView && mapView.updateTrajectory) {
         mapView.updateTrajectory(pastGeoJSON, futureGeoJSON);
+      } else {
+        console.warn('[Trajectory] mapView or updateTrajectory not available');
       }
 
       // Update 3D Globe (if loaded)
@@ -1035,7 +937,7 @@ export async function boot(store, rootEl) {
       log(`[Trajectory] ✅ ${trajectory.past.length} geçmiş + ${trajectory.future.length} gelecek nokta`);
     } catch (e) {
       console.error('[Trajectory] Error:', e);
-      log(`[Trajectory] ❌ Hata: ${e?.message || e}`);
+      log(t('trajectoryError') + `: ${e?.message || e}`);
     }
   }
 
@@ -1048,10 +950,21 @@ export async function boot(store, rootEl) {
   }
   window._applyTrajectoryToGlobe = applyTrajectoryToGlobe;
 
-  // Initial trajectory calculation (after map loads)
-  setTimeout(() => {
-    updateTrajectoryOnMap();
-  }, 3000); // Wait for map to be ready
+  // Initial trajectory calculation (handle race condition)
+  // Map might already be loaded by the time this code runs
+  if (mapView && mapView.map) {
+    if (mapView.map.loaded()) {
+      // Map already loaded, calculate immediately
+      console.log('[Trajectory] Map already loaded, calculating immediately...');
+      updateTrajectoryOnMap();
+    } else {
+      // Map not loaded yet, wait for load event
+      mapView.map.once('load', () => {
+        console.log('[Trajectory] Map loaded, calculating initial trajectory...');
+        updateTrajectoryOnMap();
+      });
+    }
+  }
 
   // Refresh trajectory every 5 minutes
   trajectoryTimer = setInterval(() => {

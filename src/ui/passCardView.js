@@ -2,7 +2,7 @@
 // TR: Sıradaki geçiş kartı + Detaylar (expand/collapse)
 // EN: Next pass card + Details toggle
 
-import { COPY } from "../constants/copy.js";
+import { t } from "../i18n/i18n.js";
 import { CONFIG } from "../constants/config.js";
 
 function el(tag, className) {
@@ -27,11 +27,11 @@ export function createPassCard() {
 
   const headRow = el("div", "pass-head");
   const title = el("div", "pass-title");
-  title.textContent = COPY.passCard.title;
+  title.textContent = t('passCardTitle');
 
   const btnDetails = el("button", "btn btn-ghost btn-mini pass-details-btn");
   btnDetails.type = "button";
-  btnDetails.textContent = COPY.ui.details || "Detaylar";
+  btnDetails.textContent = t('passDetails');
 
   headRow.append(title, btnDetails);
 
@@ -62,7 +62,7 @@ export function createPassCard() {
     isOpen = Boolean(v);
     extra.style.display = isOpen ? "block" : "none";
     wrap.classList.toggle("open", isOpen);
-    btnDetails.textContent = isOpen ? "Kapat" : (COPY.ui.details || "Detaylar");
+    btnDetails.textContent = isOpen ? t('passClose') : t('passDetails');
   }
 
   btnDetails.addEventListener("click", (e) => {
@@ -85,22 +85,20 @@ export function createPassCard() {
 
     if (visible) {
       dot.style.background = "#16a34a"; // yeşil
-      labelText.textContent = COPY.passCard.label.visible;
+      labelText.textContent = t('passVisible');
       return;
     }
 
     dot.style.background = "#ef4444"; // kırmızı
 
     if (reason === "lowAngle" && typeof maxElev === "number") {
-      // COPY.passCard.label.poorAngle içinde {deg} var
-      const txt = (COPY.passCard.label.poorAngle || "🔴 ZOR (Düşük Açı: {deg}°)")
-        .replace("{deg}", String(Math.round(maxElev)));
+      const txt = t('passPoorAngle').replace('{deg}', String(Math.round(maxElev)));
       labelText.textContent = txt;
       return;
     }
 
     // default: görünmez
-    labelText.textContent = "🔴 GÖRÜNMEZ";
+    labelText.textContent = t('passInvisible');
   }
 
   function setState({ nextPass, nextVisiblePass, countdownText }) {
@@ -108,7 +106,7 @@ export function createPassCard() {
 
     if (!nextPass) {
       setLabel({ visible: false, reason: "invisible", maxElev: null });
-      meta.textContent = "Yakında geçiş yok";
+      meta.textContent = t('passNone');
       extraLine1.textContent = "—";
       extraLine2.textContent = "—";
       return;
@@ -118,11 +116,8 @@ export function createPassCard() {
     const los = fmtTime(nextPass.losMs);
     const max = typeof nextPass.maxElevDeg === "number" ? Math.round(nextPass.maxElevDeg) : null;
 
-    const tpl = COPY.passCard.template || "AOS {aos} • LOS {los} • MAX {max}°";
-    meta.textContent = tpl
-      .replace("{aos}", aos)
-      .replace("{los}", los)
-      .replace("{max}", max == null ? "—" : String(max));
+    // Template: "AOS {aos} • LOS {los} • MAX {max}°"
+    meta.textContent = `AOS ${aos} • LOS ${los} • MAX ${max == null ? "—" : max}°`;
 
     const visible = !!nextPass.isVisible;
     const reason = nextPass.isLowAngle ? "lowAngle" : (visible ? null : "invisible");
@@ -136,20 +131,23 @@ export function createPassCard() {
     // Detaylar
     // 1) AOS/LOS ve süre
     const durSec = typeof nextPass.durationSec === "number" ? nextPass.durationSec : null;
-    const durMin = durSec == null ? "—" : `${Math.max(1, Math.round(durSec / 60))} dk`;
-    extraLine1.textContent = `AOS: ${aos} • LOS: ${los} • Süre: ${durMin}`;
+    const durMinVal = durSec == null ? "—" : Math.max(1, Math.round(durSec / 60));
+    const durMin = durSec == null ? "—" : t('passMinutes').replace('{min}', durMinVal);
+    extraLine1.textContent = `AOS: ${aos} • LOS: ${los} • ${t('passDuration')}: ${durMin}`;
 
     // 2) İlk görünür geçiş
     if (nextVisiblePass && typeof nextVisiblePass.aosMs === "number") {
       const diffSec = Math.max(0, Math.floor((nextVisiblePass.aosMs - Date.now()) / 1000));
-      // TR: “X sa Y dk sonra (HH:MM)” formatı
       const h = Math.floor(diffSec / 3600);
       const m = Math.floor((diffSec % 3600) / 60);
 
       const timeTxt = fmtTime(nextVisiblePass.aosMs);
-      extraLine2.textContent = `İlk görünür geçiş: ${h}sa ${m}dk sonra (${timeTxt})`;
+      extraLine2.textContent = `${t('passFirstVisible')}: ${t('passHoursMinutes')
+        .replace('{h}', h)
+        .replace('{m}', m)
+        .replace('{time}', timeTxt)}`;
     } else {
-      extraLine2.textContent = "İlk görünür geçiş: bulunamadı";
+      extraLine2.textContent = `${t('passFirstVisible')}: ${t('passNotFoundDetails')}`;
     }
 
     // TR: Açık kalması isterse kalsın; burada otomatik kapatmıyoruz
