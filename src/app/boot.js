@@ -25,6 +25,7 @@ import { createFloatingHUD } from "../ui/components/floatingHUD.js";
 import { createSettingsModal } from "../ui/settingsModal.js";
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
+import { createPassCard } from "../ui/passCardView.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -357,8 +358,17 @@ export async function boot(store, rootEl) {
       error: false // Could track pass calc errors here
     }),
     onShowPass: () => {
-      // TODO: Scroll to/show Pass Card when integrated
-      console.log("[Hero] Show Pass clicked");
+      const passSection = document.getElementById('pass-section');
+      if (passSection && passSection.style.display !== 'none') {
+        // Scroll to pass card
+        passSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Highlight for 2 seconds
+        passSection.classList.add('highlight');
+        setTimeout(() => passSection.classList.remove('highlight'), 2000);
+        console.log("[Hero] Show Pass - scrolled to pass card");
+      } else {
+        console.log("[Hero] Show Pass - card not visible yet");
+      }
     },
     onLiveTrack: () => {
       // Enable follow mode and focus on ISS
@@ -374,6 +384,21 @@ export async function boot(store, rootEl) {
 
   // Version label
   const version = buildEl("div", "hub-ver", overlay);
+  // Pass Card Section
+  const passSection = buildEl("div", "pass-section", overlay);
+  passSection.id = "pass-section";
+  passSection.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    max-width: 400px;
+    width: calc(100% - 40px);
+    z-index: 100;
+    display: none;
+  `;
+
+  const passCard = createPassCard();
+  passSection.appendChild(passCard.el);
   version.textContent = CONFIG?.VERSION || "v0.2.2";
 
   // ---------- Local state ----------
@@ -454,7 +479,30 @@ export async function boot(store, rootEl) {
 
   function renderPrediction() {
     const p = localState.prediction;
-    // Widget update Logic moved to flightDataWidget.update() called in renderTelemetry
+    
+    // Update pass card
+    if (p && p.aosMs) {
+      // Show pass card
+      passSection.style.display = 'block';
+      
+      // Calculate countdown
+      const now = Date.now();
+      const diffMs = p.aosMs - now;
+      const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+      const h = Math.floor(diffSec / 3600);
+      const m = Math.floor((diffSec % 3600) / 60);
+      const s = diffSec % 60;
+      const countdownText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      
+      passCard.setState({
+        nextPass: p,
+        nextVisiblePass: p.visible ? p : null,
+        countdownText
+      });
+    } else {
+      // Hide pass card when no pass
+      passSection.style.display = 'none';
+    }
   }
 
   // ------- MapLibre GL map -------
