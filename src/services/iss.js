@@ -1,20 +1,150 @@
 // src/services/iss.js
-// Türkçe yorum: WhereTheISS.at telemetri çekme (ham veriyi bizim formata çevirir)
+// 3-Tier Fallback ISS Data Fetcher
+// Primary: wheretheiss.at | Secondary: open-notify.org | Tertiary: TLE-based calculation
 
-const ENDPOINT = "https://api.wheretheiss.at/v1/satellites/25544";
+import { getIssTle } from './tle.js';
+import * as satellite from 'satellite.js';
 
-export async function fetchIssTelemetry() {
-  const res = await fetch(ENDPOINT, { cache: "no-store" });
-  if (!res.ok) throw new Error("ISS_API_FAIL");
+const PRIMARY_API = "https://api.wheretheiss.at/v1/satellites/25544";
+const SECONDARY_API = "http://api.open-notify.org/iss-now.json";
 
-  const j = await res.json();
-
+/**
+ * Normalize ISS data to consistent format
+ */
+function normalizeData(data, source) {
   return {
-    lat: Number(j.latitude),
-    lon: Number(j.longitude),
-    altKm: Number(j.altitude),
-    velKmh: Number(j.velocity),
-    visibilityNow: j.visibility === "eclipsed" ? "eclipsed" : "daylight",
-    ts: Date.now(),
+    lat: Number(data.lat),
+    lon: Number(data.lon),
+    altKm: Number(data.altKm || 408), // Default ISS altitude
+    velKmh: Number(data.velKmh || 27580), // Default ISS velocity
+    source,
+    ts: Date.now()
   };
 }
+
+/**
+ * Primary: WhereTheISS.at API
+ */
+async function fetchPrimary() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(PRIMARY_API, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+
+    return normalizeData({
+      lat: j.latitude,
+      lon: j.longitude,
+      altKm: j.altitude,
+      velKmh: j.velocity
+    }, 'wheretheiss');
+  } catch (e) {
+    clearTimeout(timeout);
+    throw new Error(`Primary failed: ${e.message}`);
+  }
+}
+
+/**
+ * Secondary: Open-Notify API
+ */
+async function fetchSecondary() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(SECONDARY_API, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+
+    if (j.message !== 'success') throw new Error('API returned failure');
+
+    return normalizeData({
+      lat: j.iss_position.latitude,
+      lon: j.iss_position.longitude
+    }, 'open-notify');
+  } catch (e) {
+    clearTimeout(timeout);
+    throw new Error(`Secondary failed: ${e.message}`);
+  }
+}
+
+/**
+ * Tertiary: TLE-based SGP4 calculation (offline fallback)
+ */
+async function fetchTertiary() {
+  try {
+    const { line1, line2 } = await getIssTle();
+    const satrec = satellite.twoline2satrec(line1, line2);
+    const now = new Date();
+
+    const positionAndVelocity = satellite.propagate(satrec, now);
+    if (!positionAndVelocity.position) throw new Error('SGP4 propagation failed');
+
+    const gmst = satellite.gstime(now);
+    const positionGd = satellite.eciToGeodetic(positionAndVelocity.position, gmst);
+
+    const lat = satellite.degreesLat(positionGd.latitude);
+    const lon = satellite.degreesLong(positionGd.longitude);
+    const alt = positionGd.height;
+
+    return normalizeData({
+      lat,
+      lon,
+      altKm: alt
+    }, 'tle-sgp4');
+  } catch (e) {
+    throw new Error(`Tertiary failed: ${e.message}`);
+  }
+}
+
+/**
+ * Main ISS fetch with 3-tier fallback chain
+ * @returns {Promise<Object|null>} ISS coordinates or null if all fail
+ */
+export async function fetchIssTelemetry() {
+  // Try Primary (wheretheiss.at)
+  try {
+    const data = await fetchPrimary();
+    console.log('[ISS] ✅ Primary API success');
+    return data;
+  } catch (e1) {
+    console.warn('[ISS] ⚠️ Primary failed:', e1.message);
+
+    // Try Secondary (open-notify)
+    try {
+      const data = await fetchSecondary();
+      console.log('[ISS] ✅ Secondary API success');
+      return data;
+    } catch (e2) {
+      console.warn('[ISS] ⚠️ Secondary failed:', e2.message);
+
+      // Try Tertiary (TLE calculation)
+      try {
+        const data = await fetchTertiary();
+        console.log('[ISS] ✅ Tertiary (TLE) success');
+        return data;
+      } catch (e3) {
+        console.error('[ISS] ❌ CRITICAL: All data streams failed');
+        console.error('  Primary:', e1.message);
+        console.error('  Secondary:', e2.message);
+        console.error('  Tertiary:', e3.message);
+        return null;
+      }
+    }
+  }
+}
+
+// Legacy export for backward compatibility
+export { fetchIssTelemetry as getISSCoordinates };

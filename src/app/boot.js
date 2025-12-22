@@ -8,6 +8,7 @@ import cities from "../assets/cities.tr.json";
 
 import { computePassBundle } from "../services/prediction.js";
 import { calculateTrajectory, trajectoryToGeoJSON } from "../services/trajectory.js";
+import { startMotion, getLastKnownData } from "../services/issMotion.js";
 import { createViewModeToggle, getInitialViewMode } from "../ui/viewModeToggleView.js";
 import { createWeatherBadge } from "../ui/weatherBadgeView.js";
 import { fetchCurrentWeather, weatherCodeLabel } from "../services/weather.js";
@@ -1142,13 +1143,79 @@ export async function boot(store, rootEl) {
   trajectoryTimer = setInterval(() => {
     updateTrajectoryOnMap();
   }, 5 * 60 * 1000);
-  const interval = Number(CONFIG?.INTERVAL_TELEMETRY_FETCH ?? 2000);
-  const timer = setInterval(refreshOnce, interval);
+
+  // ========== SMOOTH MOTION SYSTEM (60fps Lerp) ==========
+  // Replaces old interval-based discrete updates with smooth interpolation
+  startMotion({
+    // Called every frame (60fps) with interpolated position
+    onPosition: (pos) => {
+      const la = clampLat(pos.lat);
+      const lo = normalizeLon(pos.lng);
+
+      // Update 2D marker
+      mapView.updateISSPosition(la, lo);
+
+      // Update 3D globe (if visible)
+      if (viewMode === "3d" && globe) {
+        try { globe.setIssPosition(la, lo); } catch { }
+      }
+
+      // Store for other systems
+      localState.lastIssLat = la;
+      localState.lastIssLon = lo;
+    },
+
+    // Called when new API data arrives (every 3s)
+    onData: (data) => {
+      if (!data) return;
+
+      // Update widgets with fresh data
+      flightDataWidget.update({
+        altitude: data.altKm,
+        velocity: data.velKmh || 27580,
+        latitude: data.lat,
+        longitude: data.lon,
+        footprint: "--"
+      });
+
+      systemsWidget.update({
+        altitude: data.altKm
+      });
+
+      // Update terminal timestamp
+      const now = new Date();
+      termSub.textContent = `Son güncelleme: ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())} [${data.source}]`;
+
+      // Periodic log (every 10s)
+      const logEvery = Number(CONFIG?.TERMINAL_TELEMETRY_LOG_INTERVAL_MS ?? 10000);
+      const nowMs = Date.now();
+      if (nowMs - localState.lastTelemetryLogAt >= logEvery) {
+        localState.lastTelemetryLogAt = nowMs;
+        log(`ISS lat=${fmtNum(data.lat, 2)} lon=${fmtNum(data.lon, 2)} alt=${fmtNum(data.altKm, 1)}km [${data.source}]`);
+      }
+
+      // Weather refresh
+      refreshWeatherForIss(data.lat, data.lon);
+
+      // Auto-pan if tracking enabled
+      if (trackEnabled && viewMode === "2d") {
+        const nowPan = Date.now();
+        const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 4000);
+        if (nowPan - lastPanAt >= minInterval) {
+          lastPanAt = nowPan;
+          mapView.panTo(data.lat, data.lon, 4);
+        }
+      }
+    }
+  });
+
+  log('[Motion] 🚀 60fps Lerp motion system başlatıldı');
 
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
       try {
-        clearInterval(timer);
+        // Stop motion system
+        import("../services/issMotion.js").then(m => m.stopMotion());
         clearInterval(uiTickTimer);
       } catch { }
       try {
