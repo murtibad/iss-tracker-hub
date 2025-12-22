@@ -367,34 +367,6 @@ export async function boot(store, rootEl) {
 
   // Use dashboard's integrated log for status updates
   // Landing Hero
-  const landingHero = createLandingHero({
-    getPassState: () => ({
-      loading: localState.predictionBusy,
-      calculating: localState.predictionBusy,
-      pass: localState.prediction,
-      hasLocation: Number.isFinite(localState.obsLat) && Number.isFinite(localState.obsLon),
-      error: false // Could track pass calc errors here
-    }),
-    onShowPass: () => {
-      const passSection = document.getElementById('pass-section');
-      if (passSection && passSection.style.display !== 'none') {
-        // Scroll to pass card
-        passSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Highlight for 2 seconds
-        passSection.classList.add('highlight');
-        setTimeout(() => passSection.classList.remove('highlight'), 2000);
-        console.log("[Hero] Show Pass - scrolled to pass card");
-      } else {
-        console.log("[Hero] Show Pass - card not visible yet");
-      }
-    },
-    onLiveTrack: () => {
-      // Enable follow mode and focus on ISS
-      setFollowUI(true);
-      console.log("[Hero] Live Track clicked");
-    }
-  });
-  if (landingHero.el) rootEl.appendChild(landingHero.el);
   const log = dashboard.getLogFn();
 
   // Reference for terminal subtitle updates
@@ -459,6 +431,34 @@ export async function boot(store, rootEl) {
       hint: "",
     };
   }
+  const landingHero = createLandingHero({
+    getPassState: () => ({
+      loading: localState.predictionBusy,
+      calculating: localState.predictionBusy,
+      pass: localState.prediction,
+      hasLocation: Number.isFinite(localState.obsLat) && Number.isFinite(localState.obsLon),
+      error: false // Could track pass calc errors here
+    }),
+    onShowPass: () => {
+      const passSection = document.getElementById('pass-section');
+      if (passSection && passSection.style.display !== 'none') {
+        // Scroll to pass card
+        passSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Highlight for 2 seconds
+        passSection.classList.add('highlight');
+        setTimeout(() => passSection.classList.remove('highlight'), 2000);
+        console.log("[Hero] Show Pass - scrolled to pass card");
+      } else {
+        console.log("[Hero] Show Pass - card not visible yet");
+      }
+    },
+    onLiveTrack: () => {
+      // Enable follow mode and focus on ISS
+      setFollowUI(true);
+      console.log("[Hero] Live Track clicked");
+    }
+  });
+  if (landingHero.el) rootEl.appendChild(landingHero.el);
 
   async function calcPredictionNow({ forceLog = false } = {}) {
     const lat = localState.obsLat;
