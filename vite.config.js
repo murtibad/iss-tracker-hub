@@ -14,7 +14,7 @@ export default defineConfig({
                 theme_color: '#00d4ff',
                 background_color: '#0B0C15',
                 display: 'standalone',
-                start_url: './',
+                start_url: '/iss-tracker-hub/', // Match base path
                 icons: [
                     {
                         src: './icons/icon-192.png',
