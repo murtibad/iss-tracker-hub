@@ -124,7 +124,21 @@ const DICTIONARY = {
         "navTelemetry": "Telemetry",
         "navPasses": "Passes",
         "navSettings": "Settings",
-        "navNasaTV": "NASA TV"
+        "navNasaTV": "NASA TV",
+
+        // Authentication
+        "authLogin": "Sign In",
+        "authSignup": "Sign Up",
+        "authLogout": "Sign Out",
+        "authEmail": "Email",
+        "authPassword": "Password",
+        "authName": "Full Name",
+        "authForgotPassword": "Forgot password?",
+        "authNoAccount": "Don't have an account?",
+        "authHasAccount": "Already have an account?",
+        "authGoogleSignIn": "Continue with Google",
+        "authWelcome": "Welcome",
+        "authProfile": "Profile"
     },
     tr: {
         // Genel
@@ -244,7 +258,21 @@ const DICTIONARY = {
         "navTelemetry": "Telemetri",
         "navPasses": "Geçişler",
         "navSettings": "Ayarlar",
-        "navNasaTV": "NASA TV"
+        "navNasaTV": "NASA TV",
+
+        // Authentication
+        "authLogin": "Giriş Yap",
+        "authSignup": "Kayıt Ol",
+        "authLogout": "Çıkış Yap",
+        "authEmail": "E-posta",
+        "authPassword": "Şifre",
+        "authName": "Ad Soyad",
+        "authForgotPassword": "Şifremi unuttum",
+        "authNoAccount": "Hesabınız yok mu?",
+        "authHasAccount": "Zaten hesabınız var mı?",
+        "authGoogleSignIn": "Google ile devam et",
+        "authWelcome": "Hoş geldin",
+        "authProfile": "Profil"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

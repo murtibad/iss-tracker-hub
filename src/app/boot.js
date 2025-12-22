@@ -28,6 +28,8 @@ import { createLandingHero } from "../ui/components/landingHero.js";
 import { createPassCard } from "../ui/passCardView.js";
 import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
 import { createNASALiveCard } from "../ui/components/NASALiveCard.js";
+import { createAuthModal, createUserButton } from "../ui/components/authModal.js";
+import { onAuthChange, getUser, logout } from "../services/authService.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -358,6 +360,26 @@ export async function boot(store, rootEl) {
   // Settings click handler
   settingsBtn.addEventListener("click", () => {
     settingsModal.open();
+  });
+
+  // ========== AUTH MODAL ==========
+  const authModal = createAuthModal();
+  rootEl.appendChild(authModal.el);
+
+  // User button in topbar
+  const userButton = createUserButton();
+  actions.insertBefore(userButton.el, settingsBtn);
+
+  userButton.button.addEventListener("click", () => {
+    const user = getUser();
+    if (user) {
+      // Show profile menu or logout option
+      if (confirm(t('authLogout') + '?')) {
+        logout();
+      }
+    } else {
+      authModal.open('login');
+    }
   });
 
   // ========== FLOATING HUD: Compact Telemetry Display ==========

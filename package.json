@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "date-fns": "^2.30.0",
+    "firebase": "^12.7.0",
     "globe.gl": "^2.45.0",
     "maplibre-gl": "^5.15.0",
     "satellite.js": "^6.0.1",
