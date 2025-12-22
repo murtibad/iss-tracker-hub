@@ -251,9 +251,10 @@ export async function createGlobe(container) {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
-    display: none;
-    background: #000; /* Siyah arkaplan garanti olsun */
+    z-index: 10;
+    display: block; /* Init as block to ensure dimensions */
+    visibility: hidden;
+    background: #000;
   `;
   container.appendChild(globeContainer);
 
@@ -265,7 +266,14 @@ export async function createGlobe(container) {
     globeWrapper = {
       setVisible(visible) {
         if (!globeContainer) return;
-        globeContainer.style.display = visible ? "block" : "none";
+        if (visible) {
+          globeContainer.style.display = "block";
+          globeContainer.style.visibility = "visible";
+        } else {
+          globeContainer.style.display = "none";
+          globeContainer.style.visibility = "hidden";
+        }
+
         if (visible && globeInstance) {
           // Resize triggered when shown
           setTimeout(() => {
