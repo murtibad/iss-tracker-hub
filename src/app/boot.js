@@ -331,7 +331,7 @@ export async function boot(store, rootEl) {
   const titleMain = buildEl("div", "t", title);
   titleMain.textContent = "ISS Tracker HUB";
   const s = buildEl("div", "s", title);
-  s.textContent = "alpha";
+  s.textContent = "beta";
 
   const actions = buildEl("div", "hub-actions", topbar);
 
