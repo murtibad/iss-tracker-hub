@@ -18,96 +18,82 @@ export function createFloatingHUD(options = {}) {
   let isDetailsMode = false;
   let isDebugMode = false;
 
+  // Render Function - Cyberpunk Dashboard Style
   const render = () => {
     card.innerHTML = `
-      <div class="hud-content">
-        <!-- Simple Mode: Primary Metrics -->
-        <div class="hud-simple">
-          <div class="hud-grid">
-            <div class="hud-item speeding">
-              <span class="hud-label">V <small>km/h</small></span>
-              <span class="hud-value" data-speed>--,---</span>
+      <div class="hud-dashboard">
+        <!-- Decoration: Top Border Line -->
+        <div class="hud-deco-line"></div>
+        
+        <div class="hud-main-row">
+          <!-- Left: Telemetry -->
+          <div class="hud-section telemetry">
+            <div class="hud-metric">
+              <span class="hud-label">VELOCITY</span>
+              <span class="hud-value" data-speed>--</span>
+              <span class="hud-unit">KM/H</span>
             </div>
-            <div class="hud-item altitude">
-              <span class="hud-label">H <small>km</small></span>
-              <span class="hud-value" data-altitude>---</span>
+            <div class="hud-metric">
+              <span class="hud-label">ALTITUDE</span>
+              <span class="hud-value" data-altitude>--</span>
+              <span class="hud-unit">KM</span>
             </div>
           </div>
-          
-          <!-- Toggle Buttons -->
-          <div class="hud-toggles">
-            <button class="hud-toggle-btn" data-toggle="details" title="${t('hudShowDetails')}">
-              ${ICONS.chevronDown || '▼'}
-            </button>
+
+          <!-- Center: Status & Location -->
+          <div class="hud-section status">
+             <div class="hud-location-box">
+                <span class="hud-coord-label">LAT / LON</span>
+                <span class="hud-coord-value" data-location>--.--, --.--</span>
+             </div>
+             <div class="hud-meta-row">
+                <div class="hud-status-pill" data-status>${t('connectionStable')}</div>
+                <div class="hud-vis-icon" data-visibility>${ICONS.sun}</div>
+             </div>
+          </div>
+
+          <!-- Right: Controls -->
+          <div class="hud-section controls">
+             <button class="btn-cyber-mini crew-btn" title="${t('crew')}">
+                ${ICONS.users} <span>CREW</span>
+             </button>
+             <button class="btn-cyber-mini debug-btn" data-toggle="debug" title="LOGS">
+                ${ICONS.terminal || 'TERM'}
+             </button>
           </div>
         </div>
 
-        <!-- Details Mode: Secondary Info (Hidden by default) -->
-        <div class="hud-details" style="display: none;">
-          <div class="hud-status-row">
-            <div class="hud-status-text" data-status>${t('connectionStable')}</div>
-            <div class="hud-vis-icon" data-visibility title="${t('daylight')}">${ICONS.sun}</div>
-          </div>
-          
-          <div class="hud-location" data-location>
-            <small>Lat/Lon: ---, ---</small>
-          </div>
-
-          <!-- Tools -->
-          <div class="hud-tools">
-            <button class="hud-btn crew-btn" title="${t('crew')}">
-              ${ICONS.users || ICONS.user}
-              <span>${t('crew')}</span>
-            </button>
-            <button class="hud-btn debug-btn" data-toggle="debug" title="${t('hudDebug')}">
-              ${ICONS.terminal || '⌨'}
-              <span>${t('hudDebug')}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Debug/Terminal (Hidden by default) -->
-        <div class="hud-debug" style="display: none;">
-          <div class="hud-terminal" data-terminal>
-            <div class="terminal-line">${t('hudDebugReady')}</div>
-          </div>
+        <!-- Debug Terminal (Collapsible) -->
+        <div class="hud-debug-panel" style="display: none;">
+           <div class="hud-terminal-header">SYSTEM LOGS</div>
+           <div class="hud-terminal-content" data-terminal></div>
         </div>
       </div>
     `;
   };
 
-  render();
+  render(); // Initial Render
 
   // Element Cache
-  let speedEl = card.querySelector("[data-speed]");
-  let altEl = card.querySelector("[data-altitude]");
-  let statusText = card.querySelector("[data-status]");
-  let visEl = card.querySelector("[data-visibility]");
-  let locationEl = card.querySelector("[data-location]");
-  let terminalEl = card.querySelector("[data-terminal]");
+  const speedEl = card.querySelector("[data-speed]");
+  const altEl = card.querySelector("[data-altitude]");
+  const statusEl = card.querySelector("[data-status]");
+  const visEl = card.querySelector("[data-visibility]");
+  const locationEl = card.querySelector("[data-location]");
+  const terminalContainer = card.querySelector("[data-terminal]");
 
-  const detailsSection = card.querySelector(".hud-details");
-  const debugSection = card.querySelector(".hud-debug");
-  const detailsToggle = card.querySelector("[data-toggle='details']");
+  const debugPanel = card.querySelector(".hud-debug-panel");
   const debugToggle = card.querySelector("[data-toggle='debug']");
   const crewBtn = card.querySelector(".crew-btn");
 
   let lastData = {};
 
-  // Toggle Details
-  detailsToggle?.addEventListener("click", () => {
-    isDetailsMode = !isDetailsMode;
-    detailsSection.style.display = isDetailsMode ? "block" : "none";
-    detailsToggle.innerHTML = isDetailsMode
-      ? (ICONS.chevronUp || '▲')
-      : (ICONS.chevronDown || '▼');
-    detailsToggle.title = isDetailsMode ? t('hudHideDetails') : t('hudShowDetails');
-  });
-
   // Toggle Debug
   debugToggle?.addEventListener("click", () => {
     isDebugMode = !isDebugMode;
-    debugSection.style.display = isDebugMode ? "block" : "none";
+    const isVisible = debugPanel.style.display !== 'none';
+    debugPanel.style.display = isVisible ? 'none' : 'block';
+    if (debugToggle) debugToggle.classList.toggle('active', !isVisible);
   });
 
   // Crew Button
@@ -138,9 +124,9 @@ export function createFloatingHUD(options = {}) {
     if (speedEl) speedEl.textContent = speed;
     if (altEl) altEl.textContent = altFmt;
 
-    // Secondary: Location
+    // Location
     if (data.latitude !== undefined && data.longitude !== undefined && locationEl) {
-      locationEl.innerHTML = `<small>Lat/Lon: ${data.latitude.toFixed(2)}, ${data.longitude.toFixed(2)}</small>`;
+      locationEl.textContent = `${data.latitude.toFixed(2)}, ${data.longitude.toFixed(2)}`;
     }
 
     // Visibility
@@ -159,16 +145,17 @@ export function createFloatingHUD(options = {}) {
     el: card,
     update,
     log(line) {
-      if (statusText) statusText.textContent = line.substring(0, 40);
-      if (terminalEl && isDebugMode) {
+      if (statusEl) statusEl.textContent = line.substring(0, 30);
+      if (terminalContainer) {
         const termLine = document.createElement("div");
         termLine.className = "terminal-line";
-        termLine.textContent = line.substring(0, 80);
-        terminalEl.appendChild(termLine);
+        termLine.textContent = `> ${line}`;
+        terminalContainer.appendChild(termLine);
         // Keep last 10 lines
-        while (terminalEl.children.length > 10) {
-          terminalEl.removeChild(terminalEl.firstChild);
+        while (terminalContainer.children.length > 8) {
+          terminalContainer.removeChild(terminalContainer.firstChild);
         }
+        terminalContainer.scrollTop = terminalContainer.scrollHeight;
       }
     },
     getLogFn() {

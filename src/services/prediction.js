@@ -28,7 +28,7 @@ export function formatCountdown(totalSec) {
   return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
 }
 
-function getElevationDeg(satrec, obsLatDeg, obsLonDeg, obsAltKm, dateObj) {
+function getLookAngles(satrec, obsLatDeg, obsLonDeg, obsAltKm, dateObj) {
   const pv = satellite.propagate(satrec, dateObj);
   if (!pv.position) return null;
 
@@ -42,7 +42,10 @@ function getElevationDeg(satrec, obsLatDeg, obsLonDeg, obsAltKm, dateObj) {
   };
 
   const look = satellite.ecfToLookAngles(observerGd, ecf);
-  return deg(look.elevation);
+  return {
+    elevation: deg(look.elevation),
+    azimuth: deg(look.azimuth)
+  };
 }
 
 // TR: Tek bir pass yakalar (ufuk üstü giriş/çıkış + maxElev).
@@ -51,21 +54,27 @@ function findPasses({ satrec, obsLat, obsLon, startMs, endMs, stepMs }) {
 
   let inPass = false;
   let aosMs = null;
+  let aosAz = null;
   let losMs = null;
+  let losAz = null;
   let maxElev = -999;
   let maxMs = null;
 
   const passes = [];
 
   for (let t = startMs; t <= endMs; t += stepMs) {
-    const elev = getElevationDeg(satrec, obsLat, obsLon, obsAltKm, new Date(t));
-    if (elev == null) continue;
+    const look = getLookAngles(satrec, obsLat, obsLon, obsAltKm, new Date(t));
+    if (!look) continue;
+
+    const elev = look.elevation;
+    const az = look.azimuth;
 
     const above = elev > 0;
 
     if (!inPass && above) {
       inPass = true;
       aosMs = t;
+      aosAz = az;
       maxElev = elev;
       maxMs = t;
     }
@@ -78,10 +87,13 @@ function findPasses({ satrec, obsLat, obsLon, startMs, endMs, stepMs }) {
 
       if (!above) {
         losMs = t;
+        losAz = az;
 
         const pass = {
           aosMs,
           losMs,
+          aosAz,
+          losAz,
           maxMs: maxMs || aosMs,
           maxElev: Math.max(0, maxElev),
           visible: maxElev >= CONFIG.MIN_ELEVATION,
@@ -92,11 +104,26 @@ function findPasses({ satrec, obsLat, obsLon, startMs, endMs, stepMs }) {
         // reset for next
         inPass = false;
         aosMs = null;
+        aosAz = null;
         losMs = null;
+        losAz = null;
         maxElev = -999;
         maxMs = null;
       }
     }
+  }
+
+  // Close open pass at end loop
+  if (inPass) {
+    passes.push({
+      aosMs,
+      losMs: endMs,
+      aosAz,
+      losAz: 0, // Unknown
+      maxMs: maxMs || aosMs,
+      maxElev: Math.max(0, maxElev),
+      visible: maxElev >= CONFIG.MIN_ELEVATION,
+    });
   }
 
   return passes;

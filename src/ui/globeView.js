@@ -97,11 +97,33 @@ function createISSModel() {
   return group;
 }
 
-function createUserPin() {
-  return new THREE.Mesh(
-    new THREE.SphereGeometry(0.008, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xaa0000 })
-  );
+function createHomeSprite() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+
+  // Draw Base Logo (Triangle/Home)
+  ctx.fillStyle = '#FF00FF';
+  ctx.shadowColor = '#FF00FF';
+  ctx.shadowBlur = 10;
+
+  ctx.beginPath();
+  ctx.moveTo(32, 4);
+  ctx.lineTo(58, 58);
+  ctx.lineTo(6, 58);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  const map = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: map });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(4, 4, 1); // Scale up
+  return sprite;
 }
 
 export async function initGlobe(container) {
@@ -119,10 +141,10 @@ export async function initGlobe(container) {
     .customThreeObject(d => {
       if (d.type === "iss") {
         const model = createISSModel();
-        issMesh = model; // Store reference for direct updates
+        issMesh = model;
         return model;
       }
-      if (d.type === "user") return createUserPin();
+      if (d.type === "user") return createHomeSprite();
 
       // yıldızlar + ışık + atmosfer
       if (d.type === "env") {
@@ -251,7 +273,7 @@ export async function createGlobe(container) {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 10;
+    z-index: 1;
     display: block; /* Init as block to ensure dimensions */
     visibility: hidden;
     background: #000;
@@ -285,6 +307,13 @@ export async function createGlobe(container) {
             }
           }, 100);
         }
+      },
+      setUserData(lat, lng) {
+        if (!globeInstance) return;
+        userData = { lat: clampLat(lat), lng: normLng(lng), alt: 0.01, type: "user" };
+        globe.customLayerData(
+          [issData, userData, { type: "env" }]
+        );
       },
       setIssPosition(lat, lng) {
         issData.lat = clampLat(lat);
@@ -338,11 +367,24 @@ export async function createGlobe(container) {
         }
       },
 
-      /**
-       * Update trajectory lines on 3D globe
-       * @param {Array} pastPoints - Array of {lat, lng} for past trajectory
-       * @param {Array} futurePoints - Array of {lat, lng} for future trajectory
-       */
+      updateColors(accentColor) {
+        if (!globeInstance) return;
+
+        // Define gradients based on accent color
+        // Simple hex to rgba conversion for gradients could be done, or just use solid for now
+        // Let's rely on the pathsData re-evaluation if we force it
+
+        // Force path update to pick up new colors if we make pathColor function dynamic
+        // A better way is to store the color and use it in pathColor callback
+        this._accentColor = accentColor;
+
+        // Re-process paths to trigger color update
+        const currentPaths = globeInstance.pathsData();
+        globeInstance.pathsData([...currentPaths]);
+      },
+
+      _accentColor: null, // Store current accent
+
       updateTrajectory(pastPoints, futurePoints) {
         if (!globeInstance) {
           console.warn('[Globe] Not initialized yet');
@@ -353,7 +395,7 @@ export async function createGlobe(container) {
           // Combine past and future as separate path objects
           const trajectoryPaths = [];
 
-          // Past trajectory (cyan, solid)
+          // Past trajectory (current accent color)
           if (pastPoints && pastPoints.length > 1) {
             trajectoryPaths.push({
               coords: pastPoints.map(p => ({ lat: p.lat, lng: p.lng })),
@@ -361,7 +403,7 @@ export async function createGlobe(container) {
             });
           }
 
-          // Future trajectory (orange)
+          // Future trajectory (orange/gold - contrasting)
           if (futurePoints && futurePoints.length > 1) {
             trajectoryPaths.push({
               coords: futurePoints.map(p => ({ lat: p.lat, lng: p.lng })),
@@ -375,8 +417,11 @@ export async function createGlobe(container) {
             .pathPointLat(p => p.lat)
             .pathPointLng(p => p.lng)
             .pathColor(path => {
+              // Use stored accent color if available, else default Cyan
+              const accent = this._accentColor || '#00d4ff'; // default cyan
+
               if (path.type === 'past') {
-                return ['rgba(0, 212, 255, 0.9)', 'rgba(0, 180, 220, 0.6)']; // Cyan gradient
+                return [accent, accent];
               }
               return ['rgba(255, 165, 0, 0.6)', 'rgba(255, 140, 0, 0.3)']; // Orange gradient
             })

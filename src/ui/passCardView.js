@@ -128,12 +128,27 @@ export function createPassCard() {
       maxElev: nextPass.maxElevDeg,
     });
 
+    // Helper: Deg to Cardinal
+    function getDir(deg) {
+      if (deg == null) return "?";
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const idx = Math.round(deg / 45) % 8;
+      return dirs[idx];
+    }
+
     // Detaylar
-    // 1) AOS/LOS ve süre
+    // 1) AOS/LOS ve süre ve YÖN
     const durSec = typeof nextPass.durationSec === "number" ? nextPass.durationSec : null;
     const durMinVal = durSec == null ? "—" : Math.max(1, Math.round(durSec / 60));
     const durMin = durSec == null ? "—" : t('passMinutes').replace('{min}', durMinVal);
-    extraLine1.textContent = `AOS: ${aos} • LOS: ${los} • ${t('passDuration')}: ${durMin}`;
+
+    let dirHint = "";
+    if (nextPass.aosAz != null && nextPass.losAz != null) {
+      // Example: Look SW -> NE
+      dirHint = ` • 👀 ${getDir(nextPass.aosAz)} ➡ ${getDir(nextPass.losAz)}`;
+    }
+
+    extraLine1.textContent = `AOS: ${aos} • LOS: ${los} • ${t('passDuration')}: ${durMin}${dirHint}`;
 
     // 2) İlk görünür geçiş
     if (nextVisiblePass && typeof nextVisiblePass.aosMs === "number") {

@@ -1,0 +1,214 @@
+/* HUD Redesign Styles - Append to layout.css or cyberpunk.css */
+
+.floating-hud {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(10, 10, 16, 0.85) !important;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    /* Sharper corners */
+    backdrop-filter: blur(12px);
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.hud-dashboard {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.hud-deco-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.8;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.hud-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 12px;
+}
+
+/* Sections */
+.hud-section {
+    display: flex;
+    gap: 16px;
+}
+
+.hud-section.telemetry {
+    flex: 2;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 12px;
+}
+
+.hud-section.status {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.hud-section.controls {
+    flex: 1;
+    justify-content: flex-end;
+}
+
+/* Metrics */
+.hud-metric {
+    display: flex;
+    flex-direction: column;
+}
+
+.hud-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.hud-value {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+}
+
+.hud-unit {
+    font-size: 8px;
+    color: var(--accent);
+    opacity: 0.8;
+}
+
+/* Status & Location */
+.hud-location-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.hud-coord-label {
+    font-size: 8px;
+    color: var(--muted);
+}
+
+.hud-coord-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.hud-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hud-status-pill {
+    font-size: 10px;
+    background: rgba(0, 255, 128, 0.1);
+    color: #0aff00;
+    /* Fixed green for stable connection usually */
+    padding: 2px 6px;
+    border-radius: 9px;
+    border: 1px solid rgba(0, 255, 128, 0.3);
+}
+
+.hud-vis-icon {
+    font-size: 14px;
+}
+
+.hud-vis-icon.day {
+    color: #ffd700;
+    text-shadow: 0 0 10px #ffd700;
+}
+
+.hud-vis-icon.night {
+    color: #a0aec0;
+}
+
+/* Controls */
+.btn-cyber-mini {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.btn-cyber-mini:hover {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.btn-cyber-mini.active {
+    background: rgba(0, 243, 255, 0.2);
+    border-color: var(--accent);
+}
+
+/* Debug Terminal */
+.hud-debug-panel {
+    background: rgba(0, 0, 0, 0.5);
+    border-top: 1px solid var(--border);
+    padding: 8px;
+}
+
+.hud-terminal-header {
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.hud-terminal-content {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    max-height: 80px;
+    overflow-y: auto;
+    color: var(--text);
+}
+
+.terminal-line {
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Mobile Tweaks */
+@media (max-width: 600px) {
+    .hud-main-row {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .hud-section.telemetry {
+        padding-right: 8px;
+    }
+
+    .hud-value {
+        font-size: 14px;
+    }
+
+    .hud-label {
+        font-size: 8px;
+    }
+}

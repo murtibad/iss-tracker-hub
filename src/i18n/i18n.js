@@ -99,7 +99,25 @@ const DICTIONARY = {
         "hudShowDetails": "Show details",
         "hudHideDetails": "Hide details",
         "hudDebug": "Debug",
-        "hudDebugReady": "Debug console ready"
+        "hudDebugReady": "Debug console ready",
+
+        // NASA Live
+        "nasaLive": "NASA LIVE",
+        "cam1": "High Definition",
+        "cam2": "Standard Def",
+        "cam3": "Media TV",
+        "streamOffline": "Signal Lost / Offline",
+        "streamLocked": "Stream Unavailable",
+
+        // Crew
+        "crewTitle": "Expedition Crew",
+        "daysInSpace": "{d} days in space",
+        "bioCdr": "Commander",
+        "bioFe": "Flight Engineer",
+
+        // Help
+        "helpTitle": "Help & Guide",
+        "helpDesc": "How to track the station"
     },
     tr: {
         // Genel
@@ -194,7 +212,25 @@ const DICTIONARY = {
         "hudShowDetails": "Detayları göster",
         "hudHideDetails": "Detayları gizle",
         "hudDebug": "Hata Ayıklama",
-        "hudDebugReady": "Hata ayıklama konsolu hazır"
+        "hudDebugReady": "Hata ayıklama konsolu hazır",
+
+        // NASA Live
+        "nasaLive": "NASA CANLI YAYIN",
+        "cam1": "Yüksek Kalite (HD)",
+        "cam2": "Standart (SD)",
+        "cam3": "Medya TV",
+        "streamOffline": "Sinyal Yok / Çevrimdışı",
+        "streamLocked": "Yayın Kullanılamıyor",
+
+        // Crew
+        "crewTitle": "İstasyon Mürettebatı",
+        "daysInSpace": "{d} gündür uzayda",
+        "bioCdr": "Komutan",
+        "bioFe": "Uçuş Mühendisi",
+
+        // Help
+        "helpTitle": "Yardım & Rehber",
+        "helpDesc": "İstasyon nasıl takip edilir"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

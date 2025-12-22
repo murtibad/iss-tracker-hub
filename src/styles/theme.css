@@ -5,32 +5,51 @@
    ===================================================== */
 
 :root {
-  /* Space Theme: Navy + Electric Blue */
-  --primary-hue: 220;
-  --primary-sat: 85%;
+  /* Cyberpunk / Space Theme - Default: Cyan Palette */
+  --primary-hue: 190;
+  --primary-sat: 100%;
 
-  /* Backgrounds (Solid) */
-  --bg: #0B0C15;
-  /* Deep Space Navy */
-  --bg-secondary: #1a1a2e;
+  /* Backgrounds */
+  --bg: #050505;
+  --bg-secondary: #0a0a12;
+  --bg-tertiary: #0f0f19;
 
-  /* Accents */
-  --accent: #00d4ff;
-  /* Electric blue */
-  --accent-secondary: #0096c7;
+  /* Accents - Will be dynamically updated by themeManager */
+  --accent: #00f3ff;
+  --accent-secondary: #0077ff;
+  --accent-tertiary: #00d4ff;
 
-  /* Panels */
-  --card: rgba(11, 12, 21, 0.95);
-  --card2: rgba(20, 24, 40, 0.92);
-
-  /* Text */
+  /* Text Colors */
   --text: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --muted: rgba(160, 165, 180, 0.85);
+  --text-secondary: rgba(0, 243, 255, 0.8);
+  --muted: rgba(255, 255, 255, 0.5);
 
-  /* Borders */
-  --border: rgba(0, 212, 255, 0.25);
-  --ring: rgba(0, 212, 255, 0.15);
+  /* Panels - Glassmorphism */
+  --card: rgba(10, 10, 18, 0.6);
+  --card2: rgba(15, 15, 25, 0.8);
+  --card-hover: rgba(20, 20, 30, 0.85);
+
+  /* Borders & Glows - Dynamic based on accent color */
+  --border: rgba(0, 243, 255, 0.3);
+  --ring: rgba(0, 243, 255, 0.15);
+  --shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+  --shadow-lg: 0 0 30px rgba(0, 243, 255, 0.15);
+  --shadow-xl: 0 0 45px rgba(0, 243, 255, 0.2);
+
+  /* UI States */
+  --good: #2dd4bf;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --info: var(--accent);
+
+  /* Fonts */
+  --font-display: 'Orbitron', 'Eurostile', sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Transitions - Smooth theme changes */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
 body {
@@ -71,30 +90,33 @@ body {
   pointer-events: auto;
 }
 
-/* Light mode */
+
+/* Light Mode Theme */
 :root[data-theme="light"] {
   --bg: #f0f4f8;
-  /* Light blue-gray */
   --bg-secondary: #ffffff;
+  --bg-tertiary: #f8f9fa;
 
   --card: rgba(255, 255, 255, 0.95);
   --card2: rgba(245, 248, 252, 0.90);
+  --card-hover: rgba(240, 244, 248, 0.95);
 
   --text: rgba(20, 25, 35, 0.95);
-  /* Dark gray */
   --muted: rgba(80, 90, 110, 0.75);
 
+  /* Light mode keeps accent colors but adjusted for contrast */
   --accent: #0077b6;
-  /* Darker blue for light mode */
   --accent-secondary: #00b4d8;
+  --accent-tertiary: #0096c7;
 
-  --border: rgba(0, 119, 182, 0.20);
+  --border: rgba(0, 119, 182, 0.25);
   --ring: rgba(0, 119, 182, 0.12);
 
   --shadow: 0 4px 12px rgba(0, 30, 60, 0.08);
   --shadow-lg: 0 8px 20px rgba(0, 30, 60, 0.12);
   --shadow-xl: 0 12px 28px rgba(0, 30, 60, 0.15);
 }
+
 
 
 /* -----------------------------------------------------
@@ -137,6 +159,16 @@ body {
   overflow: hidden;
   font-size: 14px;
   letter-spacing: 0.3px;
+
+  /* Smooth theme transitions */
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal);
+}
+
+/* Add smooth transitions to all interactive elements */
+* {
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 /* -----------------------------------------------------
@@ -2116,6 +2148,7 @@ select:focus-visible,
     padding: 6px 10px !important;
   }
 }
+
 /* -----------------------------------------------------
    Mobile Navigation (Added for better UX)
 ----------------------------------------------------- */
@@ -2133,12 +2166,13 @@ select:focus-visible,
     height: 64px;
     background: rgba(11, 12, 21, 0.95);
     border-top: 1px solid var(--ring);
-    z-index: 9000; /* Above Leaflet controls */
+    z-index: 9000;
+    /* Above Leaflet controls */
     justify-content: space-around;
     align-items: center;
     backdrop-filter: blur(12px);
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   }
 
   :root[data-theme="light"] .mobile-nav {
@@ -2166,27 +2200,29 @@ select:focus-visible,
   .nav-item.active {
     color: var(--accent);
   }
-  
+
   .nav-icon svg {
-    width: 22px; 
+    width: 22px;
     height: 22px;
   }
 
   /* Adjustments for Mobile Nav */
   .view-toggle {
-    bottom: 80px !important; /* Move above nav */
+    bottom: 80px !important;
+    /* Move above nav */
   }
 
   .hub-ver {
-    display: none; /* Hide version on mobile to save space */
+    display: none;
+    /* Hide version on mobile to save space */
   }
-  
+
   /* Hide elements by default on mobile unless active */
   body.mobile-mode .floating-hud,
   body.mobile-mode .pass-section {
     display: none !important;
   }
-  
+
   body.mobile-mode[data-mobile-view="telemetry"] .floating-hud {
     display: block !important;
     top: 60px !important;
@@ -2194,7 +2230,7 @@ select:focus-visible,
     transform: translateX(-50%) !important;
     width: 90% !important;
   }
-  
+
   body.mobile-mode[data-mobile-view="passes"] .pass-section {
     display: block !important;
     bottom: 80px !important;

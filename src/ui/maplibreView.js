@@ -75,11 +75,11 @@ export function createMapLibreView(container, options = {}) {
             source: 'trajectory-past',
             paint: {
                 'line-color': '#00d4ff',
-                'line-width': 8,
-                'line-opacity': 0.4,
-                'line-blur': 4
+                'line-width': 10,
+                'line-opacity': 0.5,
+                'line-blur': 6
             }
-        }, firstSymbolId);
+        });
 
         map.addLayer({
             id: 'trajectory-past-line',
@@ -87,10 +87,10 @@ export function createMapLibreView(container, options = {}) {
             source: 'trajectory-past',
             paint: {
                 'line-color': '#00d4ff',  // Electric blue (PAST)
-                'line-width': 3,
+                'line-width': 4,
                 'line-opacity': 1.0
             }
-        }, firstSymbolId);
+        });
 
         // Future trajectory source (orange dashed)
         map.addSource('trajectory-future', {
@@ -104,11 +104,11 @@ export function createMapLibreView(container, options = {}) {
             source: 'trajectory-future',
             paint: {
                 'line-color': '#ffa500',  // Orange (FUTURE)
-                'line-width': 3,
-                'line-opacity': 0.8,
-                'line-dasharray': [6, 4]  // Dashed
+                'line-width': 4,
+                'line-opacity': 0.9,
+                'line-dasharray': [4, 4]  // Dashed
             }
-        }, firstSymbolId);
+        });
 
         trajectoryLayersReady = true;
         console.log('[MapLibre] 🛤️ Trajectory layers initialized');
@@ -130,52 +130,67 @@ export function createMapLibreView(container, options = {}) {
         visualizePitch: false
     }), 'top-right');
 
-    // Create ISS marker element with radar glow effect
+    // --- MARKERS ---
+
+    // 1. ISS Marker (Pixel Art Style)
+    // Custom SVG string for Pixel Art ISS
+    const issSvg = `
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 18H26V22H14V18Z" fill="#00D4FF"/>
+        <path d="M12 16H8V24H12V16Z" fill="#66E0FF"/>
+        <path d="M28 16H32V24H28V16Z" fill="#66E0FF"/>
+        <path d="M18 14V10H22V14H18Z" fill="#0099CC"/>
+        <path d="M18 26V30H22V26H18Z" fill="#0099CC"/>
+        <path d="M4 14H8V26H4V14Z" fill="#AACCFF"/> 
+        <path d="M32 14H36V26H32V14Z" fill="#AACCFF"/>
+        <rect x="0" y="14" width="4" height="12" fill="#003366"/>
+        <rect x="36" y="14" width="4" height="12" fill="#003366"/>
+        <rect x="19" y="8" width="2" height="2" fill="white"/> <!-- Antenna tip -->
+    </svg>
+    `;
+
     const markerEl = document.createElement('div');
     markerEl.className = 'iss-marker';
-    markerEl.style.width = '16px';
-    markerEl.style.height = '16px';
-    markerEl.style.backgroundColor = '#00d4ff'; // Electric blue
-    markerEl.style.border = '2px solid #00d4ff';
-    markerEl.style.borderRadius = '50%';
-    markerEl.style.boxShadow = `
-    0 0 10px #00d4ff,
-    0 0 20px #00d4ff,
-    0 0 30px rgba(0, 212, 255, 0.5)
-  `; // Radar glow effect
+    markerEl.style.width = '40px';
+    markerEl.style.height = '40px';
+    markerEl.innerHTML = issSvg;
     markerEl.style.cursor = 'pointer';
-    // NO transition on transform - prevents swimming during pan!
-    // Only transition box-shadow for hover effect
-    markerEl.style.transition = 'box-shadow 0.3s ease';
-    // GPU acceleration hint
-    markerEl.style.willChange = 'transform';
+    markerEl.style.filter = "drop-shadow(0 0 5px rgba(0,212,255,0.8))";
+    markerEl.style.transition = 'transform 0.3s ease';
 
     // Pulse animation on hover
-    markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.transform = 'scale(1.3)';
-        markerEl.style.boxShadow = `
-      0 0 15px #00d4ff,
-      0 0 30px #00d4ff,
-      0 0 45px rgba(0, 212, 255, 0.7)
-    `;
-    });
+    markerEl.addEventListener('mouseenter', () => markerEl.style.transform = 'scale(1.2)');
+    markerEl.addEventListener('mouseleave', () => markerEl.style.transform = 'scale(1)');
 
-    markerEl.addEventListener('mouseleave', () => {
-        markerEl.style.transform = 'scale(1)';
-        markerEl.style.boxShadow = `
-      0 0 10px #00d4ff,
-      0 0 20px #00d4ff,
-      0 0 30px rgba(0, 212, 255, 0.5)
-    `;
-    });
-
-    // Create ISS marker
     const issMarker = new maplibregl.Marker({
         element: markerEl,
         anchor: 'center'
     })
         .setLngLat([0, 0])
         .addTo(map);
+
+    // 2. User Home Marker (Custom Base Logo)
+    // Only created when location is set, handled via custom method or externally?
+    // Let's add method to update Home Marker
+    let homeMarker = null;
+
+    function updateHomeMarker(lat, lng) {
+        if (!homeMarker) {
+            const el = document.createElement('div');
+            el.innerHTML = `
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9.5L12 2.5L21 9.5V20.5C21 21.0523 20.5523 21.5 20 21.5H15V15.5H9V21.5H4C3.44772 21.5 3 21.0523 3 20.5V9.5Z" fill="#FF00FF" stroke="white" stroke-width="2"/>
+            </svg>`;
+            el.className = 'home-marker';
+            el.style.filter = "drop-shadow(0 0 5px #ff00ff)";
+
+            homeMarker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                .setLngLat([lng, lat])
+                .addTo(map);
+        } else {
+            homeMarker.setLngLat([lng, lat]);
+        }
+    }
 
     // Popup for ISS info
     const popup = new maplibregl.Popup({
@@ -222,6 +237,7 @@ export function createMapLibreView(container, options = {}) {
         map,
         issMarker,
         popup,
+        updateHomeMarker, // Expose for boot.js
 
         /**
          * Update ISS position - queues update for next map render

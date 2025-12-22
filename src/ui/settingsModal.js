@@ -63,6 +63,18 @@ export function createSettingsModal(options = {}) {
           </div>
         </div>
 
+        <!-- Accent Color Section -->
+        <div class="settings-group">
+            <div class="settings-label">Color</div>
+            <div class="settings-controls" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
+                <button class="settings-btn color-btn" data-color="cyan" style="background:#00f3ff; height:24px; border-radius:4px;"></button>
+                <button class="settings-btn color-btn" data-color="pink" style="background:#ff00ff; height:24px; border-radius:4px;"></button>
+                <button class="settings-btn color-btn" data-color="green" style="background:#0aff00; height:24px; border-radius:4px;"></button>
+                <button class="settings-btn color-btn" data-color="orange" style="background:#ffaa00; height:24px; border-radius:4px;"></button>
+                <button class="settings-btn color-btn" data-color="purple" style="background:#bd00ff; height:24px; border-radius:4px;"></button>
+            </div>
+        </div>
+
         <!-- Meta Info -->
         <div class="settings-meta">
           ISS Tracker HUB v0.3.2<br>
@@ -130,17 +142,50 @@ export function createSettingsModal(options = {}) {
   themeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       const theme = btn.dataset.theme;
-      // Use the global applyTheme logic if exposed, or manually set attribute
-      // Ideally we should call a global function or emit event, 
-      // but direct attribute set works if we also update storage with correct key
       document.documentElement.setAttribute("data-theme", theme === 'system' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light') : theme);
-      localStorage.setItem("issThemeMode", theme); // Correct key from boot.js
-
-      // Update active state
+      localStorage.setItem("issThemeMode", theme);
       themeBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
     });
   });
+
+  // Color logic
+  const colorBtns = modal.querySelectorAll("[data-color]");
+  const colorMap = {
+    cyan: '#00f3ff',
+    pink: '#ff00ff',
+    green: '#0aff00',
+    orange: '#ffaa00',
+    purple: '#bd00ff'
+  };
+
+  colorBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const colorName = btn.dataset.color;
+      const colorHex = colorMap[colorName];
+
+      // Update CSS variables
+      const root = document.documentElement;
+      root.style.setProperty('--accent', colorHex);
+      root.style.setProperty('--neon-cyan', colorHex); // Override main neon color
+      root.style.setProperty('--border', `rgba(${hexToRgb(colorHex)}, 0.3)`);
+
+      localStorage.setItem("issAccentColor", colorName);
+
+      // Visual feedback
+      colorBtns.forEach(b => b.style.outline = 'none');
+      btn.style.outline = '2px solid #fff';
+    });
+  });
+
+  // Helper
+  function hexToRgb(hex) {
+    const bigint = parseInt(hex.replace('#', ''), 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `${r}, ${g}, ${b}`;
+  }
 
   return {
     el: modal,
