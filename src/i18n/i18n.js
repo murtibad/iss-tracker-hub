@@ -117,7 +117,14 @@ const DICTIONARY = {
 
         // Help
         "helpTitle": "Help & Guide",
-        "helpDesc": "How to track the station"
+        "helpDesc": "How to track the station",
+
+        // Mobile Navigation
+        "navMap": "Map",
+        "navTelemetry": "Telemetry",
+        "navPasses": "Passes",
+        "navSettings": "Settings",
+        "navNasaTV": "NASA TV"
     },
     tr: {
         // Genel
@@ -230,7 +237,14 @@ const DICTIONARY = {
 
         // Help
         "helpTitle": "Yardım & Rehber",
-        "helpDesc": "İstasyon nasıl takip edilir"
+        "helpDesc": "İstasyon nasıl takip edilir",
+
+        // Mobile Navigation
+        "navMap": "Harita",
+        "navTelemetry": "Telemetri",
+        "navPasses": "Geçişler",
+        "navSettings": "Ayarlar",
+        "navNasaTV": "NASA TV"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

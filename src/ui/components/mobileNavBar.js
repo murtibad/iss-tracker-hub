@@ -9,6 +9,7 @@ export function createMobileNavBar(actions) {
     // Tabs configuration
     const tabs = [
         { id: "map", icon: ICONS.map, label: t('navMap') || "Harita" },
+        { id: "nasa", icon: ICONS.video || ICONS.play, label: t('navNasaTV') || "NASA TV" },
         { id: "telemetry", icon: ICONS.activity, label: t('navTelemetry') || "Veriler" },
         { id: "passes", icon: ICONS.globe, label: t('navPasses') || "Geçişler" },
         { id: "settings", icon: ICONS.settings, label: t('settings') || "Ayarlar" }

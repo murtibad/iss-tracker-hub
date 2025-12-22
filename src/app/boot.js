@@ -27,6 +27,7 @@ import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
 import { createPassCard } from "../ui/passCardView.js";
 import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
+import { createNASALiveCard } from "../ui/components/NASALiveCard.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -391,6 +392,32 @@ export async function boot(store, rootEl) {
   const passCard = createPassCard();
   passSection.appendChild(passCard.el);
   version.textContent = CONFIG?.VERSION || "v0.2.2";
+
+  // ========== NASA LIVE CARD ==========
+  const nasaSection = buildEl("div", "nasa-section", overlay);
+  nasaSection.id = "nasa-section";
+  nasaSection.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 20px;
+    right: 20px;
+    max-width: 500px;
+    z-index: 100;
+    display: none;
+  `;
+  const nasaCard = createNASALiveCard();
+  nasaSection.appendChild(nasaCard.el);
+
+  // Info note for NASA stream
+  const nasaNote = buildEl("div", "nasa-note", nasaSection);
+  nasaNote.style.cssText = `
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    padding: 8px;
+    opacity: 0.7;
+  `;
+  nasaNote.textContent = "⚠️ ISS sinyal durumuna göre canlı yayında kesintiler olabilir.";
 
   // ---------- Local state ----------
   const localState = {
@@ -1151,6 +1178,16 @@ export async function boot(store, rootEl) {
   const mobileNav = createMobileNavBar({
     onChange: (tabId) => {
       document.body.setAttribute('data-mobile-view', tabId);
+
+      // Toggle section visibility based on active tab
+      nasaSection.style.display = tabId === 'nasa' ? 'block' : 'none';
+      passSection.style.display = tabId === 'passes' ? 'block' : 'none';
+      dashboard.el.style.display = tabId === 'telemetry' ? 'flex' : 'none';
+
+      // Pause/resume NASA video when not visible
+      if (tabId !== 'nasa') {
+        // Videos are in iframes, they auto-manage when hidden
+      }
     },
     onSettings: () => settingsModal.open()
   });
