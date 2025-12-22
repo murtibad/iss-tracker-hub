@@ -7,6 +7,7 @@ import { CONFIG } from "../constants/config.js";
 import cities from "../assets/cities.tr.json";
 
 import { computePassBundle } from "../services/prediction.js";
+import { calculateTrajectory, trajectoryToGeoJSON } from "../services/trajectory.js";
 import { createViewModeToggle, getInitialViewMode } from "../ui/viewModeToggleView.js";
 import { createWeatherBadge } from "../ui/weatherBadgeView.js";
 import { fetchCurrentWeather, weatherCodeLabel } from "../services/weather.js";
@@ -1078,6 +1079,49 @@ export async function boot(store, rootEl) {
   refreshOnce();
   startUiTick();
 
+  // ---------- Trajectory Visualization ----------
+  let trajectoryTimer = null;
+  let lastTrajectoryUpdateAt = 0;
+
+  async function updateTrajectoryOnMap() {
+    try {
+      const now = Date.now();
+      // Minimum 3 minute between updates
+      if (now - lastTrajectoryUpdateAt < 3 * 60 * 1000) return;
+      lastTrajectoryUpdateAt = now;
+
+      log('[Trajectory] Hesaplanıyor...');
+      const trajectory = await calculateTrajectory({
+        pastMinutes: 45,
+        futureMinutes: 90,
+        stepSeconds: 30  // 30 second steps for smooth line
+      });
+
+      // Convert to GeoJSON
+      const pastGeoJSON = trajectoryToGeoJSON(trajectory.past);
+      const futureGeoJSON = trajectoryToGeoJSON(trajectory.future);
+
+      // Update 2D MapLibre
+      if (mapView && mapView.updateTrajectory) {
+        mapView.updateTrajectory(pastGeoJSON, futureGeoJSON);
+      }
+
+      log(`[Trajectory] ✅ ${trajectory.past.length} geçmiş + ${trajectory.future.length} gelecek nokta`);
+    } catch (e) {
+      console.error('[Trajectory] Error:', e);
+      log(`[Trajectory] ❌ Hata: ${e?.message || e}`);
+    }
+  }
+
+  // Initial trajectory calculation (after map loads)
+  setTimeout(() => {
+    updateTrajectoryOnMap();
+  }, 3000); // Wait for map to be ready
+
+  // Refresh trajectory every 5 minutes
+  trajectoryTimer = setInterval(() => {
+    updateTrajectoryOnMap();
+  }, 5 * 60 * 1000);
   const interval = Number(CONFIG?.INTERVAL_TELEMETRY_FETCH ?? 2000);
   const timer = setInterval(refreshOnce, interval);
 

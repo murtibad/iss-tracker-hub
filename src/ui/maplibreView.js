@@ -45,9 +45,62 @@ export function createMapLibreView(container, options = {}) {
 
     console.log('[MapLibre] Map instance created:', map);
 
-    // Map load event
+    // Trajectory layers initialized flag
+    let trajectoryLayersReady = false;
+
+    // Map load event - add trajectory layers
     map.on('load', () => {
         console.log('[MapLibre] ✅ Map loaded successfully!');
+
+        // Past trajectory source (cyan)
+        map.addSource('trajectory-past', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] }
+        });
+
+        map.addLayer({
+            id: 'trajectory-past-glow',
+            type: 'line',
+            source: 'trajectory-past',
+            paint: {
+                'line-color': '#00d4ff',
+                'line-width': 6,
+                'line-opacity': 0.2,
+                'line-blur': 3
+            }
+        });
+
+        map.addLayer({
+            id: 'trajectory-past-line',
+            type: 'line',
+            source: 'trajectory-past',
+            paint: {
+                'line-color': '#00d4ff',  // Electric blue
+                'line-width': 2,
+                'line-opacity': 0.8
+            }
+        });
+
+        // Future trajectory source (orange dashed)
+        map.addSource('trajectory-future', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] }
+        });
+
+        map.addLayer({
+            id: 'trajectory-future-line',
+            type: 'line',
+            source: 'trajectory-future',
+            paint: {
+                'line-color': '#ffa500',  // Orange
+                'line-width': 2,
+                'line-opacity': 0.5,
+                'line-dasharray': [4, 4]  // Dashed
+            }
+        });
+
+        trajectoryLayersReady = true;
+        console.log('[MapLibre] 🛤️ Trajectory layers initialized');
     });
 
     map.on('error', (e) => {
@@ -176,6 +229,46 @@ export function createMapLibreView(container, options = {}) {
             } else {
                 map.easeTo({ pitch: 0, duration: 1000 });
             }
+        },
+
+        /**
+         * Update trajectory lines on map
+         * @param {Object} pastGeoJSON - GeoJSON for past trajectory
+         * @param {Object} futureGeoJSON - GeoJSON for future trajectory
+         */
+        updateTrajectory(pastGeoJSON, futureGeoJSON) {
+            if (!trajectoryLayersReady) {
+                console.warn('[MapLibre] Trajectory layers not ready yet');
+                // Queue update for when layers are ready
+                map.once('load', () => {
+                    this.updateTrajectory(pastGeoJSON, futureGeoJSON);
+                });
+                return;
+            }
+
+            try {
+                const pastSource = map.getSource('trajectory-past');
+                const futureSource = map.getSource('trajectory-future');
+
+                if (pastSource && pastGeoJSON) {
+                    pastSource.setData(pastGeoJSON);
+                }
+
+                if (futureSource && futureGeoJSON) {
+                    futureSource.setData(futureGeoJSON);
+                }
+
+                console.log('[MapLibre] 🛤️ Trajectory updated');
+            } catch (e) {
+                console.error('[MapLibre] Trajectory update error:', e);
+            }
+        },
+
+        /**
+         * Check if trajectory layers are ready
+         */
+        isTrajectoryReady() {
+            return trajectoryLayersReady;
         },
 
         /**
