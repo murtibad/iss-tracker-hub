@@ -5,6 +5,7 @@ let globe = null;
 let followTimer = null;
 let followEnabled = false;
 let animationFrameId = null;
+let issMesh = null; // Direct reference to ISS mesh for frame-sync updates
 
 const issData = { lat: 0, lng: 0, alt: 0.06, type: "iss" };
 let userData = null;
@@ -115,7 +116,9 @@ export async function initGlobe(container) {
     .customLayerData([])
     .customThreeObject(d => {
       if (d.type === "iss") {
-        return createISSModel();
+        const model = createISSModel();
+        issMesh = model; // Store reference for direct updates
+        return model;
       }
       if (d.type === "user") return createUserPin();
 
@@ -166,6 +169,8 @@ export async function initGlobe(container) {
       // ISS modeli için hafif rotasyon animasyonu
       if (d.type === "iss") {
         obj.rotation.y += 0.005; // Yavaş yavaş dönsün
+        // Ensure mesh reference is current
+        if (!issMesh) issMesh = obj;
       }
     });
 
@@ -255,14 +260,15 @@ export async function createGlobe(container) {
     setIssPosition(lat, lng) {
       issData.lat = clampLat(lat);
       issData.lng = normLng(lng);
-      if (globeInstance) {
+
+      // Direct mesh update - no layer rebuild for frame-sync performance
+      if (issMesh && globeInstance) {
         try {
-          const layerData = userData ? [issData, userData, { type: "env" }] : [issData, { type: "env" }];
-          globeInstance.customLayerData(layerData);
+          const c = globeInstance.getCoords(issData.lat, issData.lng, issData.alt);
+          issMesh.position.set(c.x, c.y, c.z);
         } catch (e) {
-          console.warn("ISS position update error:", e);
+          console.warn("ISS direct position update error:", e);
         }
-      } else {
       }
     },
     startFollow() {
