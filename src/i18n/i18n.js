@@ -83,7 +83,17 @@ const DICTIONARY = {
         staleData: "Data may be outdated",
         reconnecting: "Reconnecting...",
         trajectoryCalculating: "Calculating trajectory...",
-        trajectoryError: "Trajectory error"
+        trajectoryError: "Trajectory error",
+
+        // Landing Hero
+        "hero.headline": "The ISS is currently over Earth",
+        "hero.subline.loading": "Calculating pass times...",
+        "hero.subline.pass": "Visible from your location in {minutes} minutes",
+        "hero.subline.permission": "Enable location to see when ISS passes overhead",
+        "hero.subline.unavailable": "Pass calculation unavailable",
+        "hero.cta.showPass": "Show Pass",
+        "hero.cta.liveTrack": "Live Track",
+        "hero.passCardComing": "Pass card is being prepared..."
     },
     tr: {
         // Genel
@@ -162,7 +172,17 @@ const DICTIONARY = {
         staleData: "Veriler güncel olmayabilir",
         reconnecting: "Yeniden bağlanılıyor...",
         trajectoryCalculating: "Yörünge hesaplanıyor...",
-        trajectoryError: "Yörünge hatası"
+        trajectoryError: "Yörünge hatası",
+
+        // Landing Hero
+        "hero.headline": "ISS şu an Dünya'nın üzerinde",
+        "hero.subline.loading": "Geçiş hesaplanıyor...",
+        "hero.subline.pass": "{minutes} dakika sonra bulunduğun konumdan görülebilir",
+        "hero.subline.permission": "Konum izni vererek geçiş zamanını öğren",
+        "hero.subline.unavailable": "Geçiş hesaplaması kullanılamıyor",
+        "hero.cta.showPass": "Geçişi Göster",
+        "hero.cta.liveTrack": "Canlı Takip Et",
+        "hero.passCardComing": "Geçiş kartı hazırlanıyor..."
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

@@ -24,6 +24,7 @@ import { ICONS } from "../ui/icons.js";
 import { createFloatingHUD } from "../ui/components/floatingHUD.js";
 import { createSettingsModal } from "../ui/settingsModal.js";
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
+import { createLandingHero } from "../ui/components/landingHero.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -346,6 +347,26 @@ export async function boot(store, rootEl) {
   rootEl.appendChild(networkStatus.el);
 
   // Use dashboard's integrated log for status updates
+  // Landing Hero
+  const landingHero = createLandingHero({
+    getPassState: () => ({
+      loading: localState.predictionBusy,
+      calculating: localState.predictionBusy,
+      pass: localState.prediction,
+      hasLocation: Number.isFinite(localState.obsLat) && Number.isFinite(localState.obsLon),
+      error: false // Could track pass calc errors here
+    }),
+    onShowPass: () => {
+      // TODO: Scroll to/show Pass Card when integrated
+      console.log("[Hero] Show Pass clicked");
+    },
+    onLiveTrack: () => {
+      // Enable follow mode and focus on ISS
+      setFollowUI(true);
+      console.log("[Hero] Live Track clicked");
+    }
+  });
+  if (landingHero.el) rootEl.appendChild(landingHero.el);
   const log = dashboard.getLogFn();
 
   // Reference for terminal subtitle updates
