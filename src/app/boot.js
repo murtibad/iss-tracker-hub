@@ -72,6 +72,24 @@ function buildEl(tag, className, parent) {
   if (className) n.className = className;
   if (parent) parent.appendChild(n);
   return n;
+// Safe localStorage wrapper
+const safeStorage = {
+  getItem: (key) => {
+    try {
+      return window.localStorage ? window.safeStorage.getItem(key) : null;
+    } catch (e) {
+      console.warn('[Storage] getItem failed:', e);
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      if (window.localStorage) window.safeStorage.setItem(key, value);
+    } catch (e) {
+      console.warn('[Storage] setItem failed:', e);
+    }
+  }
+};
 }
 
 // ------- Theme (system/dark/light) -------
@@ -90,21 +108,21 @@ function applyTheme(mode) {
 
 function getInitialThemeMode() {
   const key = CONFIG?.THEME_STORAGE_KEY || "issThemeMode";
-  const saved = localStorage.getItem(key);
+  const saved = safeStorage.getItem(key);
   const valid = saved === "light" || saved === "dark" || saved === "system";
   return valid ? saved : (CONFIG?.DEFAULT_THEME || "system");
 }
 
 function setThemeMode(mode) {
   const key = CONFIG?.THEME_STORAGE_KEY || "issThemeMode";
-  localStorage.setItem(key, mode);
+  safeStorage.setItem(key, mode);
   return applyTheme(mode);
 }
 
 // ------- Skin (cyberpunk/liquid/realistic) -------
 const SKIN_KEY = "isshub:skin";
 function getInitialSkin() {
-  const v = localStorage.getItem(SKIN_KEY);
+  const v = safeStorage.getItem(SKIN_KEY);
   if (v === "cyberpunk" || v === "liquid" || v === "realistic") return v;
   return "realistic";
 }
@@ -144,7 +162,7 @@ function applySkin(skin) {
 }
 
 function setSkin(skin) {
-  localStorage.setItem(SKIN_KEY, skin);
+  safeStorage.setItem(SKIN_KEY, skin);
   applySkin(skin);
 }
 
@@ -153,7 +171,7 @@ const PLACE_STORAGE_KEY = "isshub:place_v2";
 
 function safeGetPlace() {
   try {
-    const raw = localStorage.getItem(PLACE_STORAGE_KEY);
+    const raw = safeStorage.getItem(PLACE_STORAGE_KEY);
     if (!raw) return null;
     const obj = JSON.parse(raw);
     if (!obj || typeof obj !== "object") return null;
@@ -174,7 +192,7 @@ function safeGetPlace() {
 
 function safeSetPlace(place) {
   try {
-    localStorage.setItem(PLACE_STORAGE_KEY, JSON.stringify(place));
+    safeStorage.setItem(PLACE_STORAGE_KEY, JSON.stringify(place));
   } catch {
     // sessiz
   }
