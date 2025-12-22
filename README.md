@@ -1,105 +1,161 @@
 # 🛰️ ISS Tracker HUB
 
-Uluslararası Uzay İstasyonu'nun (ISS) gerçek zamanlı konumunu takip edin. 2D harita ve etkileyici 3D dünya görünümü ile ISS'in nerede olduğunu görün!
+Real-time International Space Station tracking with 3D visualization and personalized pass predictions.
 
-## ✨ Özellikler
+**Current Version:** v0.3.3 (beta)
 
-- 🌍 **2D/3D Görünüm** - Leaflet haritası veya muhteşem 3D dünya
-- 🛰️ **Gerçek Zamanlı Takip** - ISS'in anlık konumu ve hızı
-- 🎨 **Özelleştirilebilir Tema** - 6 hazır renk + özel renk seçimi
-- 🌙 **Karanlık/Açık Mod** - Sistem temasına uyum
-- 📍 **Geçiş Tahminleri** - ISS'in bölgenizden ne zaman görüneceğini öğrenin
-- 🌤️ **Hava Durumu** - ISS'in altındaki bölgenin hava durumu
-- 👨‍🚀 **Mürettebat Bilgisi** - ISS'te kimler var?
-- 📱 **Mobil Uyumlu** - Her cihazda mükemmel çalışır
+## ✨ Features
 
-## 🚀 Kurulum
+### Core Tracking
+- 🌍 **2D/3D View Toggle** - MapLibre GL map or immersive 3D globe
+- 🛰️ **Real-time Telemetry** - Live ISS position, velocity, altitude
+- 📍 **Pass Predictions** - Calculate when ISS is visible from your location
+- 🌤️ **Weather Integration** - Current conditions at ISS location
+
+### PWA & Offline
+- 📱 **Installable PWA** - Add to home screen, works like a native app
+- 🔌 **Offline-ready** - App shell cached for offline usage
+- 🚀 **Runtime Caching** - ISS API and geocoding cached (Network First)
+- ⚠️ **Network Status** - Visual indicators for offline/stale data
+
+### Localization & Accessibility
+- 🌐 **i18n Support** - Turkish (TR) and English (EN)
+- ♿ **A11y Baseline** - Keyboard navigation, ARIA labels, focus management
+- 🎨 **Glassmorphism UI** - Modern, premium design
+
+### Additional
+- 👨‍🚀 **Crew Info** - Who's on the ISS right now
+- 📱 **Fully Responsive** - Desktop, tablet, mobile
+
+## 🚀 Quick Start
 
 ```bash
-# Bağımlılıkları yükle
+# Install dependencies
 npm install
 
-# Geliştirme sunucusunu başlat
+# Development server
 npm run dev
 
 # Production build
 npm run build
+
+# Preview production build
+npm run preview
 ```
 
-## 🌐 Canlı Demo
+## 🌐 Live Demo
 
-[GitHub Pages'te Canlı Görün](https://kullaniciadi.github.io/iss-tracker-hub)
+[View on GitHub Pages](https://github.com/yourusername/iss-tracker-hub)
 
-## 🎨 Tema Özelleştirme
+## 📡 Data Sources
 
-Sağ üstteki **🎨 Renk** butonuna tıklayarak cam temasını değiştirebilirsiniz:
-- 🔵 Cyan (varsayılan)
-- 💜 Purple
-- 💗 Pink
-- 🟢 Green
-- 🟡 Amber
-- 🔴 Red
-- ⚙️ Özel renk seçici
+- **ISS Position**: [Where The ISS At API](https://wheretheiss.at/)
+- **Weather**: [Open-Meteo](https://open-meteo.com/)
+- **Crew**: [Open Notify API](http://open-notify.org/)
+- **Geocoding**: [Nominatim / OpenStreetMap](https://nominatim.openstreetmap.org/)
 
-## 📡 Veri Kaynakları
+## 🛠️ Tech Stack
 
-- **ISS Konumu**: [Where The ISS At API](https://wheretheiss.at/)
-- **Hava Durumu**: [Open-Meteo](https://open-meteo.com/)
-- **Mürettebat**: [Open Notify API](http://open-notify.org/)
-- **Konum Arama**: [Nominatim / OpenStreetMap](https://nominatim.openstreetmap.org/)
+### Core
+- ⚡ **Vite** - Fast build tool
+- 🗺️ **MapLibre GL** - 2D map rendering
+- 🌍 **Globe.gl** - 3D Earth visualization
+- 🎨 **Vanilla JS** - No framework, pure JavaScript
 
-## 🛠️ Teknolojiler
+### PWA & Caching
+- 📦 **vite-plugin-pwa** - Service Worker generation
+- 🔄 **Workbox** - Runtime caching strategies
+- 💾 **Cache First** - App shell (HTML/CSS/JS/icons)
+- 🌐 **Network First** - API data (ISS: 5min TTL, Geocoding: 24h TTL)
 
-- ⚡ **Vite** - Hızlı build tool
-- 🗺️ **Leaflet** - 2D harita
-- 🌍 **Globe.gl** - 3D dünya görselleştirmesi
-- 🎨 **Vanilla JS** - Framework yok, saf JavaScript
-- 📐 **satellite.js** - Geçiş tahminleri
+### Utilities
+- 📐 **satellite.js** - TLE-based orbit calculations
+- 🌍 **i18n** - Custom lightweight translation system
+- ♿ **A11y** - WCAG 2.1 baseline compliance
 
-## 📂 Proje Yapısı
+## 📂 Project Structure
 
 ```
 iss-tracker-hub/
+├── public/
+│   ├── icons/              # PWA icons
+│   └── manifest.json       # PWA manifest
 ├── src/
 │   ├── app/
-│   │   └── boot.js           # Ana uygulama
+│   │   └── boot.js         # Main application entry
 │   ├── ui/
-│   │   ├── globeView.js      # 3D dünya
-│   │   ├── themePickerView.js # Renk seçici
+│   │   ├── components/     # Reusable UI components
+│   │   ├── globeView.js    # 3D globe
+│   │   ├── maplibreView.js # 2D map
 │   │   └── ...
 │   ├── services/
-│   │   ├── prediction.js     # Geçiş hesaplama
-│   │   └── weather.js        # Hava durumu
-│   ├── styles/
-│   │   └── glass.css         # Glass morphism tema
-│   └── constants/
-│       └── config.js         # Ayarlar
-├── index.html
+│   │   ├── prediction.js   # Pass calculations
+│   │   ├── issMotion.js    # Telemetry & interpolation
+│   │   └── weather.js      # Weather API
+│   ├── i18n/
+│   │   └── i18n.js         # Translation system
+│   └── styles/
+│       └── theme.css       # Glassmorphism theme
+├── vite.config.js          # Vite + PWA config
 └── package.json
 ```
 
-## ⚙️ Yapılandırma
+## 🔧 Configuration
 
-`src/constants/config.js` dosyasından ayarları değiştirebilirsiniz:
-- Güncelleme aralıkları
-- Minimum geçiş yüksekliği
-- Varsayılan tema
-- API URL'leri
+Edit `src/constants/config.js`:
+- Update intervals (telemetry, weather, predictions)
+- Minimum pass elevation angle
+- Default theme/language
+- API endpoints
 
-## 🤝 Katkıda Bulunma
+## 🌐 PWA Notes
 
-Pull request'ler memnuniyetle karşılanır!
+### What Works Offline
+- ✅ App shell (UI, styles, scripts)
+- ✅ Cached ISS data (up to 5 minutes old)
+- ✅ Cached geocoding results (up to 24 hours old)
 
-## 📜 Lisans
+### What Requires Network
+- ❌ Live ISS telemetry updates
+- ❌ Fresh weather data
+- ❌ New geocoding searches
+
+### Intentionally Excluded
+- Push notifications (beta scope)
+- Background sync (future enhancement)
+
+## 🎯 Roadmap
+
+### Completed (v0.3.3)
+- ✅ i18n Phase 1 & 2 (TR/EN)
+- ✅ PWA Phase 1 & 2 (Installable + Runtime caching)
+- ✅ A11y baseline (keyboard nav, ARIA, focus)
+- ✅ Offline/stale status indicators
+
+### Backlog (Nice-to-Have)
+- Pass Card UI integration
+- Additional languages (DE, FR, ES, etc.)
+- Advanced error handling
+- Code splitting & lazy loading
+- Push notifications (opt-in)
+
+## 🤝 Contributing
+
+Pull requests are welcome! For major changes, please open an issue first.
+
+## 📜 License
 
 MIT
 
-## 🙏 Teşekkürler
+## 🙏 Acknowledgments
 
-- NASA ve ISS mürettebatına
-- Açık kaynak API sağlayıcılarına
-- OSM topluluğuna
+- NASA and the ISS crew
+- Open-source API providers
+- OpenStreetMap community
+- Vite & Workbox teams
 
 ---
 
 **Made with ❤️ for space enthusiasts**
+
+**Status:** Beta | **Version:** v0.3.3 | **Last Updated:** December 2025
