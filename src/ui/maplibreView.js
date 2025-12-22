@@ -133,7 +133,11 @@ export function createMapLibreView(container, options = {}) {
     0 0 30px rgba(0, 212, 255, 0.5)
   `; // Radar glow effect
     markerEl.style.cursor = 'pointer';
-    markerEl.style.transition = 'all 0.3s ease';
+    // NO transition on transform - prevents swimming during pan!
+    // Only transition box-shadow for hover effect
+    markerEl.style.transition = 'box-shadow 0.3s ease';
+    // GPU acceleration hint
+    markerEl.style.willChange = 'transform';
 
     // Pulse animation on hover
     markerEl.addEventListener('mouseenter', () => {
