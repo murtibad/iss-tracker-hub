@@ -131,10 +131,11 @@ Edit `src/constants/config.js`:
 - ✅ PWA Phase 1 & 2 (Installable + Runtime caching)
 - ✅ A11y baseline (keyboard nav, ARIA, focus)
 - ✅ Offline/stale status indicators
+- ✅ **Mobile UX Upgrade** (Bottom Navigation Bar)
+- ✅ **3D Globe** (Singleton fixes & Performance)
+- ✅ **GitHub Pages Compatibility** (Fixed paths & API keys)
 
 ### Backlog (Nice-to-Have)
-- Pass Card UI integration
-- Additional languages (DE, FR, ES, etc.)
 - Advanced error handling
 - Code splitting & lazy loading
 - Push notifications (opt-in)
