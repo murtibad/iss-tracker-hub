@@ -33,7 +33,35 @@ export default defineConfig({
             workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
                 navigateFallback: null,
-                cleanupOutdatedCaches: true
+                cleanupOutdatedCaches: true,
+                runtimeCaching: [
+                    // ISS Telemetry API (wheretheiss.at)
+                    {
+                        urlPattern: /^https:\/\/api\.wheretheiss\.at\/.*/,
+                        handler: 'NetworkFirst',
+                        options: {
+                            networkTimeoutSeconds: 5,
+                            cacheName: 'iss-api',
+                            expiration: {
+                                maxEntries: 50,
+                                maxAgeSeconds: 300 // 5 minutes
+                            }
+                        }
+                    },
+                    // Geocoding API (Nominatim)
+                    {
+                        urlPattern: /^https:\/\/nominatim\.openstreetmap\.org\/.*/,
+                        handler: 'NetworkFirst',
+                        options: {
+                            networkTimeoutSeconds: 5,
+                            cacheName: 'geocoding-api',
+                            expiration: {
+                                maxEntries: 100,
+                                maxAgeSeconds: 86400 // 24 hours
+                            }
+                        }
+                    }
+                ]
             },
             devOptions: {
                 enabled: false // SW only in production build

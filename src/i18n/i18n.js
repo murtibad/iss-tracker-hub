@@ -80,6 +80,7 @@ const DICTIONARY = {
         bootReady: "App ready",
         locationSet: "Location set",
         offline: "Offline. Retrying...",
+        staleData: "Data may be outdated",
         reconnecting: "Reconnecting...",
         trajectoryCalculating: "Calculating trajectory...",
         trajectoryError: "Trajectory error"
@@ -158,6 +159,7 @@ const DICTIONARY = {
         bootReady: "Uygulama hazır",
         locationSet: "Konum ayarlandı",
         offline: "Çevrimdışı. Tekrar deneniyor...",
+        staleData: "Veriler güncel olmayabilir",
         reconnecting: "Yeniden bağlanılıyor...",
         trajectoryCalculating: "Yörünge hesaplanıyor...",
         trajectoryError: "Yörünge hatası"

@@ -23,6 +23,7 @@ import { ICONS } from "../ui/icons.js";
 // Floating HUD (Compact Telemetry v0.3.3)
 import { createFloatingHUD } from "../ui/components/floatingHUD.js";
 import { createSettingsModal } from "../ui/settingsModal.js";
+import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -340,6 +341,9 @@ export async function boot(store, rootEl) {
   // ========== FLOATING HUD: Compact Telemetry Display ==========
   const dashboard = createFloatingHUD();
   rootEl.appendChild(dashboard.el);
+  // Network Status Bar
+  const networkStatus = createNetworkStatusBar();
+  rootEl.appendChild(networkStatus.el);
 
   // Use dashboard's integrated log for status updates
   const log = dashboard.getLogFn();
@@ -852,6 +856,8 @@ export async function boot(store, rootEl) {
 
   function handleNewData(data) {
     // 1. Update HUD (Velocity/Alt/etc)
+    // Mark data as received (for staleness tracking)
+    networkStatus.markDataReceived();
     dashboard.update({
       altitude: data.altKm,
       velocity: data.velKmh,
