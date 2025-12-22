@@ -348,7 +348,7 @@ export async function createGlobe(container) {
           .pathStroke(path => path.type === 'past' ? 2.5 : 1.5)
           .pathDashLength(path => path.type === 'past' ? 0 : 0.3)  // Dashed for future
           .pathDashGap(path => path.type === 'past' ? 0 : 0.15)
-          .pathPointAlt(() => 0.005); // Slightly above globe surface
+          .pathPointAlt(() => 0.08); // ~ISS orbit altitude for depth perception
 
         console.log(`[Globe] 🛤️ Trajectory updated: ${pastPoints?.length || 0} past, ${futurePoints?.length || 0} future`);
       } catch (e) {
@@ -372,22 +372,12 @@ async function updateISS() {
     issData.lng = normLng(j.longitude);
     issData.alt = 0.06; // Daha yüksek - daha görünür
 
-    trail.push({ lat: issData.lat, lng: issData.lng });
-    if (trail.length > 80) trail.shift();
-
     // ISS ve diğer objeleri güncelle
     globe.customLayerData(
       userData ? [issData, userData, { type: "env" }] : [issData, { type: "env" }]
     );
 
-    // İz (trail) görselleştirmesi
-    globe.pathsData([{ coords: trail }])
-      .pathPoints("coords")
-      .pathPointLat(p => p.lat)
-      .pathPointLng(p => p.lng)
-      .pathColor(() => ["rgba(45,212,191,0.8)"]) // Daha parlak renk
-      .pathStroke(2) // Daha kalın
-      .pathPointAlt(() => 0.06); // ISS ile aynı yükseklikte
+    // Note: Old trail pathsData removed - trajectory now handled by boot.js
   } catch (e) {
     console.error("ISS update error", e);
   }

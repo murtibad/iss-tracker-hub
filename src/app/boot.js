@@ -606,6 +606,8 @@ export async function boot(store, rootEl) {
           if (trackEnabled) {
             try { g.startFollow(); } catch { }
           }
+          // Apply cached trajectory to 3D globe
+          try { if (window._applyTrajectoryToGlobe) window._applyTrajectoryToGlobe(); } catch { }
         })
         .catch((e) => {
           log(t('globeError') + `: ${e?.message || e}`);
@@ -1082,6 +1084,7 @@ export async function boot(store, rootEl) {
   // ---------- Trajectory Visualization ----------
   let trajectoryTimer = null;
   let lastTrajectoryUpdateAt = 0;
+  let cachedTrajectory = null; // Cache for 3D mode switching
 
   async function updateTrajectoryOnMap() {
     try {
@@ -1097,6 +1100,9 @@ export async function boot(store, rootEl) {
         stepSeconds: 30  // 30 second steps for smooth line
       });
 
+      // Cache trajectory for 3D mode switching
+      cachedTrajectory = trajectory;
+
       // Convert to GeoJSON for 2D MapLibre
       const pastGeoJSON = trajectoryToGeoJSON(trajectory.past);
       const futureGeoJSON = trajectoryToGeoJSON(trajectory.future);
@@ -1106,7 +1112,7 @@ export async function boot(store, rootEl) {
         mapView.updateTrajectory(pastGeoJSON, futureGeoJSON);
       }
 
-      // Update 3D Globe
+      // Update 3D Globe (if loaded)
       if (globe && globe.updateTrajectory) {
         globe.updateTrajectory(trajectory.past, trajectory.future);
       }
@@ -1117,6 +1123,15 @@ export async function boot(store, rootEl) {
       log(`[Trajectory] ❌ Hata: ${e?.message || e}`);
     }
   }
+
+  // Apply cached trajectory to globe when 3D mode is enabled
+  function applyTrajectoryToGlobe() {
+    if (cachedTrajectory && globe && globe.updateTrajectory) {
+      globe.updateTrajectory(cachedTrajectory.past, cachedTrajectory.future);
+      console.log('[Trajectory] Applied to 3D Globe');
+    }
+  }
+  window._applyTrajectoryToGlobe = applyTrajectoryToGlobe;
 
   // Initial trajectory calculation (after map loads)
   setTimeout(() => {
