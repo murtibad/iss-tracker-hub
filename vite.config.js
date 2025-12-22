@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-    base: './', // GitHub Pages için relative paths
+    base: '/iss-tracker-hub/', // GitHub Pages base path
     plugins: [
         VitePWA({
             registerType: 'autoUpdate',
