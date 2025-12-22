@@ -3,7 +3,7 @@
 // EN: All app constants live here.
 
 export const CONFIG = {
-  VERSION: "v0.1-alpha",
+  VERSION: "v0.2-beta",
 
   // Location / pass
   MIN_ELEVATION: 20,

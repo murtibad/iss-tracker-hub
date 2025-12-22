@@ -12,8 +12,15 @@ import { createViewModeToggle, getInitialViewMode } from "../ui/viewModeToggleVi
 import { createWeatherBadge } from "../ui/weatherBadgeView.js";
 import { fetchCurrentWeather, weatherCodeLabel } from "../services/weather.js";
 import { createThemePicker, applyGlassColor, getGlassColor } from "../ui/themePickerView.js";
+import { showLocationWelcome } from "../ui/locationWelcomeModal.js";
+import { createLanguagePicker } from "../ui/languagePickerView.js";
+import { initI18n, t, getCurrentLanguage, getSpeedUnit, getDistanceUnit } from "../i18n/i18n.js";
 
 import { openCrewModal } from "../ui/crewWidgetView.js";
+
+// Widgets (Professional V2)
+import { createFlightDataWidget } from "../ui/widgets/flightDataWidget.js";
+import { createSystemsWidget } from "../ui/widgets/systemsWidget.js";
 
 // Leaflet marker default icon fix (Vite + Leaflet klasik)
 import icon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -281,8 +288,16 @@ async function tryGetGpsOnce({ timeoutMs = 9000 } = {}) {
 }
 
 // ------- Boot -------
-export function boot(store, rootEl) {
+export async function boot(store, rootEl) {
   if (!rootEl) throw new Error("rootEl missing");
+
+  // Initialize i18n system (auto-detect from IP if first time)
+  try {
+    const lang = await initI18n();
+    console.log(`[boot] Language initialized: ${lang}`);
+  } catch (e) {
+    console.warn("[boot] i18n initialization failed:", e);
+  }
 
   // Root
   rootEl.innerHTML = "";
@@ -301,8 +316,8 @@ export function boot(store, rootEl) {
   logo.setAttribute("aria-hidden", "true");
 
   const title = buildEl("div", "hub-title", brand);
-  const t = buildEl("div", "t", title);
-  t.textContent = "ISS Tracker HUB";
+  const titleMain = buildEl("div", "t", title);
+  titleMain.textContent = "ISS Tracker HUB";
   const s = buildEl("div", "s", title);
   s.textContent = "alpha";
 
@@ -311,7 +326,7 @@ export function boot(store, rootEl) {
   const followPill = buildEl("div", "hub-pill", actions);
   const followDot = buildEl("div", "hub-dot", followPill);
   const followTxt = buildEl("div", "", followPill);
-  followTxt.textContent = "Takip: Açık";
+  followTxt.textContent = t('follow') + ": " + t('on');
 
   // Skin select (✅ fixed)
   const skinSelect = document.createElement("select");
@@ -327,20 +342,26 @@ export function boot(store, rootEl) {
   // Theme button (system/dark/light)
   const themeBtn = buildEl("button", "btn", actions);
   themeBtn.type = "button";
-  themeBtn.textContent = "Tema: Sistem";
+  themeBtn.textContent = t('theme') + ": " + t('system');
 
   const cityBtn = buildEl("button", "btn", actions);
   cityBtn.type = "button";
-  cityBtn.textContent = "Şehir Seç";
+  cityBtn.textContent = t('city');
 
   const crewBtn = buildEl("button", "btn", actions);
   crewBtn.type = "button";
-  crewBtn.textContent = "Mürettebat";
+  crewBtn.textContent = t('crew');
 
   const colorBtn = buildEl("button", "btn", actions);
   colorBtn.type = "button";
-  colorBtn.textContent = "🎨 Renk";
-  colorBtn.title = "Cam rengini değiştir";
+  colorBtn.textContent = t('colorPicker');
+  colorBtn.title = t('colorPicker');
+
+  // Language picker button
+  const langBtn = buildEl("button", "btn", actions);
+  langBtn.type = "button";
+  langBtn.textContent = t('language');
+  langBtn.title = t('language');
 
   crewBtn.addEventListener("click", () => openCrewModal());
 
@@ -350,6 +371,14 @@ export function boot(store, rootEl) {
 
   colorBtn.addEventListener("click", () => {
     themePicker.open();
+  });
+
+  // Language picker modal
+  const languagePicker = createLanguagePicker();
+  rootEl.appendChild(languagePicker.el);
+
+  langBtn.addEventListener("click", () => {
+    languagePicker.open();
   });
 
   // Apply initial theme/skin/glass color
@@ -363,8 +392,8 @@ export function boot(store, rootEl) {
   });
 
   function updateThemeButton() {
-    const label = themeMode === "system" ? "Sistem" : themeMode === "dark" ? "Koyu" : "Açık";
-    themeBtn.textContent = `Tema: ${label}`;
+    const label = themeMode === "system" ? t('system') : themeMode === "dark" ? t('dark') : t('light');
+    themeBtn.textContent = t('theme') + ": " + label;
   }
   updateThemeButton();
 
@@ -373,62 +402,37 @@ export function boot(store, rootEl) {
     resolvedTheme = setThemeMode(themeMode);
     updateThemeButton();
     updateTileTheme();
-    log(`Tema değişti: ${themeMode} (${resolvedTheme})`);
+    log(t('themeChanged') + `: ${themeMode} (${resolvedTheme})`);
   });
 
-  // HUD cards
-  const cards = buildEl("div", "hub-cards", overlay);
+  // 3-Panel Grid Layout
+  const mainLayout = buildEl("div", "hub-main-layout", overlay);
 
-  const card1 = buildEl("div", "card hub-glass", cards);
-  const row1 = buildEl("div", "row", card1);
-  const mSpeedK = buildEl("div", "k", row1);
-  mSpeedK.textContent = "Hız (km/h)";
-  const mSpeedV = buildEl("div", "v", row1);
-  mSpeedV.textContent = "--";
-  const sub1 = buildEl("div", "sub", card1);
-  sub1.innerHTML = `Konum: <strong id="pos">--</strong>`;
+  const leftCol = buildEl("div", "hub-col hub-left", mainLayout);
+  const centerCol = buildEl("div", "hub-col hub-center", mainLayout);
+  const rightCol = buildEl("div", "hub-col hub-right", mainLayout);
+  const bottomRow = buildEl("div", "hub-bottom", mainLayout);
 
-  const card2 = buildEl("div", "card hub-glass", cards);
-  const row2 = buildEl("div", "row", card2);
-  const mAltK = buildEl("div", "k", row2);
-  mAltK.textContent = "Yükseklik (km)";
-  const mAltV = buildEl("div", "v", row2);
-  mAltV.textContent = "--";
-  const sub2 = buildEl("div", "sub", card2);
-  sub2.innerHTML = `Şehrim: <strong id="city">Konumum</strong>`;
+  // Left Panel Widgets (Unified Flight Data)
+  const flightDataWidget = createFlightDataWidget();
+  leftCol.appendChild(flightDataWidget.el);
 
-  const card3 = buildEl("div", "card hub-glass", cards);
-  const row3 = buildEl("div", "row", card3);
-  const mPosK = buildEl("div", "k", row3);
-  mPosK.textContent = "Lat / Lon";
-  const mPosV = buildEl("div", "v", row3);
-  mPosV.textContent = "--";
+  // Right Panel Widgets (Unified Systems)
+  const systemsWidget = createSystemsWidget();
+  rightCol.appendChild(systemsWidget.el);
 
-  const pass = buildEl("div", "card hub-glass", cards);
-  const passRow = buildEl("div", "row", pass);
-  const passK = buildEl("div", "k", passRow);
-  passK.textContent = "En Yakın Geçiş";
-  const passTimer = buildEl("div", "v", passRow);
-  passTimer.textContent = "--:--:--";
+  // -- Old Cards Removed --
 
-  const passBadge = buildEl("div", "pass-badge", pass);
-  const passBadgeDot = buildEl("div", "b", passBadge);
-  const passBadgeText = buildEl("div", "", passBadge);
-  passBadgeText.textContent = "—";
-
-  const passMeta = buildEl("div", "pass-meta", pass);
-  passMeta.textContent = "—";
-
-  const passMini = buildEl("div", "pass-mini", pass);
-  passMini.textContent = "";
+  // -- Old Cards Removed --
 
   // Terminal (log)
-  const terminal = buildEl("div", "hub-terminal hub-glass", rootEl);
+  // Terminal (log)
+  const terminal = buildEl("div", "hub-terminal hub-glass", bottomRow);
   const termHead = buildEl("div", "term-head", terminal);
   const termTitle = buildEl("div", "term-title", termHead);
-  termTitle.textContent = "Terminal";
+  termTitle.textContent = "TERMINAL";
   const termSub = buildEl("div", "term-sub", termHead);
-  termSub.textContent = "Son güncelleme: --:--:--";
+  termSub.textContent = "Last Update: --:--:--";
 
   const termBody = buildEl("div", "term-body", terminal);
   termBody.textContent = "";
@@ -440,12 +444,12 @@ export function boot(store, rootEl) {
     const msg = `[${stamp}] ${line}`;
     logLines.push(msg);
     if (logLines.length > 200) logLines.shift();
-    termBody.textContent = logLines.join("\n"); // ✅ XSS yok
+    termBody.textContent = logLines.join("\n");
     termBody.scrollTop = termBody.scrollHeight;
   }
 
-  // Version label
-  const version = buildEl("div", "hub-ver", rootEl);
+  // Version label - Keep absolute but effectively bottom right
+  const version = buildEl("div", "hub-ver", overlay);
   version.textContent = CONFIG?.VERSION || "v0.1-alpha";
 
   // ---------- Local state ----------
@@ -465,13 +469,8 @@ export function boot(store, rootEl) {
   };
 
   function syncCityText() {
-    const cityEl = card2.querySelector("#city");
-    if (!cityEl) return;
-    cityEl.textContent = placeLabel({
-      cityName: localState.cityName,
-      districtName: localState.districtName,
-      neighborhoodName: localState.neighborhoodName,
-    });
+    // No longer needed for old cards
+    // Could update telemetry widget title or location if it supported it
   }
 
   // ------- PASS PREDICTION -------
@@ -498,14 +497,14 @@ export function boot(store, rootEl) {
     const lat = localState.obsLat;
     const lon = localState.obsLon;
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      if (forceLog) log("pass> konum yok: geçiş hesabı yapılamadı");
+      if (forceLog) log(t('passNoLocation'));
       return;
     }
     if (localState.predictionBusy) return;
 
     localState.predictionBusy = true;
     try {
-      log(`pass> hesaplanıyor… (obs=${fmtNum(lat, 3)},${fmtNum(lon, 3)})`);
+      log(t('passCalculating') + ` (obs=${fmtNum(lat, 3)},${fmtNum(lon, 3)})`);
       const bundle = await computePassBundle({ obsLat: lat, obsLon: lon });
       const nextPass = bundle?.nextPass || null;
 
@@ -513,7 +512,7 @@ export function boot(store, rootEl) {
       localState.lastPredictionRefresh = Date.now();
 
       if (!nextPass) {
-        log("pass> 36 saat içinde geçiş bulunamadı");
+        log(t('passNotFound'));
       } else {
         log(
           `pass> bulundu: AOS=${new Date(nextPass.aosMs).toLocaleTimeString()} LOS=${new Date(
@@ -522,7 +521,7 @@ export function boot(store, rootEl) {
         );
       }
     } catch (e) {
-      log(`pass> HATA: ${String(e?.message || e)}`);
+      log(t('passError') + `: ${String(e?.message || e)}`);
       localState.prediction = null;
     } finally {
       localState.predictionBusy = false;
@@ -531,30 +530,7 @@ export function boot(store, rootEl) {
 
   function renderPrediction() {
     const p = localState.prediction;
-    if (!p) {
-      passTimer.textContent = "--:--:--";
-      passBadgeDot.style.background = "var(--bad)";
-      passBadgeText.textContent = "—";
-      passMeta.textContent = "—";
-      passMini.textContent = "";
-      return;
-    }
-
-    const now = Date.now();
-    const msLeft = Math.max(0, p.aosMs - now);
-    passTimer.textContent = fmtHMS(msLeft);
-
-    const ok = Boolean(p.visible);
-    passBadgeDot.style.background = ok ? "var(--good)" : "var(--bad)";
-    passBadgeText.textContent = ok ? "✅ GÖRÜNÜR" : `🔴 GÖRÜNMEZ (${p.reason || "—"})`;
-
-    const aos = new Date(p.aosMs);
-    const los = new Date(p.losMs);
-    const aosStr = `${pad2(aos.getHours())}:${pad2(aos.getMinutes())}`;
-    const losStr = `${pad2(los.getHours())}:${pad2(los.getMinutes())}`;
-    passMeta.textContent = `AOS ${aosStr} • LOS ${losStr} • MAX ${Math.round(p.maxElevDeg)}°`;
-
-    passMini.textContent = p.hint ? p.hint : "";
+    // Widget update Logic moved to flightDataWidget.update() called in renderTelemetry
   }
 
   // ------- Leaflet map -------
@@ -643,7 +619,7 @@ export function boot(store, rootEl) {
       applySkin(getInitialSkin());
       return globe;
     } catch (e) {
-      log(`3D globe yüklenemedi: ${e?.message || e}`);
+      log(t('globeLoadFailed') + `: ${e?.message || e}`);
       try { globe?.setVisible(false); } catch { }
       globe = null;
       return null;
@@ -674,7 +650,7 @@ export function boot(store, rootEl) {
           }
         })
         .catch((e) => {
-          log(`3D globe hatası: ${e?.message || e}`);
+          log(t('globeError') + `: ${e?.message || e}`);
           mapEl.style.display = "block";
           try { viewToggleRef?.setMode("2d"); } catch { }
         });
@@ -748,18 +724,17 @@ export function boot(store, rootEl) {
 
   const locTop = buildEl("div", "loc-top", locCard);
   const locTitle = buildEl("div", "loc-title", locTop);
-  locTitle.textContent = "Yer Seçimi (OSM)";
+  locTitle.textContent = t('locationModalTitle');
   const locClose = buildEl("button", "btn", locTop);
   locClose.type = "button";
-  locClose.textContent = "Kapat";
+  locClose.textContent = t('close');
 
   const locBody = buildEl("div", "loc-body", locCard);
 
   const locDesc = buildEl("div", "", locBody);
   locDesc.style.fontWeight = "900";
   locDesc.style.opacity = "0.9";
-  locDesc.textContent =
-    "Geçiş hesabı seçtiğin konuma göre yapılır. Kaydedince 'En Yakın Geçiş' otomatik hesaplanır.";
+  locDesc.textContent = t('locationModalDesc');
 
   const locRow = buildEl("div", "loc-row", locBody);
   const locGpsBtn = buildEl("button", "btn", locRow);
@@ -785,7 +760,7 @@ export function boot(store, rootEl) {
   const locRow2 = buildEl("div", "loc-row", locBody);
   const locSaveBtn = buildEl("button", "btn", locRow2);
   locSaveBtn.type = "button";
-  locSaveBtn.textContent = "Kaydet";
+  locSaveBtn.textContent = t('save');
   locSaveBtn.disabled = true;
 
   let selectedPlace = null;
@@ -884,7 +859,7 @@ export function boot(store, rootEl) {
       const data = await nominatimFetch("/search", { q, limit: "12" });
       renderSearchResults(data);
     } catch (e) {
-      log(`loc> Nominatim arama başarısız: ${String(e?.message || e)}`);
+      log(t('locSearchFailed') + `: ${String(e?.message || e)}`);
       renderCityFallback(q);
     }
   }
@@ -911,7 +886,7 @@ export function boot(store, rootEl) {
 
   locGpsBtn.addEventListener("click", async () => {
     try {
-      log("loc> GPS isteniyor…");
+      log(t('locGpsRequesting'));
       const pos = await tryGetGpsOnce({ timeoutMs: 9000 });
       const data = await nominatimFetch("/reverse", {
         lat: String(pos.lat),
@@ -922,9 +897,9 @@ export function boot(store, rootEl) {
       if (!place || place.lat == null || place.lon == null) throw new Error("reverse empty");
       setPicked(place);
       locSaveBtn.disabled = false;
-      log(`loc> GPS reverse ok: ${placeLabel(place)}`);
+      log(t('locGpsSuccess') + `: ${placeLabel(place)}`);
     } catch (e) {
-      log(`loc> GPS/Reverse başarısız (${String(e?.message || e)})`);
+      log(t('locGpsFailed') + ` (${String(e?.message || e)})`);
       locSearch.disabled = false;
       locSearch.focus();
     }
@@ -951,7 +926,7 @@ export function boot(store, rootEl) {
     localState.obsLon = Number(selectedPlace.lon);
 
     syncCityText();
-    log(`loc> kaydedildi: ${placeLabel(selectedPlace)}`);
+    log(t('locSaved') + `: ${placeLabel(selectedPlace)}`);
 
     closeLocModal();
     await calcPredictionNow({ forceLog: true });
@@ -996,14 +971,22 @@ export function boot(store, rootEl) {
   }
 
   function renderTelemetry(tel) {
-    mSpeedV.textContent = fmtInt(tel.velocity);
-    mAltV.textContent = fmtNum(tel.altitude, 1);
-    mPosV.textContent = `${fmtNum(tel.latitude, 2)} / ${fmtNum(tel.longitude, 2)}`;
+    // Widget updates
+    telemetryWidget.update({
+      altitude: tel.altitude,
+      velocity: tel.velocity,
+      latitude: tel.latitude,
+      longitude: tel.longitude,
+      footprint: "Ocean" // Placeholder, need real geo lookup if possible
+    });
 
-    const posEl = card1.querySelector("#pos");
-    if (posEl) posEl.textContent = `${fmtNum(tel.latitude, 2)} / ${fmtNum(tel.longitude, 2)}`;
+    distancesWidget.update({
+      altitude: tel.altitude
+    });
 
-    syncCityText();
+    commWidget.update({});
+    timeWidget.update({});
+    solarWidget.update({});
 
     const la = clampLat(tel.latitude);
     const lo = normalizeLon(tel.longitude);
@@ -1026,24 +1009,57 @@ export function boot(store, rootEl) {
     const pts = trackPolyline.getLatLngs();
     if (pts.length > 600) trackPolyline.setLatLngs(pts.slice(-600));
 
-    // follow pan throttle
+    // follow: logic remains same...
     if (trackEnabled) {
       const now = Date.now();
       const minInterval = Number(CONFIG?.FOLLOW_PAN_INTERVAL_MS ?? 4000);
       const minDistM = Number(CONFIG?.FOLLOW_PAN_MIN_DISTANCE_M ?? 30000);
-
       const canTime = now - lastPanAt >= minInterval;
       const distOk = !lastPanLatLng ? true : map.distance(lastPanLatLng, latlng) >= minDistM;
-
-      const reduceMotion =
-        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
       if (canTime && distOk) {
         lastPanAt = now;
         lastPanLatLng = latlng;
-        map.panTo(latlng, { animate: !reduceMotion, duration: 0.25 });
+        map.panTo(latlng, { animate: true, duration: 0.25 });
       }
     }
+  }
+
+  async function fetchTelemetry() {
+    // Use real API
+    const res = await fetch(ISS_URL);
+    if (!res.ok) throw new Error("iss api");
+    const d = await res.json();
+    return {
+      altitude: d.altitude,
+      velocity: d.velocity,
+      latitude: d.latitude,
+      longitude: d.longitude,
+      footprint: d.visibility
+    };
+  }
+
+  function renderTelemetry(tel) {
+    // Widget updates (Unified)
+    flightDataWidget.update({
+      altitude: tel.altitude,
+      velocity: tel.velocity,
+      latitude: tel.latitude,
+      longitude: tel.longitude,
+      footprint: tel.footprint || "Ocean",
+      pass: localState.prediction // Pass data passed here
+    });
+    systemsWidget.update();
+
+    // Common updates
+    const la = clampLat(tel.latitude);
+    const lo = normalizeLon(tel.longitude);
+    localState.lastIssLat = la;
+    localState.lastIssLon = lo;
+    const latlng = L.latLng(la, lo);
+    marker.setLatLng(latlng);
+
+    // 3D
+    try { if (viewMode === "3d") globe?.setIssPosition(la, lo); } catch { }
   }
 
   // UI tick (countdown)
@@ -1088,7 +1104,7 @@ export function boot(store, rootEl) {
         renderPrediction();
       }
     } catch (e) {
-      log(`HATA: telemetri alınamadı (${String(e?.message || e)})`);
+      log(t('telemetryError') + ` (${String(e?.message || e)})`);
     }
   }
 
@@ -1111,5 +1127,22 @@ export function boot(store, rootEl) {
     });
   }
 
-  log("boot> hazır");
+  log(t('bootReady'));
+
+  // Show location welcome for first-time users
+  setTimeout(() => {
+    showLocationWelcome(
+      (location) => {
+        log(t('locationSet') + `: ${location.displayName}`);
+        // Optionally recalculate predictions with new location
+        if (location.lat && location.lon) {
+          // Could trigger prediction recalculation here
+        }
+      },
+      () => {
+        // Manual entry - open city selection modal
+        openLocModal();
+      }
+    );
+  }, 1000); // Small delay to let UI settle
 }

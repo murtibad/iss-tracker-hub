@@ -5,31 +5,41 @@
    ===================================================== */
 
 :root {
-  /* Dinamik Glass Renkleri (JavaScript'ten güncellenebilir) */
-  --glass-hue: 190;
-  --glass-sat: 85%;
+  /* Dinamik Glass Renkleri - MAGENTA/PINK THEME */
+  --glass-hue: 330;
+  /* Magenta hue */
+  --glass-sat: 100%;
 
   /* Base tokens (boot.js + ui dosyaları bunları kullanıyor) */
-  --bg: #0b0f17;
-  --card: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.08);
-  --card2: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.12);
-  --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.65);
-  --border: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.15);
-  --ring: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.25);
+  --bg: #0a0a0f;
+  /* Darker background */
+  --card: hsla(var(--glass-hue), var(--glass-sat), 55%, 0.08);
+  --card2: hsla(var(--glass-hue), var(--glass-sat), 55%, 0.12);
+  --text: rgba(255, 255, 255, 0.95);
+  --muted: rgba(255, 255, 255, 0.70);
+  --border: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.20);
+  --ring: hsla(var(--glass-hue), var(--glass-sat), 65%, 0.35);
 
   --good: #22c55e;
   --bad: #ef4444;
   --warn: #fbbf24;
 
-  --accent: #22d3ee;
-  --accent2: #60a5fa;
+  --accent: #ff1493;
+  /* Magenta/Deep Pink */
+  --accent2: #ff69b4;
+  /* Hot Pink */
 
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.40);
+  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.28);
 
-  /* Glass glow effect */
-  --glass-glow: 0 0 20px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.2);
+  /* Neon glow effects */
+  --glass-glow: 0 0 20px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.3),
+    0 0 40px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.15);
+  --neon-glow: 0 0 10px var(--accent),
+    0 0 20px var(--accent),
+    0 0 30px hsla(330, 100%, 50%, 0.5);
+  --text-glow: 0 0 8px hsla(330, 100%, 65%, 0.6),
+    0 0 12px hsla(330, 100%, 65%, 0.3);
 }
 
 /* Light mode */
@@ -84,9 +94,30 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  /* Monospace font for terminal/cyberpunk feel - Multi-language support */
+  /* Latin → Cyrillic → CJK → Arabic → Fallback */
+  font-family:
+    'Courier New', 'Consolas', 'Monaco', 'Andale Mono',
+    /* Latin monospace */
+    'DejaVu Sans Mono',
+    /* Linux fallback */
+    'Courier New',
+    /* Windows Cyrillic support */
+    'Microsoft YaHei Mono', 'SimHei',
+    /* Chinese */
+    'Meiryo', 'MS Gothic',
+    /* Japanese */
+    'Arial Unicode MS',
+    /* CJK fallback */
+    'Tahoma', 'Arial',
+    /* Arabic support */
+    monospace,
+    /* Generic monospace */
+    'Segoe UI', sans-serif;
+  /* Final fallback */
   overflow: hidden;
+  font-size: 14px;
+  letter-spacing: 0.3px;
 }
 
 /* -----------------------------------------------------
@@ -110,14 +141,34 @@ body {
 }
 
 /* -----------------------------------------------------
-   Glass base
+   Glass base - CYBERPUNK SOLID VERSION
 ----------------------------------------------------- */
 .hub-glass {
-  background: var(--card);
-  border: 1px solid var(--ring);
-  box-shadow: var(--shadow), var(--glass-glow);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 15, 0.98);
+  /* Very opaque for dark mode */
+  border: 2px solid var(--accent);
+  /* Strong neon border */
+  box-shadow:
+    0 0 20px hsla(var(--glass-hue), var(--glass-sat), 50%, 0.4),
+    0 0 40px hsla(var(--glass-hue), var(--glass-sat), 50%, 0.2),
+    inset 0 0 60px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.05);
+  /* Inner glow */
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  position: relative;
+}
+
+/* Light mode panels - bright and clean */
+:root[data-theme="light"] .hub-glass {
+  background: rgba(255, 255, 255, 0.95);
+  /* Bright white background */
+  border-color: var(--accent);
+  box-shadow:
+    0 0 15px hsla(var(--glass-hue), var(--glass-sat), 50%, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 0 40px hsla(var(--glass-hue), var(--glass-sat), 65%, 0.03);
+  color: #1a1a1a;
+  /* Dark text for light mode */
 }
 
 /* -----------------------------------------------------
@@ -263,100 +314,111 @@ body {
 }
 
 /* -----------------------------------------------------
-   HUD cards (left)
+   3-Panel Layout System (CSS Grid)
 ----------------------------------------------------- */
-.hub-cards {
+.hub-main-layout {
   position: absolute;
-  top: 72px;
-  left: 12px;
-  width: min(360px, calc(100% - 24px));
+  inset: 0;
+  top: 50px;
+  /* Space for topbar */
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  grid-template-rows: 1fr auto;
+  gap: 12px;
+  padding: 16px;
+  pointer-events: none;
+  /* Let clicks pass to map through gaps */
+  z-index: 1000;
+}
+
+.hub-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  pointer-events: none;
+  /* Container doesn't block */
+}
+
+.hub-col>* {
   pointer-events: auto;
-  z-index: 2000;
+  /* Children (widgets) block clicks */
 }
 
-.card {
-  padding: 10px 12px;
+.hub-left {
+  grid-column: 1;
+  grid-row: 1;
 }
 
-.card .row {
+.hub-center {
+  grid-column: 2;
+  grid-row: 1;
+  /* Center is meant for map interaction, so mostly empty */
+}
+
+.hub-right {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Terminal Area - Spans full bottom or center bottom */
+.hub-bottom {
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.card .k {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.card .v {
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 0.2px;
-}
-
-.card .sub {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.card .sub strong {
-  color: var(--text);
-}
-
-.pass-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 900;
-  font-size: 12px;
-}
-
-.pass-badge .b {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--bad);
-}
-
-.pass-meta {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.pass-mini {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--text);
-  opacity: 0.95;
-  font-weight: 800;
+.hub-bottom>* {
+  pointer-events: auto;
 }
 
 /* -----------------------------------------------------
-   Terminal (log)
+   HUD/Widgets (Restyling for Grid)
 ----------------------------------------------------- */
-.hub-terminal {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  width: min(520px, calc(100% - 24px));
-  max-width: 520px;
-  height: 180px;
-  padding: 10px;
-  pointer-events: auto;
-  z-index: 2000;
+/* Remove absolute positioning from cards since they are now in the grid */
+.hub-cards {
+  position: static;
+  /* Was absolute */
+  width: 100%;
+  top: auto;
+  left: auto;
+}
 
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+.hub-terminal {
+  position: static;
+  /* Was absolute */
+  width: 100%;
+  max-width: 100%;
+  height: 200px;
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+  /* Connect to bottom edge */
+}
+
+/* Mobile Responsive */
+@media (max-width: 900px) {
+  .hub-main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    overflow-y: auto;
+    pointer-events: auto;
+    /* Need scroll on mobile */
+  }
+
+  .hub-left,
+  .hub-right,
+  .hub-center,
+  .hub-bottom {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .hub-center {
+    height: 300px;
+    /* Reserve space for map on mobile */
+  }
 }
 
 .term-head {
