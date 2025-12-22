@@ -1,5 +1,6 @@
 import { t, getCurrentLanguage, setLanguage } from "../i18n/i18n.js";
 import { ICONS } from "./icons.js";
+import { setTheme, setColorPalette, setLanguage as saveLanguagePref } from "../services/userPreferences.js";
 
 export function createSettingsModal(options = {}) {
   const modal = document.createElement("div");
@@ -144,6 +145,7 @@ export function createSettingsModal(options = {}) {
       const theme = btn.dataset.theme;
       document.documentElement.setAttribute("data-theme", theme === 'system' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light') : theme);
       localStorage.setItem("issThemeMode", theme);
+      setTheme(theme); // Sync to cloud
       themeBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
     });
@@ -171,6 +173,7 @@ export function createSettingsModal(options = {}) {
       root.style.setProperty('--border', `rgba(${hexToRgb(colorHex)}, 0.3)`);
 
       localStorage.setItem("issAccentColor", colorName);
+      setColorPalette(colorName.toUpperCase()); // Sync to cloud
 
       // Visual feedback
       colorBtns.forEach(b => b.style.outline = 'none');
