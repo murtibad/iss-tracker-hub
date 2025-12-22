@@ -5,9 +5,12 @@ import { t } from "../../i18n/i18n.js";
 
 const DISMISS_KEY = "isshub:landingHeroDismissed";
 
+// Safe localStorage access
+const storage = typeof window !== 'undefined' && window.localStorage ? window.localStorage : null;
+
 export function createLandingHero({ onShowPass, onLiveTrack, getPassState }) {
   // Check if already dismissed
-  if (localStorage.getItem(DISMISS_KEY) === "true") {
+  if (storage && storage.getItem(DISMISS_KEY) === "true") {
     return { el: null, update: () => { }, dismiss: () => { } };
   }
 
@@ -128,7 +131,7 @@ export function createLandingHero({ onShowPass, onLiveTrack, getPassState }) {
 
   // Dismiss function
   function dismiss() {
-    localStorage.setItem(DISMISS_KEY, "true");
+    storage && storage.setItem(DISMISS_KEY, "true");
     overlay.remove();
   }
 
