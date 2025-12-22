@@ -1144,18 +1144,16 @@ export async function boot(store, rootEl) {
     updateTrajectoryOnMap();
   }, 5 * 60 * 1000);
 
-  // ========== SMOOTH MOTION SYSTEM (60fps Lerp) ==========
-  // Replaces old interval-based discrete updates with smooth interpolation
+  // ========== SMOOTH MOTION SYSTEM ==========
+  // 2D: Native marker updated on data arrival (sticky during pan)
+  // 3D: 60fps lerp for smooth orbit visualization
   startMotion({
-    // Called every frame (60fps) with interpolated position
+    // Called every frame (60fps) - ONLY for 3D globe smooth interpolation
     onPosition: (pos) => {
       const la = clampLat(pos.lat);
       const lo = normalizeLon(pos.lng);
 
-      // Update 2D marker
-      mapView.updateISSPosition(la, lo);
-
-      // Update 3D globe (if visible)
+      // Update ONLY 3D globe at 60fps (WebGL mesh needs lerp)
       if (viewMode === "3d" && globe) {
         try { globe.setIssPosition(la, lo); } catch { }
       }
@@ -1168,6 +1166,14 @@ export async function boot(store, rootEl) {
     // Called when new API data arrives (every 3s)
     onData: (data) => {
       if (!data) return;
+
+      const la = clampLat(data.lat);
+      const lo = normalizeLon(data.lon);
+
+      // Update 2D marker ONLY on data arrival (native = sticky during pan)
+      if (viewMode === "2d") {
+        mapView.updateISSPosition(la, lo);
+      }
 
       // Update widgets with fresh data
       flightDataWidget.update({
@@ -1209,7 +1215,7 @@ export async function boot(store, rootEl) {
     }
   });
 
-  log('[Motion] 🚀 60fps Lerp motion system başlatıldı');
+  log('[Motion] 🛰️ Motion system started (2D: native sticky, 3D: 60fps lerp)');
 
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
