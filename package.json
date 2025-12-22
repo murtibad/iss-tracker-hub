@@ -1,6 +1,6 @@
 {
   "name": "iss-tracker-hub",
-  "version": "0.2.0-beta",
+  "version": "0.2.2",
   "description": "Real-time ISS tracker with 3D visualization and personalized home location",
   "author": "murtibad",
   "license": "MIT",

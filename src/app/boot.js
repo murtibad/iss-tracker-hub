@@ -19,8 +19,8 @@ import { initI18n, t, getCurrentLanguage, getSpeedUnit, getDistanceUnit } from "
 
 import { openCrewModal } from "../ui/crewWidgetView.js";
 
-// Smart Info Card (Minimalist UI)
-import { createSmartInfoCard } from "../ui/widgets/smartInfoCard.js";
+// Docked Dashboard (Cinematic UI v0.2.2)
+import { createDockedDashboard } from "../ui/components/dockedDashboard.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -392,47 +392,20 @@ export async function boot(store, rootEl) {
     log(t('themeChanged') + `: ${themeMode} (${resolvedTheme})`);
   });
 
-  // ========== MINIMALIST UI: Smart Info Card ==========
-  // Single floating card replaces complex 3-panel grid
-  const smartCard = createSmartInfoCard();
-  rootEl.appendChild(smartCard.el);
+  // ========== DOCKED UI: Cinematic Dashboard v0.2.2 ==========
+  // Full-width bottom bar with telemetry + terminal + actions
+  const dashboard = createDockedDashboard();
+  rootEl.appendChild(dashboard.el);
 
-  // Terminal layout (simplified - just terminal at bottom)
-  const bottomLayout = buildEl("div", "hub-bottom-simple", overlay);
-  bottomLayout.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    pointer-events: none;
-  `;
+  // Use dashboard's integrated terminal for logging
+  const log = dashboard.getLogFn();
 
-  // Terminal (log) - simplified single column layout
-  const terminal = buildEl("div", "hub-terminal hub-glass", bottomLayout);
-  const termHead = buildEl("div", "term-head", terminal);
-  const termTitle = buildEl("div", "term-title", termHead);
-  termTitle.textContent = "TERMINAL";
-  const termSub = buildEl("div", "term-sub", termHead);
-  termSub.textContent = "Last Update: --:--:--";
+  // Reference for terminal subtitle updates
+  const termSub = { textContent: "" };  // Placeholder - dashboard manages this internally
 
-  const termBody = buildEl("div", "term-body", terminal);
-  termBody.textContent = "";
-
-  const logLines = [];
-  function log(line) {
-    const ts = new Date();
-    const stamp = `${pad2(ts.getHours())}:${pad2(ts.getMinutes())}:${pad2(ts.getSeconds())}`;
-    const msg = `[${stamp}] ${line}`;
-    logLines.push(msg);
-    if (logLines.length > 200) logLines.shift();
-    termBody.textContent = logLines.join("\n");
-    termBody.scrollTop = termBody.scrollHeight;
-  }
-
-  // Version label - Keep absolute but effectively bottom right
+  // Version label
   const version = buildEl("div", "hub-ver", overlay);
-  version.textContent = CONFIG?.VERSION || "v0.1-alpha";
+  version.textContent = CONFIG?.VERSION || "v0.2.2";
 
   // ---------- Local state ----------
   const localState = {
@@ -990,10 +963,12 @@ export async function boot(store, rootEl) {
   }
 
   function renderTelemetry(tel) {
-    // Smart Info Card update
-    smartCard.update({
+    // Docked Dashboard update
+    dashboard.update({
       altitude: tel.altitude,
       velocity: tel.velocity,
+      latitude: tel.latitude,
+      longitude: tel.longitude,
       visibility: tel.footprint // "daylight" or "eclipsed"
     });
 
@@ -1165,10 +1140,12 @@ export async function boot(store, rootEl) {
         mapView.updateISSPosition(la, lo);
       }
 
-      // Update Smart Info Card
-      smartCard.update({
+      // Update Docked Dashboard
+      dashboard.update({
         altitude: data.altKm,
         velocity: data.velKmh || 27580,
+        latitude: data.lat,
+        longitude: data.lon,
         visibility: "daylight" // Default, API may provide this
       });
 
