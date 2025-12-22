@@ -26,6 +26,7 @@ import { createSettingsModal } from "../ui/settingsModal.js";
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
 import { createPassCard } from "../ui/passCardView.js";
+import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -72,24 +73,24 @@ function buildEl(tag, className, parent) {
   if (className) n.className = className;
   if (parent) parent.appendChild(n);
   return n;
-// Safe localStorage wrapper
-const safeStorage = {
-  getItem: (key) => {
-    try {
-      return window.localStorage ? window.safeStorage.getItem(key) : null;
-    } catch (e) {
-      console.warn('[Storage] getItem failed:', e);
-      return null;
+  // Safe localStorage wrapper
+  const safeStorage = {
+    getItem: (key) => {
+      try {
+        return window.localStorage ? window.safeStorage.getItem(key) : null;
+      } catch (e) {
+        console.warn('[Storage] getItem failed:', e);
+        return null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
+        if (window.localStorage) window.safeStorage.setItem(key, value);
+      } catch (e) {
+        console.warn('[Storage] setItem failed:', e);
+      }
     }
-  },
-  setItem: (key, value) => {
-    try {
-      if (window.localStorage) window.safeStorage.setItem(key, value);
-    } catch (e) {
-      console.warn('[Storage] setItem failed:', e);
-    }
-  }
-};
+  };
 }
 
 // ------- Theme (system/dark/light) -------
@@ -497,12 +498,12 @@ export async function boot(store, rootEl) {
 
   function renderPrediction() {
     const p = localState.prediction;
-    
+
     // Update pass card
     if (p && p.aosMs) {
       // Show pass card
       passSection.style.display = 'block';
-      
+
       // Calculate countdown
       const now = Date.now();
       const diffMs = p.aosMs - now;
@@ -511,7 +512,7 @@ export async function boot(store, rootEl) {
       const m = Math.floor((diffSec % 3600) / 60);
       const s = diffSec % 60;
       const countdownText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-      
+
       passCard.setState({
         nextPass: p,
         nextVisiblePass: p.visible ? p : null,
@@ -1145,6 +1146,19 @@ export async function boot(store, rootEl) {
       } catch { }
     });
   }
+
+  // ---------- Mobile Navigation Bar ----------
+  const mobileNav = createMobileNavBar({
+    onChange: (tabId) => {
+      document.body.setAttribute('data-mobile-view', tabId);
+    },
+    onSettings: () => settingsModal.open()
+  });
+  rootEl.appendChild(mobileNav.el);
+
+  // Enable mobile mode class for CSS hooks (media query handles activation)
+  document.body.classList.add('mobile-mode');
+  document.body.setAttribute('data-mobile-view', 'map');
 
   log(t('bootReady'));
 

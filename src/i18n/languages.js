@@ -31,6 +31,13 @@ export const LANGUAGES = {
             dark: 'Koyu',
             light: 'Açık',
             myLocation: 'Konumum',
+            settings: 'Ayarlar',
+            navMap: 'Harita',
+            navTelemetry: 'Veriler',
+            navPasses: 'Geçişler',
+            hudShowDetails: 'Detaylar',
+            hudHideDetails: 'Gizle',
+            hudDebug: 'Terminal',
 
             // Modals
             selectLocation: 'Yer Seçimi',
@@ -144,6 +151,13 @@ export const LANGUAGES = {
             dark: 'Dark',
             light: 'Light',
             myLocation: 'My Location',
+            settings: 'Settings',
+            navMap: 'Map',
+            navTelemetry: 'Telemetry',
+            navPasses: 'Passes',
+            hudShowDetails: 'Show Details',
+            hudHideDetails: 'Hide Details',
+            hudDebug: 'Debug',
 
             selectLocation: 'Select Location',
             searchCity: 'Search City',

@@ -2116,3 +2116,95 @@ select:focus-visible,
     padding: 6px 10px !important;
   }
 }
+/* -----------------------------------------------------
+   Mobile Navigation (Added for better UX)
+----------------------------------------------------- */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(11, 12, 21, 0.95);
+    border-top: 1px solid var(--ring);
+    z-index: 9000; /* Above Leaflet controls */
+    justify-content: space-around;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  }
+
+  :root[data-theme="light"] .mobile-nav {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .nav-item {
+    background: none;
+    border: none;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-item.active {
+    color: var(--accent);
+  }
+  
+  .nav-icon svg {
+    width: 22px; 
+    height: 22px;
+  }
+
+  /* Adjustments for Mobile Nav */
+  .view-toggle {
+    bottom: 80px !important; /* Move above nav */
+  }
+
+  .hub-ver {
+    display: none; /* Hide version on mobile to save space */
+  }
+  
+  /* Hide elements by default on mobile unless active */
+  body.mobile-mode .floating-hud,
+  body.mobile-mode .pass-section {
+    display: none !important;
+  }
+  
+  body.mobile-mode[data-mobile-view="telemetry"] .floating-hud {
+    display: block !important;
+    top: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+  }
+  
+  body.mobile-mode[data-mobile-view="passes"] .pass-section {
+    display: block !important;
+    bottom: 80px !important;
+    width: 95% !important;
+    right: 2.5% !important;
+  }
+
+  /* Hide simple elements when focused on map */
+  body.mobile-mode[data-mobile-view="map"] .floating-hud,
+  body.mobile-mode[data-mobile-view="map"] .pass-section {
+    display: none !important;
+  }
+}
