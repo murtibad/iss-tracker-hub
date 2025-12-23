@@ -2,8 +2,9 @@
 // TR: Sıradaki geçiş kartı + Detaylar (expand/collapse)
 // EN: Next pass card + Details toggle
 
-import { t } from "../i18n/i18n.js";
+import { t, getCurrentLanguage } from "../i18n/i18n.js";
 import { CONFIG } from "../constants/config.js";
+import { downloadICS } from "../services/passNotification.js";
 
 function el(tag, className) {
   const n = document.createElement(tag);
@@ -53,9 +54,32 @@ export function createPassCard() {
   const extraLine1 = el("div", "pass-extra-line");
   const extraLine2 = el("div", "pass-extra-line");
 
-  extra.append(extraLine1, extraLine2);
+  // Calendar export button
+  const calendarBtn = el("button", "btn btn-calendar");
+  calendarBtn.type = "button";
+  const lang = getCurrentLanguage();
+  calendarBtn.innerHTML = `📅 ${lang === 'tr' ? 'Takvime Ekle' : 'Add to Calendar'}`;
+  calendarBtn.style.cssText = `
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    background: rgba(0,243,255,0.2);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    color: var(--accent);
+    cursor: pointer;
+    width: 100%;
+    transition: 0.2s;
+  `;
+  calendarBtn.onmouseenter = () => calendarBtn.style.background = 'rgba(0,243,255,0.4)';
+  calendarBtn.onmouseleave = () => calendarBtn.style.background = 'rgba(0,243,255,0.2)';
+
+  extra.append(extraLine1, extraLine2, calendarBtn);
 
   wrap.append(headRow, countdown, labelRow, meta, extra);
+
+  // Store current pass data for calendar export
+  let currentPassData = null;
 
   let isOpen = false;
   function setOpen(v) {
@@ -70,10 +94,29 @@ export function createPassCard() {
     setOpen(!isOpen);
   });
 
+  // Calendar button click handler
+  calendarBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (currentPassData) {
+      const success = downloadICS({
+        startTime: currentPassData.aosMs,
+        duration: Math.round((currentPassData.durationSec || 300) / 60),
+        maxElevation: currentPassData.maxElevDeg
+      });
+      if (success) {
+        calendarBtn.innerHTML = '✅ ' + (getCurrentLanguage() === 'tr' ? 'İndirildi!' : 'Downloaded!');
+        setTimeout(() => {
+          calendarBtn.innerHTML = '📅 ' + (getCurrentLanguage() === 'tr' ? 'Takvime Ekle' : 'Add to Calendar');
+        }, 2000);
+      }
+    }
+  });
+
   // Kartın gövdesine tıklayınca da aç/kapa (buton hariç)
   wrap.addEventListener("click", (e) => {
-    const t = e.target;
-    if (t && t.closest && t.closest(".pass-details-btn")) return;
+    const target = e.target;
+    if (target && target.closest && (target.closest(".pass-details-btn") || target.closest(".btn-calendar"))) return;
     // sadece kartın içinde bir yere tıklandıysa
     setOpen(!isOpen);
   });
@@ -104,13 +147,19 @@ export function createPassCard() {
   function setState({ nextPass, nextVisiblePass, countdownText }) {
     countdown.textContent = countdownText || "--:--:--";
 
+    // Store for calendar export
+    currentPassData = nextPass;
+
     if (!nextPass) {
       setLabel({ visible: false, reason: "invisible", maxElev: null });
       meta.textContent = t('passNone');
       extraLine1.textContent = "—";
       extraLine2.textContent = "—";
+      calendarBtn.style.display = 'none';
       return;
     }
+
+    calendarBtn.style.display = 'block';
 
     const aos = fmtTime(nextPass.aosMs);
     const los = fmtTime(nextPass.losMs);

@@ -138,7 +138,14 @@ const DICTIONARY = {
         "authHasAccount": "Already have an account?",
         "authGoogleSignIn": "Continue with Google",
         "authWelcome": "Welcome",
-        "authProfile": "Profile"
+        "authProfile": "Profile",
+
+        // Calendar and Notifications
+        "addToCalendar": "Add to Calendar",
+        "calendarDownloaded": "Downloaded!",
+        "enableNotifications": "Enable Notifications",
+        "notificationsEnabled": "Notifications Enabled",
+        "passReminder": "ISS Pass Reminder"
     },
     tr: {
         // Genel
@@ -272,7 +279,14 @@ const DICTIONARY = {
         "authHasAccount": "Zaten hesabınız var mı?",
         "authGoogleSignIn": "Google ile devam et",
         "authWelcome": "Hoş geldin",
-        "authProfile": "Profil"
+        "authProfile": "Profil",
+
+        // Calendar and Notifications
+        "addToCalendar": "Takvime Ekle",
+        "calendarDownloaded": "İndirildi!",
+        "enableNotifications": "Bildirimleri Aç",
+        "notificationsEnabled": "Bildirimler Açık",
+        "passReminder": "ISS Geçiş Hatırlatıcısı"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},
