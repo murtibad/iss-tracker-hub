@@ -529,15 +529,15 @@ export async function boot(store, rootEl) {
         // Highlight for 2 seconds
         passSection.classList.add('highlight');
         setTimeout(() => passSection.classList.remove('highlight'), 2000);
-        console.log("[Hero] Show Pass - scrolled to pass card");
+        // console.log("[Hero] Show Pass - scrolled to pass card");
       } else {
-        console.log("[Hero] Show Pass - card not visible yet");
+        // console.log("[Hero] Show Pass - card not visible yet");
       }
     },
     onLiveTrack: () => {
       // Enable follow mode and focus on ISS
       setFollowUI(true);
-      console.log("[Hero] Live Track clicked");
+      // console.log("[Hero] Live Track clicked");
     }
   });
   if (landingHero.el) rootEl.appendChild(landingHero.el);
@@ -1152,7 +1152,7 @@ export async function boot(store, rootEl) {
   function applyTrajectoryToGlobe() {
     if (cachedTrajectory && globe && globe.updateTrajectory) {
       globe.updateTrajectory(cachedTrajectory.past, cachedTrajectory.future);
-      console.log('[Trajectory] Applied to 3D Globe');
+      // console.log('[Trajectory] Applied to 3D Globe');
     }
   }
   window._applyTrajectoryToGlobe = applyTrajectoryToGlobe;
@@ -1162,12 +1162,12 @@ export async function boot(store, rootEl) {
   if (mapView && mapView.map) {
     if (mapView.map.loaded()) {
       // Map already loaded, calculate immediately
-      console.log('[Trajectory] Map already loaded, calculating immediately...');
+      // console.log('[Trajectory] Map already loaded, calculating immediately...');
       updateTrajectoryOnMap();
     } else {
       // Map not loaded yet, wait for load event
       mapView.map.once('load', () => {
-        console.log('[Trajectory] Map loaded, calculating initial trajectory...');
+        // console.log('[Trajectory] Map loaded, calculating initial trajectory...');
         updateTrajectoryOnMap();
       });
     }
@@ -1301,4 +1301,15 @@ export async function boot(store, rootEl) {
       }
     );
   }, 1000); // Small delay to let UI settle
+
+  // Phase 7: Network Feedback
+  window.addEventListener('offline', () => {
+    showToast(`${t('connectionLost')} • ${t('staleData')}`, 'error');
+    networkStatus.setOffline(true);
+  });
+
+  window.addEventListener('online', () => {
+    showToast(t('connectionRestored') || "⚡ Connection Restored", 'success');
+    networkStatus.setOffline(false);
+  });
 }

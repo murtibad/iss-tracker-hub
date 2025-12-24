@@ -28,6 +28,8 @@ const DICTIONARY = {
 
         // Status
         connectionStable: "Connection stable",
+        connectionLost: "⚠️ Internet connection lost",
+        connectionRestored: "⚡ Connection restored",
         daylight: "Daylight",
         eclipse: "Eclipse",
 
@@ -269,6 +271,8 @@ const DICTIONARY = {
 
         // Durum
         connectionStable: "Bağlantı kararlı",
+        connectionLost: "⚠️ İnternet bağlantısı kesildi",
+        connectionRestored: "⚡ Bağlantı geri geldi",
         daylight: "Gündüz",
         eclipse: "Tutulma (Gece)",
 
