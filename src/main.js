@@ -6,6 +6,7 @@ import "./styles/theme.css";
 import "./styles/cyberpunk.css";
 import "./styles/layout.css"; // Responsive layout
 import "./styles/fixes.css"; // <-- HUD/Leaflet z-index düzeltmesi
+import "./styles/accessibility.css"; // <-- Accessibility for elderly users (60-70 age group)
 
 import { createStore } from "./state/store.js";
 import { boot } from "./app/boot.js";

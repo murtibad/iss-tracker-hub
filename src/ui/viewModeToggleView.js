@@ -1,6 +1,6 @@
 // src/ui/viewModeToggleView.js
-// TR: 2D / 3D görünüm toggle butonu
-// EN: 2D / 3D view toggle button
+// TR: 2D / 3D görünüm toggle butonu + Odak Modu
+// EN: 2D / 3D view toggle button + Focus Mode
 
 function el(tag, className) {
   const n = document.createElement(tag);
@@ -9,13 +9,19 @@ function el(tag, className) {
 }
 
 const STORAGE_KEY = "isshub:view_mode"; // "2d" | "3d"
+const FOCUS_STORAGE_KEY = "isshub:focus_mode"; // "earth" | "iss"
 
 export function getInitialViewMode() {
   const v = localStorage.getItem(STORAGE_KEY);
   return v === "3d" ? "3d" : "2d";
 }
 
-export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
+export function getInitialFocusMode() {
+  const v = localStorage.getItem(FOCUS_STORAGE_KEY);
+  return v === "iss" ? "iss" : "earth";
+}
+
+export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChange } = {}) {
   // TR: Vite HMR veya yeniden boot durumlarında üst üste binmemesi için
   //     önce var olan toggle'ı temizle.
   // EN: Remove any existing toggle to avoid duplicates (e.g. HMR/reboot).
@@ -26,16 +32,20 @@ export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
 
   const wrap = el("div", "view-toggle glass");
   wrap.id = "isshub-viewmode-toggle";
-  wrap.style.position = "fixed";
-  wrap.style.right = "16px";
-  // TR: Sağ alttaki version label ile çakışmasın.
-  // EN: Avoid overlapping the bottom-right version label.
-  wrap.style.bottom = "56px";
-  wrap.style.zIndex = "1300";
+  wrap.style.cssText = `
+    position: fixed;
+    right: 16px;
+    bottom: 56px;
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  `;
 
+  // 2D/3D Modu Butonu
   const btn = el("button", "btn btn-primary view-mode-btn");
   btn.type = "button";
-  // Add some specific styling for this button
   btn.style.cssText = `
     width: 44px;
     height: 44px;
@@ -48,23 +58,130 @@ export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
   `;
   wrap.appendChild(btn);
 
+  // Odak Modu Butonu (sadece 3D modda görünür)
+  const focusBtn = el("button", "btn btn-secondary focus-mode-btn");
+  focusBtn.type = "button";
+  focusBtn.style.cssText = `
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0, 180, 255, 0.3);
+    border: 2px solid rgba(0, 200, 255, 0.6);
+    color: #00d4ff;
+    transition: all 0.3s ease;
+  `;
+  wrap.appendChild(focusBtn);
+
   let mode = initialMode === "3d" ? "3d" : "2d";
+  let focusMode = getInitialFocusMode();
+
+  // Icons
+  const iconMap = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>`;
+  const iconGlobe = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+  const iconEarth = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>`;
+  const iconISS = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="1" y="8" width="4" height="8"/><rect x="19" y="8" width="4" height="8"/><circle cx="12" cy="12" r="2"/></svg>`;
 
   function render() {
-    // Icons should be imported or passed. 
-    // Since this file doesn't import ICONS, let's use emoji or simple svg for now
-    // Or better, update imports.
-    const iconMap = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>`;
-    const iconGlobe = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+    const label = mode === "3d" ? "3D Küre" : "2D Harita";
+    const nextLabel = mode === "3d" ? "Switch to 2D Map" : "Switch to 3D Globe";
 
-    const label = mode === "3d" ? "Switch to 2D Map" : "Switch to 3D Globe";
-    // If mode is 3D, button should show 2D icon to switch back? Or show current mode?
-    // Usually toggle shows "What will happen". So if 3D, show Map icon.
+    // Icon content
     btn.innerHTML = mode === "3d" ? iconMap : iconGlobe;
-    btn.title = mode === "3d" ? "2D Map" : "3D Globe";
-    btn.setAttribute("aria-label", label);
+    btn.title = nextLabel;
+    btn.setAttribute("aria-label", nextLabel);
+
+    // Visible Label Container (Elderly UX)
+    let labelContainer = document.getElementById('view-mode-label');
+    if (!labelContainer) {
+      labelContainer = document.createElement('div');
+      labelContainer.id = 'view-mode-label';
+      labelContainer.style.cssText = `
+            background: var(--card);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 14px; /* Secondary text allow 14px? User said NO < 18px primary/secondary. */
+            /* Checking rule: "No primary or secondary UI text may render below 18px" */
+            /* So this must be 18px. */
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+            pointer-events: none;
+            position: absolute;
+            right: 60px; /* Left of the buttons */
+            top: 0;
+            white-space: nowrap;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            height: 44px; /* Match button height */
+        `;
+      wrap.appendChild(labelContainer);
+    }
+    labelContainer.textContent = mode === "3d" ? "Mod: 3D Küre" : "Mod: 2D Harita";
+
+    // Odak butonu sadece 3D modda görünür
+    if (mode === "3d") {
+      focusBtn.style.display = "flex";
+      renderFocusBtn();
+    } else {
+      focusBtn.style.display = "none";
+      // Clear secondary label if exists
+      const focusLabel = document.getElementById('focus-mode-label');
+      if (focusLabel) focusLabel.style.display = 'none';
+    }
+  }
+
+  function renderFocusBtn() {
+    // Focus Label (Elderly UX)
+    let focusLabel = document.getElementById('focus-mode-label');
+    if (!focusLabel) {
+      focusLabel = document.createElement('div');
+      focusLabel.id = 'focus-mode-label';
+      focusLabel.style.cssText = `
+            background: var(--card);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 18px; /* Strict 18px */
+            font-weight: 700;
+            text-align: right;
+            pointer-events: none;
+            position: absolute;
+            right: 60px;
+            top: 52px; /* Below the first label */
+            white-space: nowrap;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            height: 40px;
+        `;
+      wrap.appendChild(focusLabel);
+    }
+    focusLabel.style.display = 'flex';
+
+    if (focusMode === "iss") {
+      focusBtn.innerHTML = iconEarth;
+      focusBtn.title = "Switch to Earth View";
+      focusBtn.style.background = "rgba(255, 100, 50, 0.4)";
+      focusBtn.style.borderColor = "rgba(255, 150, 100, 0.8)";
+      focusBtn.style.color = "#ffaa66";
+      focusLabel.textContent = "Odak: ISS";
+    } else {
+      focusBtn.innerHTML = iconISS;
+      focusBtn.title = "Focus on ISS";
+      focusBtn.style.background = "rgba(0, 180, 255, 0.3)";
+      focusBtn.style.borderColor = "rgba(0, 200, 255, 0.6)";
+      focusBtn.style.color = "#00d4ff";
+      focusLabel.textContent = "Odak: Dünya";
+    }
   }
 
   function setMode(v) {
@@ -77,9 +194,24 @@ export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
     if (typeof onChange === "function") onChange(mode);
   }
 
+  function setFocusMode(v) {
+    const next = v === "iss" ? "iss" : "earth";
+    focusMode = next;
+    try {
+      localStorage.setItem(FOCUS_STORAGE_KEY, focusMode);
+    } catch { }
+    renderFocusBtn();
+    if (typeof onFocusChange === "function") onFocusChange(focusMode);
+  }
+
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     setMode(mode === "3d" ? "2d" : "3d");
+  });
+
+  focusBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    setFocusMode(focusMode === "iss" ? "earth" : "iss");
   });
 
   render();
@@ -88,5 +220,7 @@ export function createViewModeToggle({ initialMode = "2d", onChange } = {}) {
     el: wrap,
     getMode: () => mode,
     setMode,
+    getFocusMode: () => focusMode,
+    setFocusMode,
   };
 }

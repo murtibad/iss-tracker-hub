@@ -4,7 +4,47 @@ import { t } from "../../i18n/i18n.js";
 
 export function createMobileNavBar(actions) {
     const bar = document.createElement("div");
-    bar.className = "mobile-nav";
+    bar.className = "mobile-nav glass-panel";
+
+    // Phase 6: Accessible Touch Targets
+    const style = document.createElement('style');
+    style.textContent = `
+        .mobile-nav { 
+            height: 80px !important; /* Large Touch Area */
+            padding-bottom: 20px !important; /* Safe Area for modern phones */
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            transition: 0.2s;
+        }
+        .nav-icon { font-size: 24px !important; margin-bottom: 4px; }
+        .nav-label { 
+            font-size: 18px !important; /* Strict 18px */
+            font-weight: 600;
+        }
+        .nav-item.active {
+            color: var(--accent);
+            background: linear-gradient(to top, rgba(0,243,255,0.1), transparent);
+            border-top: 3px solid var(--accent);
+        }
+        .nav-item.active .nav-label { font-weight: 800; }
+    `;
+    bar.appendChild(style);
 
     // Tabs configuration
     const tabs = [

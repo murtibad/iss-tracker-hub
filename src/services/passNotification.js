@@ -19,7 +19,7 @@ function generateICS(pass) {
     const now = new Date();
 
     const lang = getCurrentLanguage();
-    const title = lang === 'tr' ? 'ISS Geçişi' : 'ISS Pass';
+    const title = t('notify.title') || "ISS Tracker Hub";
     const description = lang === 'tr'
         ? `Uluslararası Uzay İstasyonu konumunuzdan görünür olacak. Maksimum yükseklik: ${pass.maxElevation || '--'}°`
         : `The International Space Station will be visible from your location. Max elevation: ${pass.maxElevation || '--'}°`;
@@ -117,34 +117,37 @@ function sendNotification(title, body, tag = 'iss-pass') {
     return notification;
 }
 
-// Schedule a notification for a pass
-function schedulePassNotification(pass, minutesBefore = 10) {
-    if (!pass || !pass.startTime) return null;
+// Schedule notifications (30m & 10m)
+function schedulePassNotification(pass) {
+    if (!pass || !pass.startTime) return [];
 
     const startTime = new Date(pass.startTime).getTime();
-    const notifyTime = startTime - (minutesBefore * 60 * 1000);
     const now = Date.now();
+    const timers = [];
 
-    if (notifyTime <= now) {
-        console.warn('[PassNotification] Pass is too soon to schedule notification');
-        return null;
-    }
+    // Define alerts: 30 min and 10 min
+    const alerts = [30, 10];
 
-    const delay = notifyTime - now;
-    const lang = getCurrentLanguage();
+    alerts.forEach(minutes => {
+        const notifyTime = startTime - (minutes * 60 * 1000);
+        if (notifyTime > now) {
+            const delay = notifyTime - now;
 
-    const timeoutId = setTimeout(() => {
-        const title = lang === 'tr' ? '🛰️ ISS Geçişi Yaklaşıyor!' : '🛰️ ISS Pass Coming!';
-        const body = lang === 'tr'
-            ? `ISS ${minutesBefore} dakika sonra konumunuzdan görünür olacak!`
-            : `ISS will be visible from your location in ${minutesBefore} minutes!`;
+            const timerId = setTimeout(() => {
+                const lang = getCurrentLanguage();
+                const title = t('notify.title') || "ISS Tracker Hub";
+                const bodyKey = minutes === 30 ? 'notify.body30m' : 'notify.body10m';
+                const body = t(bodyKey) || `ISS pass in ${minutes} minutes.`;
 
-        sendNotification(title, body);
-    }, delay);
+                sendNotification(title, body);
+            }, delay);
 
-    console.log(`[PassNotification] Scheduled notification in ${Math.round(delay / 60000)} minutes`);
+            timers.push(timerId);
+            console.log(`[PassNotification] Scheduled ${minutes}m alert in ${Math.round(delay / 60000)}m`);
+        }
+    });
 
-    return timeoutId;
+    return timers;
 }
 
 // Enable/disable pass notifications

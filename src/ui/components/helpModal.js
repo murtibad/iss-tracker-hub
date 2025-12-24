@@ -1,0 +1,161 @@
+import { t } from '../../i18n/i18n.js';
+import { ICONS } from '../icons.js';
+
+export function createHelpModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'help-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'help-modal hub-glass';
+    modal.style.cssText = `
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        border-radius: 16px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: 0 0 40px var(--neon-glow);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    `;
+
+    // Internal State
+    let activeTab = 'about'; // 'about', 'glossary', 'tips'
+
+    function render() {
+        // Safe check for help object
+        const help = t('help');
+        // Fallback if translations missing (should not happen after i18n update)
+        if (!help) return;
+
+        modal.innerHTML = `
+            <!-- Header -->
+            <div class="help-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 24px; color: var(--accent); font-weight: 900; letter-spacing: 0.5px;">
+                    ${ICONS.settings} ${t('help').tabAbout.split(' ')[0]} 
+                </h2>
+                <button class="help-close btn" style="font-size: 24px; background: transparent; border: none; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;">×</button>
+            </div>
+
+            <!-- Tabs (Mandatory Tabbed Interface) -->
+            <div class="help-tabs" style="display: flex; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+                ${createTabBtn('about', help.tabAbout, activeTab === 'about')}
+                ${createTabBtn('glossary', help.tabGlossary, activeTab === 'glossary')}
+                ${createTabBtn('tips', help.tabTips, activeTab === 'tips')}
+            </div>
+
+            <!-- Content Area (Scrollable) -->
+            <div class="help-content" style="flex: 1; overflow-y: auto; padding: 24px;">
+                ${getTabContent(activeTab, help)}
+            </div>
+        `;
+
+        // Event Bindings
+        modal.querySelector('.help-close').onclick = close;
+
+        modal.querySelectorAll('.help-tab-btn').forEach(btn => {
+            btn.onclick = () => {
+                activeTab = btn.dataset.tab;
+                render();
+            };
+        });
+    }
+
+    // Helper: Create Tab Button (44px min height)
+    function createTabBtn(id, label, isActive) {
+        const activeStyle = isActive ?
+            `border-bottom: 3px solid var(--accent); color: var(--accent); background: rgba(255,255,255,0.05);` :
+            `border-bottom: 3px solid transparent; color: var(--muted);`;
+
+        return `
+            <button class="help-tab-btn" data-tab="${id}" style="
+                flex: 1;
+                padding: 16px; 
+                min-height: 54px; /* >44px */
+                background: transparent;
+                border: none;
+                font-size: 18px; /* Strict 18px */
+                font-weight: 800;
+                cursor: pointer;
+                transition: all 0.2s;
+                ${activeStyle}
+            ">
+                ${label}
+            </button>
+        `;
+    }
+
+    // Helper: Get Content based on Tab (Strict Density Rules)
+    function getTabContent(tab, help) {
+        const pStyle = "font-size: 18px; line-height: 1.6; margin-bottom: 16px; color: var(--text);";
+        const hStyle = "font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 8px; margin-top: 24px;";
+
+        if (tab === 'about') {
+            return `
+                <h3 style="${hStyle} margin-top: 0;">${help.aboutTitle}</h3>
+                <p style="${pStyle}">${help.aboutText1}</p>
+                <p style="${pStyle}">${help.aboutText2}</p>
+                
+                <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-top: 24px;">
+                    <div style="${pStyle} font-weight: 700;">📏 ${help.aboutSize}</div>
+                    <div style="${pStyle} font-weight: 700;">🚀 ${help.aboutSpeed}</div>
+                </div>
+            `;
+        } else if (tab === 'glossary') {
+            return `
+                ${createTerm(help.termAos, help.defAos, hStyle, pStyle)}
+                ${createTerm(help.termLos, help.defLos, hStyle, pStyle)}
+                ${createTerm(help.termAlt, help.defAlt, hStyle, pStyle)}
+                ${createTerm(help.termMag, help.defMag, hStyle, pStyle)}
+            `;
+        } else if (tab === 'tips') {
+            return `
+                 ${createTerm(help.tip1Title, help.tip1Text, hStyle, pStyle, '⭐')}
+                 ${createTerm(help.tip2Title, help.tip2Text, hStyle, pStyle, '🕒')}
+                 ${createTerm(help.tip3Title, help.tip3Text, hStyle, pStyle, '🔭')}
+            `;
+        }
+    }
+
+    function createTerm(title, def, hStyle, pStyle, icon = '') {
+        return `
+            <div style="margin-bottom: 24px; border-bottom: 1px solid var(--ring); padding-bottom: 16px;">
+                <div style="${hStyle} margin-top: 0;">${icon} ${title}</div>
+                <div style="${pStyle} margin-bottom: 0;">${def}</div>
+            </div>
+        `;
+    }
+
+    function open() {
+        render(); // Re-render to catch language changes
+        overlay.style.display = 'flex';
+    }
+
+    function close() {
+        overlay.style.display = 'none';
+    }
+
+    overlay.onclick = (e) => {
+        if (e.target === overlay) close();
+    };
+
+    overlay.appendChild(modal);
+
+    return {
+        el: overlay,
+        open,
+        close
+    };
+}

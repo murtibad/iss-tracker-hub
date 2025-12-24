@@ -1,5 +1,6 @@
 // src/ui/crewWidgetView.js
-import { enhanceCrewData } from "../services/astronauts.js";
+import { createCrewBoard } from "./components/crewBoard.js";
+import { t } from "../i18n/i18n.js";
 
 export function openCrewModal() {
   if (document.querySelector(".crew-overlay")) return;
@@ -7,108 +8,63 @@ export function openCrewModal() {
   const overlay = document.createElement("div");
   overlay.className = "crew-overlay";
   overlay.style.display = "flex";
+  // Accessible overlay styles
+  overlay.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  `;
 
   const card = document.createElement("div");
-  card.className = "crew-card hub-glass";
-
-  card.innerHTML = `
-    <div class="crew-top">
-      <div class="crew-title">🚀 ISS Mürettebatı</div>
-      <button type="button" class="btn crew-close">✕</button>
-    </div>
-    <div class="crew-content">
-      <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
-        ⏳ Yükleniyor...
-      </div>
-    </div>
+  card.className = "crew-modal hub-glass";
+  card.style.cssText = `
+    width: 100%; max-width: 800px; max-height: 90vh;
+    border-radius: 16px; background: var(--panel);
+    border: 1px solid var(--border); display: flex; flex-direction: column;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
   `;
+
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.02);
+  `;
+
+  header.innerHTML = `
+    <div style="font-size: 24px; font-weight: 800; color: var(--accent);">
+      🚀 ${t('crewParams')?.title || "Expedition Crew"}
+    </div>
+    <button type="button" class="btn crew-close" style="font-size: 24px; background: transparent; border: none; color: var(--muted); cursor: pointer; min-width: 44px;">✕</button>
+  `;
+  card.appendChild(header);
+
+  // Content (Scrollable)
+  const content = document.createElement('div');
+  content.className = "crew-content";
+  content.style.cssText = `
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; align-items: center;
+  `;
+
+  // Inject Static Crew Board
+  const board = createCrewBoard();
+  content.appendChild(board.el);
+  card.appendChild(content);
 
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  const closeBtn = card.querySelector(".crew-close");
-  closeBtn.onclick = () => overlay.remove();
+  // Close Logic
+  const closeBtn = header.querySelector(".crew-close");
+  const close = () => overlay.remove();
+
+  closeBtn.onclick = close;
   overlay.onclick = (e) => {
-    if (e.target === overlay) overlay.remove();
+    if (e.target === overlay) close();
   };
-  card.onclick = (e) => e.stopPropagation();
-
-  // Fetch crew and enhance with Wikipedia data
-  fetch("http://api.open-notify.org/astros.json")
-    .then(r => r.json())
-    .then(async (d) => {
-      const issCrew = d.people.filter(p => p.craft === "ISS");
-
-      // Show basic info while loading details
-      const content = card.querySelector(".crew-content");
-      content.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: var(--muted);">
-          🔍 ${issCrew.length} astronotun bilgileri Wikipedia'dan alınıyor...
-        </div>
-      `;
-
-      // Enhance with Wikipedia data
-      const enhancedCrew = await enhanceCrewData(issCrew);
-
-      // Render enhanced crew cards
-      content.innerHTML = `
-        <div class="crew-list">
-          ${enhancedCrew.map(astronaut => renderAstronautCard(astronaut)).join("")}
-        </div>
-      `;
-    })
-    .catch((error) => {
-      const content = card.querySelector(".crew-content");
-      content.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: var(--bad);">
-          ❌ Yüklenemedi<br>
-          <small style="opacity: 0.7;">${error.message}</small>
-        </div>
-      `;
-    });
-}
-
-function renderAstronautCard(astronaut) {
-  const {
-    name,
-    craft,
-    thumbnail,
-    extract,
-    description,
-    wikiUrl
-  } = astronaut;
-
-  return `
-    <div class="crew-item-enhanced">
-      ${thumbnail ? `
-        <div class="crew-photo">
-          <img src="${thumbnail}" alt="${name}" loading="lazy">
-        </div>
-      ` : `
-        <div class="crew-photo crew-photo-placeholder">
-          <div class="crew-photo-icon">👨‍🚀</div>
-        </div>
-      `}
-      
-      <div class="crew-details">
-        <div class="crew-name-enhanced">${name}</div>
-        <div class="crew-description">${description}</div>
-        <div class="crew-craft-tag">
-          <span class="crew-craft-icon">🛰️</span> ${craft}
-        </div>
-        
-        <div class="crew-bio">
-          ${extract || "No information available"}
-        </div>
-        
-        ${wikiUrl ? `
-          <a href="${wikiUrl}" target="_blank" rel="noopener noreferrer" class="crew-wiki-link">
-            📖 Wikipedia'da Oku →
-          </a>
-        ` : ""}
-      </div>
-    </div>
-  `;
 }
 
 window.openCrewModal = openCrewModal;

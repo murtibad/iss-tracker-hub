@@ -119,33 +119,133 @@ const DICTIONARY = {
         "helpTitle": "Help & Guide",
         "helpDesc": "How to track the station",
 
+        // Help System (Simplified for Elderly Users)
+        help: {
+            // Tabs
+            tabAbout: "About ISS",
+            tabGlossary: "Terms",
+            tabTips: "Tips",
+
+            // About Tab
+            aboutTitle: "What is the Space Station?",
+            aboutText1: "The International Space Station (ISS) is a large laboratory flying in space. It orbits Earth 16 times every day.",
+            aboutText2: "Astronauts live there to do science experiments. It looks like a very bright moving star in the sky.",
+            aboutSize: "Size: 109 meters (Like a football field)",
+            aboutSpeed: "Speed: 28,000 km/h (17,500 mph)",
+
+            // Glossary Tab
+            termAos: "Appearance (AOS)",
+            defAos: "The time when the station rises above the horizon and becomes visible.",
+            termLos: "Disappearance (LOS)",
+            defLos: "The time when the station goes below the horizon or enters Earth's shadow.",
+            termAlt: "Altitude",
+            defAlt: "How high the station is above the ground (approx. 400 km).",
+            termMag: "Brightness",
+            defMag: "How bright it looks. Negative numbers (like -3.0) mean very bright!",
+
+            // Tips Tab
+            tip1Title: "Look for a moving star",
+            tip1Text: "It looks like a steady white light moving quickly across the sky. It does not blink.",
+            tip2Title: "Best time to watch",
+            tip2Text: "It is visible shortly after sunset or before sunrise.",
+            tip3Title: "No telescope needed",
+            tip3Text: "You can see it clearly with your naked eye."
+        },
+
+        // Phase 5: Notifications
+        notify: {
+            title: "ISS Tracker Hub",
+            body30m: "Heads up! ISS pass in 30 minutes.",
+            body10m: "Get ready! ISS pass in 10 minutes.",
+            btnAlertOn: "🔔 Alerts On",
+            btnAlertOff: "🔕 Alerts Off",
+            permDenied: "⚠️ Alerts blocked. Please enable in browser settings.",
+            keepOpen: "⚠️ Keep tab open to receive alerts",
+            label: "Alerts (30m & 10m)"
+        },
+
+        // Crew & Live (Phase 4)
+        crewParams: {
+            title: "Expedition Crew",
+            labelStatic: "ℹ️ Reference Data (Not Real-Time)",
+            roleCdr: "Commander",
+            roleFe: "Flight Engineer",
+            bio1: "Veteran cosmonaut and commander of the station.",
+            bio2: "Flight engineer on his first long-duration mission.",
+            bio3: "Researching microgravity fluid dynamics.",
+            bio4: "US Navy test pilot and NASA astronaut.",
+            bio5: "Physician and veteran of two previous spaceflights.",
+            bio6: "Aerospace engineer on her rookie mission.",
+            bio7: "Cosmonaut with background in aircraft radio engineering."
+        },
+        nasa: {
+            title: "NASA Live",
+            streamCam1: "ISS Cam 1 (HD)",
+            streamTv: "NASA TV",
+            streamMedia: "Media Channel",
+            btnStart: "📺 Start Live Stream",
+            offline: "Stream Offline",
+            locked: "Signal Locked"
+        },
+
+        // Weather (WMO Codes & Visibility)
+        weather: {
+            // WMO Codes
+            code_0: "Clear sky",
+            code_1: "Mainly clear",
+            code_2: "Partly cloudy",
+            code_3: "Overcast",
+            code_45: "Fog",
+            code_48: "Depositing rime fog",
+            code_51: "Light drizzle",
+            code_53: "Moderate drizzle",
+            code_55: "Dense drizzle",
+            code_61: "Slight rain",
+            code_63: "Moderate rain",
+            code_65: "Heavy rain",
+            code_71: "Slight snow fall",
+            code_73: "Moderate snow fall",
+            code_75: "Heavy snow fall",
+            code_80: "Slight rain showers",
+            code_81: "Moderate rain showers",
+            code_82: "Violent rain showers",
+            code_95: "Thunderstorm",
+            code_96: "Thunderstorm with hail",
+            code_99: "Heavy thunderstorm",
+
+            // Visibility Context (Elderly UX)
+            visLabel: "Visibility",
+            visGood: "Good – ISS clearly visible",
+            visPoor: "Low – Clouds might block view"
+        },
+
         // Mobile Navigation
-        "navMap": "Map",
-        "navTelemetry": "Telemetry",
-        "navPasses": "Passes",
-        "navSettings": "Settings",
-        "navNasaTV": "NASA TV",
+        navMap: "Map",
+        navTelemetry: "Telemetry",
+        navPasses: "Passes",
+        navSettings: "Settings",
+        navNasaTV: "NASA TV",
 
         // Authentication
-        "authLogin": "Sign In",
-        "authSignup": "Sign Up",
-        "authLogout": "Sign Out",
-        "authEmail": "Email",
-        "authPassword": "Password",
-        "authName": "Full Name",
-        "authForgotPassword": "Forgot password?",
-        "authNoAccount": "Don't have an account?",
-        "authHasAccount": "Already have an account?",
-        "authGoogleSignIn": "Continue with Google",
-        "authWelcome": "Welcome",
-        "authProfile": "Profile",
+        authLogin: "Sign In",
+        authSignup: "Sign Up",
+        authLogout: "Sign Out",
+        authEmail: "Email",
+        authPassword: "Password",
+        authName: "Full Name",
+        authForgotPassword: "Forgot password?",
+        authNoAccount: "Don't have an account?",
+        authHasAccount: "Already have an account?",
+        authGoogleSignIn: "Continue with Google",
+        authWelcome: "Welcome",
+        authProfile: "Profile",
 
         // Calendar and Notifications
-        "addToCalendar": "Add to Calendar",
-        "calendarDownloaded": "Downloaded!",
-        "enableNotifications": "Enable Notifications",
-        "notificationsEnabled": "Notifications Enabled",
-        "passReminder": "ISS Pass Reminder"
+        addToCalendar: "Add to Calendar",
+        calendarDownloaded: "Downloaded!",
+        enableNotifications: "Enable Notifications",
+        notificationsEnabled: "Notifications Enabled",
+        passReminder: "ISS Pass Reminder"
     },
     tr: {
         // Genel
@@ -256,37 +356,133 @@ const DICTIONARY = {
         "bioCdr": "Komutan",
         "bioFe": "Uçuş Mühendisi",
 
-        // Help
-        "helpTitle": "Yardım & Rehber",
-        "helpDesc": "İstasyon nasıl takip edilir",
+        // Help System (Simplified)
+        help: {
+            // Tabs
+            tabAbout: "İstasyon Nedir?",
+            tabGlossary: "Terimler",
+            tabTips: "İpuçları",
+
+            // About Tab
+            aboutTitle: "Uzay İstasyonu Hakkında",
+            aboutText1: "Uluslararası Uzay İstasyonu (ISS), uzayda uçan dev bir laboratuvardır. Dünya etrafında günde 16 tur atar.",
+            aboutText2: "Astronotlar orada yaşar ve deneyler yapar. Gökyüzünde çok parlak, hareket eden bir yıldız gibi görünür.",
+            aboutSize: "Boyut: 109 metre (Bir futbol sahası kadar)",
+            aboutSpeed: "Hız: 28,000 km/s (Ses hızından 10 kat hızlı)",
+
+            // Glossary Tab
+            termAos: "Görüş Başlangıcı (AOS)",
+            defAos: "İstasyonun ufuktan yükselip görünür olmaya başladığı an.",
+            termLos: "Görüş Bitişi (LOS)",
+            defLos: "İstasyonun ufuktan kaybolduğu veya Dünya'nın gölgesine girdiği an.",
+            termAlt: "Yükseklik (İrtifa)",
+            defAlt: "İstasyonun yerden ne kadar yüksekte olduğu (yaklaşık 400 km).",
+            termMag: "Parlaklık",
+            defMag: "Ne kadar parlak göründüğüdür. Eksi sayılar (örneğin -3.0) çok parlak demektir!",
+
+            // Tips Tab
+            tip1Title: "Hareket eden yıldıza bakın",
+            tip1Text: "Gökyüzünde hızla kayan parlak, beyaz bir ışık gibidir. Uçaklar gibi yanıp sönmez.",
+            tip2Title: "En iyi zaman",
+            tip2Text: "Genellikle gün batımından hemen sonra veya gün doğumundan önce görülür.",
+            tip3Title: "Teleskop gerekmez",
+            tip3Text: "Çıplak gözle çok rahat görülebilir."
+        },
+
+        // Phase 5: Bildirimler
+        notify: {
+            title: "ISS Takip Merkezi",
+            body30m: "Dikkat! ISS geçişine 30 dakika var.",
+            body10m: "Hazırlan! ISS geçişine 10 dakika var.",
+            btnAlertOn: "🔔 Bildirimler Açık",
+            btnAlertOff: "🔕 Bildirimler Kapalı",
+            permDenied: "⚠️ Bildirimler engellendi. Tarayıcı ayarlarından izin verin.",
+            keepOpen: "⚠️ Bildirim almak için sekmeyi açık tutun",
+            label: "Uyarılar (30dk & 10dk)"
+        },
+
+        // Mürettebat & Canlı Yayın (Phase 4)
+        crewParams: {
+            title: "Keşif Mürettebatı",
+            labelStatic: "ℹ️ Referans Verisi (Canlı Değil)",
+            roleCdr: "Komutan",
+            roleFe: "Uçuş Mühendisi",
+            bio1: "Tecrübeli kozmonot ve istasyon komutanı.",
+            bio2: "İlk uzun süreli görevindeki uçuş mühendisi.",
+            bio3: "Mikro yerçekimi sıvı dinamiği araştırmacısı.",
+            bio4: "ABD Donanması test pilotu ve astronot.",
+            bio5: "Doktor ve önceki iki uzay uçuşunun gazisi.",
+            bio6: "Çaylak görevindeki havacılık mühendisi.",
+            bio7: "Uçak radyo mühendisliği geçmişine sahip kozmonot."
+        },
+        nasa: {
+            title: "NASA Canlı",
+            streamCam1: "ISS Kamera 1 (HD)",
+            streamTv: "NASA TV",
+            streamMedia: "Medya Kanalı",
+            btnStart: "📺 Yayını Başlat",
+            offline: "Yayın Kapalı",
+            locked: "Sinyal Yok"
+        },
+
+        // Hava Durumu (WMO Kodları & Görüş)
+        weather: {
+            // WMO Codes
+            code_0: "Açık",
+            code_1: "Çoğunlukla açık",
+            code_2: "Parçalı bulutlu",
+            code_3: "Kapalı",
+            code_45: "Sisli",
+            code_48: "Kırağılı sis",
+            code_51: "Hafif çiseleme",
+            code_53: "Orta çiseleme",
+            code_55: "Yoğun çiseleme",
+            code_61: "Hafif yağmurlu",
+            code_63: "Orta yağmurlu",
+            code_65: "Şiddetli yağmurlu",
+            code_71: "Hafif kar yağışlı",
+            code_73: "Orta kar yağışlı",
+            code_75: "Yoğun kar yağışlı",
+            code_80: "Hafif sağanak",
+            code_81: "Orta sağanak",
+            code_82: "Şiddetli sağanak",
+            code_95: "Fırtına",
+            code_96: "Dolu ile fırtına",
+            code_99: "Şiddetli fırtına",
+
+            // Visibility Context (Elderly UX)
+            visLabel: "Görüş",
+            visGood: "İyi – ISS net görülebilir",
+            visPoor: "Düşük – Bulutlar engel olabilir"
+        },
 
         // Mobile Navigation
-        "navMap": "Harita",
-        "navTelemetry": "Telemetri",
-        "navPasses": "Geçişler",
-        "navSettings": "Ayarlar",
-        "navNasaTV": "NASA TV",
+        navMap: "Harita",
+        navTelemetry: "Telemetri",
+        navPasses: "Geçişler",
+        navSettings: "Ayarlar",
+        navNasaTV: "NASA TV",
 
         // Authentication
-        "authLogin": "Giriş Yap",
-        "authSignup": "Kayıt Ol",
-        "authLogout": "Çıkış Yap",
-        "authEmail": "E-posta",
-        "authPassword": "Şifre",
-        "authName": "Ad Soyad",
-        "authForgotPassword": "Şifremi unuttum",
-        "authNoAccount": "Hesabınız yok mu?",
-        "authHasAccount": "Zaten hesabınız var mı?",
-        "authGoogleSignIn": "Google ile devam et",
-        "authWelcome": "Hoş geldin",
-        "authProfile": "Profil",
+        authLogin: "Giriş Yap",
+        authSignup: "Kayıt Ol",
+        authLogout: "Çıkış Yap",
+        authEmail: "E-posta",
+        authPassword: "Şifre",
+        authName: "Ad Soyad",
+        authForgotPassword: "Şifremi unuttum",
+        authNoAccount: "Hesabınız yok mu?",
+        authHasAccount: "Zaten hesabınız var mı?",
+        authGoogleSignIn: "Google ile devam et",
+        authWelcome: "Hoş geldin",
+        authProfile: "Profil",
 
         // Calendar and Notifications
-        "addToCalendar": "Takvime Ekle",
-        "calendarDownloaded": "İndirildi!",
-        "enableNotifications": "Bildirimleri Aç",
-        "notificationsEnabled": "Bildirimler Açık",
-        "passReminder": "ISS Geçiş Hatırlatıcısı"
+        addToCalendar: "Takvime Ekle",
+        calendarDownloaded: "İndirildi!",
+        enableNotifications: "Bildirimleri Aç",
+        notificationsEnabled: "Bildirimler Açık",
+        passReminder: "ISS Geçiş Hatırlatıcısı"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

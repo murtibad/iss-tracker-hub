@@ -4,13 +4,16 @@
 
 import { t, getCurrentLanguage } from "../i18n/i18n.js";
 import { CONFIG } from "../constants/config.js";
-import { downloadICS } from "../services/passNotification.js";
+import { downloadICS, togglePassNotifications, areNotificationsEnabled } from "../services/passNotification.js";
+import { showToast } from "./components/toastManager.js";
 
 function el(tag, className) {
   const n = document.createElement(tag);
   if (className) n.className = className;
   return n;
 }
+
+
 
 function pad2(x) {
   const s = String(x);
@@ -26,6 +29,28 @@ function fmtTime(ms) {
 export function createPassCard() {
   const wrap = el("div", "pass-card glass");
 
+  // Phase 6 Typography Overrides
+  const style = document.createElement('style');
+  style.textContent = `
+    .pass-title { font-size: 20px !important; font-weight: 800; letter-spacing: 0.5px; }
+    .btn-mini { font-size: 18px !important; padding: 8px 16px; }
+    .pass-countdown { 
+        font-size: 32px !important; 
+        font-family: 'Courier New', monospace; 
+        font-weight: 900; 
+        letter-spacing: 2px;
+        color: var(--accent);
+        text-shadow: 0 0 10px rgba(0,243,255,0.4);
+    }
+    .pass-label { font-size: 18px !important; font-weight: 600; opacity: 0.9; }
+    .pass-meta { font-size: 18px !important; color: var(--muted); margin-top: 8px; }
+    .pass-extra-line { font-size: 18px !important; color: #ddd; margin-bottom: 6px; }
+    .btn-calendar { font-size: 18px !important; min-height: 44px; }
+    .btn-notify { font-size: 18px !important; min-height: 44px; }
+    .notify-warning { font-size: 18px !important; font-weight: 600; }
+  `;
+  wrap.appendChild(style);
+
   const headRow = el("div", "pass-head");
   const title = el("div", "pass-title");
   title.textContent = t('passCardTitle');
@@ -38,6 +63,8 @@ export function createPassCard() {
 
   const countdown = el("div", "pass-countdown");
   countdown.textContent = "--:--:--";
+  // Ensure strict min-height to prevent layout shift
+  countdown.style.minHeight = "40px";
 
   const labelRow = el("div", "pass-label-row");
   const dot = el("span", "pass-dot");
@@ -74,7 +101,81 @@ export function createPassCard() {
   calendarBtn.onmouseenter = () => calendarBtn.style.background = 'rgba(0,243,255,0.4)';
   calendarBtn.onmouseleave = () => calendarBtn.style.background = 'rgba(0,243,255,0.2)';
 
-  extra.append(extraLine1, extraLine2, calendarBtn);
+  // Notification Bell Button
+  const notifyBtn = el("button", "btn btn-notify");
+  notifyBtn.type = "button";
+  notifyBtn.style.cssText = `
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    width: 100%;
+    transition: 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  `;
+
+  // Page Open Warning (Initially hidden)
+  const keepOpenMsg = el("div", "notify-warning");
+  keepOpenMsg.textContent = t('notify.keepOpen');
+  keepOpenMsg.style.cssText = `
+    font-size: 10px; color: var(--warning); margin-top: 6px; text-align: center; display: none;
+  `;
+
+  extra.append(extraLine1, extraLine2, calendarBtn, notifyBtn, keepOpenMsg);
+
+  // Update button visual state
+  const updateNotifyBtn = () => {
+    const enabled = areNotificationsEnabled();
+    const lang = getCurrentLanguage();
+
+    if (enabled) {
+      notifyBtn.innerHTML = t('notify.btnAlertOn');
+      notifyBtn.style.background = 'rgba(255, 215, 0, 0.1)';
+      notifyBtn.style.borderColor = 'var(--accent)';
+      notifyBtn.style.color = 'var(--accent)';
+      keepOpenMsg.style.display = 'block';
+    } else {
+      notifyBtn.innerHTML = t('notify.btnAlertOff');
+      notifyBtn.style.background = 'rgba(255,255,255,0.05)';
+      notifyBtn.style.borderColor = 'var(--border)';
+      notifyBtn.style.color = 'var(--muted)';
+      keepOpenMsg.style.display = 'none';
+    }
+  };
+
+  // Initial State
+  updateNotifyBtn();
+
+  notifyBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const wasEnabled = areNotificationsEnabled();
+
+    if (wasEnabled) {
+      // Disable immediately
+      await togglePassNotifications(false);
+      updateNotifyBtn();
+    } else {
+      // Request Permission
+      if (Notification.permission === 'denied') {
+        showToast(t('notify.permDenied'), 'error');
+        return;
+      }
+
+      const res = await togglePassNotifications(true);
+      if (res.success) {
+        updateNotifyBtn();
+        showToast(t('notify.btnAlertOn'), 'success');
+      } else if (res.error === 'permission_denied') {
+        showToast(t('notify.permDenied'), 'error');
+      }
+    }
+  });
 
   wrap.append(headRow, countdown, labelRow, meta, extra);
 

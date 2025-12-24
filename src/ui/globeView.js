@@ -1,473 +1,320 @@
 // src/ui/globeView.js
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 let globe = null;
-let followTimer = null;
 let followEnabled = false;
 let animationFrameId = null;
-let issMesh = null; // Direct reference to ISS mesh for frame-sync updates
+let issMesh = null;
+let issModelLoaded = null;
+let focusMode = 'earth';
+let globeContainer = null;
 
-const issData = { lat: 0, lng: 0, alt: 0.06, type: "iss" };
+const ISS_ORBIT_ALTITUDE = 0.15;
+
+// State
+const issData = { lat: 0, lng: 0, alt: ISS_ORBIT_ALTITUDE, type: "iss" };
+let targetPos = { lat: 0, lng: 0 };
+let renderPos = { lat: 0, lng: 0 };
+
 let userData = null;
-const trail = [];
+const gltfLoader = new GLTFLoader();
 
-function clampLat(lat) {
-  return Math.max(-89.9, Math.min(89.9, lat));
-}
+function clampLat(lat) { return Math.max(-89.9, Math.min(89.9, lat)); }
 function normLng(lng) {
   while (lng > 180) lng -= 360;
   while (lng < -180) lng += 360;
   return lng;
 }
 
-function createISSModel() {
-  const group = new THREE.Group();
-
-  // Ana modül (gövde) - 2x DAHA BÜYÜK
-  const mainModule = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.3, 0.3, 2.4, 16),
-    new THREE.MeshStandardMaterial({
-      color: 0xeeeeee,
-      metalness: 0.7,
-      roughness: 0.3,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.4
-    })
-  );
-  mainModule.rotation.z = Math.PI / 2;
-  group.add(mainModule);
-
-  // Güneş panelleri - 2x DAHA BÜYÜK
-  const panelGeo = new THREE.BoxGeometry(2, 0.1, 6);
-  const panelMat = new THREE.MeshStandardMaterial({
-    color: 0x2266ff,
-    metalness: 0.9,
-    roughness: 0.1,
-    emissive: 0x1144aa,
-    emissiveIntensity: 0.7
-  });
-
-  // Sol panel set
-  const leftPanelGroup = new THREE.Group();
-  const lp1 = new THREE.Mesh(panelGeo, panelMat);
-  const lp2 = new THREE.Mesh(panelGeo, panelMat);
-  lp2.position.z = 6.4;
-  leftPanelGroup.add(lp1, lp2);
-  leftPanelGroup.position.x = -2.4;
-  group.add(leftPanelGroup);
-
-  // Sağ panel set
-  const rightPanelGroup = new THREE.Group();
-  const rp1 = new THREE.Mesh(panelGeo, panelMat);
-  const rp2 = new THREE.Mesh(panelGeo, panelMat);
-  rp2.position.z = 6.4;
-  rightPanelGroup.add(rp1, rp2);
-  rightPanelGroup.position.x = 2.4;
-  group.add(rightPanelGroup);
-
-  // Parlak anten
-  const antennaMat = new THREE.MeshStandardMaterial({
-    color: 0xffaa00,
-    emissive: 0xff6600,
-    emissiveIntensity: 0.8
-  });
-  const antenna1 = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8),
-    antennaMat
-  );
-  antenna1.position.set(0, 0.4, 0);
-  group.add(antenna1);
-
-  // PARLAK BEACON - Uzaktan da görünsün!
-  const beacon = new THREE.Mesh(
-    new THREE.SphereGeometry(0.6, 16, 16),
-    new THREE.MeshBasicMaterial({
-      color: 0x00ffff,
-      transparent: true,
-      opacity: 0.9
-    })
-  );
-  beacon.position.set(0, 0, 0);
-  group.add(beacon);
-
-  // ISS'i biraz döndürelim
-  group.rotation.y = Math.PI / 6;
-  group.rotation.x = Math.PI / 12;
-
-  return group;
+function getBearing(lat1, lon1, lat2, lon2) {
+  const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
+  const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+    Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
+  return Math.atan2(y, x);
 }
 
-function createHomeSprite() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const ctx = canvas.getContext('2d');
-
-  // Draw Base Logo (Triangle/Home)
-  ctx.fillStyle = '#FF00FF';
-  ctx.shadowColor = '#FF00FF';
-  ctx.shadowBlur = 10;
-
-  ctx.beginPath();
-  ctx.moveTo(32, 4);
-  ctx.lineTo(58, 58);
-  ctx.lineTo(6, 58);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  const map = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({ map: map });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(4, 4, 1); // Scale up
-  return sprite;
+// Model Yükleme
+async function loadRealisticISS() {
+  if (issModelLoaded) return issModelLoaded.clone();
+  return new Promise((resolve) => {
+    const modelUrl = import.meta.env.BASE_URL + "models/ISS.glb";
+    gltfLoader.load(modelUrl, (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(0.08, 0.08, 0.08);
+      model.traverse(c => {
+        if (c.isMesh && c.material) {
+          c.material.metalness = 0.8;
+          c.material.roughness = 0.3;
+        }
+      });
+      const wrapper = new THREE.Group();
+      wrapper.add(model);
+      wrapper.rotation.x = Math.PI / 2;
+      issModelLoaded = wrapper;
+      resolve(wrapper.clone());
+    }, undefined, () => resolve(createFallbackISSModel()));
+  });
 }
 
-export async function initGlobe(container) {
+function createFallbackISSModel() {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 2, 8),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc })
+  );
+  m.rotation.z = Math.PI / 2;
+  g.add(m);
+  return g;
+}
+
+export async function initGlobe(parentContainer) {
   if (globe) return globe;
 
-  // Dinamik import - Vite uyumlu
-  const globeModule = await import("globe.gl");
-  const Globe = globeModule.default || globeModule;
-
-  globe = Globe()(container)
-    .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg")
-    .bumpImageUrl("https://unpkg.com/three-globe/example/img/earth-topology.png")
-    .backgroundColor("#000")
-    .customLayerData([])
-    .customThreeObject(d => {
-      if (d.type === "iss") {
-        const model = createISSModel();
-        issMesh = model;
-        return model;
-      }
-      if (d.type === "user") return createHomeSprite();
-
-      // yıldızlar + ışık + atmosfer
-      if (d.type === "env") {
-        const group = new THREE.Group();
-
-        const starsGeo = new THREE.BufferGeometry();
-        const starCount = 1200;
-        const pos = [];
-        for (let i = 0; i < starCount; i++) {
-          const r = 250;
-          const u = Math.random() * 2 - 1;
-          const t = Math.random() * Math.PI * 2;
-          pos.push(
-            r * Math.sqrt(1 - u * u) * Math.cos(t),
-            r * Math.sqrt(1 - u * u) * Math.sin(t),
-            r * u
-          );
-        }
-        starsGeo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-        const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
-        const stars = new THREE.Points(starsGeo, starsMat);
-
-        const ambient = new THREE.AmbientLight(0xffffff, 0.25);
-        const sun = new THREE.DirectionalLight(0xffffff, 0.6);
-        sun.position.set(1, 0.5, 0.2);
-
-        const atmosphere = new THREE.Mesh(
-          new THREE.SphereGeometry(102, 32, 32),
-          new THREE.MeshLambertMaterial({
-            color: 0x3399ff,
-            transparent: true,
-            opacity: 0.08
-          })
-        );
-
-        group.add(stars, ambient, sun, atmosphere);
-        window.issLights = { ambient, sun, starsMat };
-        return group;
-      }
-    })
-    .customThreeObjectUpdate((obj, d) => {
-      if (!d.lat) return;
-      const c = globe.getCoords(d.lat, d.lng, d.alt || 0);
-      obj.position.set(c.x, c.y, c.z);
-
-      // ISS modeli için hafif rotasyon animasyonu
-      if (d.type === "iss") {
-        obj.rotation.y += 0.005; // Yavaş yavaş dönsün
-        // Ensure mesh reference is current
-        if (!issMesh) issMesh = obj;
-      }
-    });
-
-  globe.customLayerData([
-    issData,
-    { type: "env", lat: 0, lng: 0 }
-  ]);
-
-  globe.pointOfView({ lat: 20, lng: 0, altitude: 2.2 });
-
-  setInterval(updateISS, 10000); // 10 saniye - Rate limit'i önlemek için
-  updateISS();
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(p => {
-      userData = {
-        lat: p.coords.latitude,
-        lng: p.coords.longitude,
-        alt: 0.01,
-        type: "user"
-      };
-      globe.customLayerData([issData, userData, { type: "env" }]);
-    });
-  }
-
-  window.startFollow = () => {
-    followEnabled = true;
-    if (followTimer) clearInterval(followTimer);
-    followTimer = setInterval(() => {
-      if (!followEnabled) return;
-      const pov = globe.pointOfView();
-      pov.lat += (issData.lat - pov.lat) * 0.1;
-      pov.lng += (issData.lng - pov.lng) * 0.1;
-      pov.altitude += (1.5 - pov.altitude) * 0.05;
-      globe.pointOfView(pov);
-    }, 50);
-  };
-
-  window.stopFollow = () => {
-    followEnabled = false;
-    clearInterval(followTimer);
-  };
-
-  return globe;
-}
-
-// boot.js tarafından beklenen API wrapper
-let globeWrapper = null;
-let globeContainer = null; // Container referansını sakla
-
-export async function createGlobe(container) {
-  // Eğer zaten oluşturulmuşsa
-  if (globeWrapper && globeContainer) {
-    // DOM kontrolü: Eğer container içinde değilse (örn. sayfa yenilendi/boot tekrar çalıştı)
-    if (!container.contains(globeContainer)) {
-      container.appendChild(globeContainer);
-      // Resize tetikle
-      if (globeWrapper.instance) {
-        setTimeout(() => {
-          try {
-            globeWrapper.instance.width(container.clientWidth);
-            globeWrapper.instance.height(container.clientHeight);
-          } catch (e) { }
-        }, 100);
-      }
-    }
-    return globeWrapper;
-  }
-
-  // Globe container oluştur
-  globeContainer = document.createElement("div");
-  globeContainer.id = "globe-container";
-  globeContainer.style.cssText = `
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    display: block; /* Init as block to ensure dimensions */
-    visibility: hidden;
-    background: #000;
-  `;
-  container.appendChild(globeContainer);
+  globeContainer = document.createElement('div');
+  globeContainer.id = 'globe-3d-canvas-container';
+  globeContainer.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; overflow:hidden; pointer-events:auto;';
+  parentContainer.prepend(globeContainer);
 
   try {
-    // Globe'u başlat
-    const globeInstance = await initGlobe(globeContainer);
+    const globeModule = await import("globe.gl");
+    const Globe = globeModule.default || globeModule;
+    globe = Globe()(globeContainer)
+      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg")
+      .backgroundColor("#000005")
+      .showAtmosphere(true)
+      .atmosphereColor("#3a8bff")
+      .atmosphereAltitude(0.2);
 
-    // API wrapper oluştur ve kaydet
-    globeWrapper = {
-      setVisible(visible) {
-        if (!globeContainer) return;
-        if (visible) {
-          globeContainer.style.display = "block";
-          globeContainer.style.visibility = "visible";
-        } else {
-          globeContainer.style.display = "none";
-          globeContainer.style.visibility = "hidden";
-        }
+    // Serbest kamera kontrolleri
+    globe.controls().autoRotate = false;
+    globe.controls().enableZoom = true;
+    globe.controls().enableDamping = true;
+    globe.controls().dampingFactor = 0.05;
+    globe.controls().rotateSpeed = 0.5;
 
-        if (visible && globeInstance) {
-          // Resize triggered when shown
-          setTimeout(() => {
-            try {
-              if (globeInstance.width) globeInstance.width(globeContainer.clientWidth);
-              if (globeInstance.height) globeInstance.height(globeContainer.clientHeight);
-            } catch (e) {
-              console.warn("Globe resize error:", e);
+    globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+
+    setTimeout(() => {
+      globe.customLayerData([issData, { type: "env" }])
+        .customThreeObject(d => {
+          if (d.type === "iss") {
+            const model = issModelLoaded ? issModelLoaded.clone() : createFallbackISSModel();
+            issMesh = model;
+            return model;
+          }
+          if (d.type === "env") {
+            const group = new THREE.Group();
+
+            // 🌌 YILDIZLAR
+            const starsGeo = new THREE.BufferGeometry();
+            const starCount = 4000;
+            const pos = [];
+            for (let i = 0; i < starCount; i++) {
+              const r = 400 + Math.random() * 200;
+              const u = Math.random() * 2 - 1;
+              const t = Math.random() * Math.PI * 2;
+              pos.push(
+                r * Math.sqrt(1 - u * u) * Math.cos(t),
+                r * Math.sqrt(1 - u * u) * Math.sin(t),
+                r * u
+              );
             }
-          }, 100);
-        }
-      },
-      setUserData(lat, lng) {
-        if (!globeInstance) return;
-        userData = { lat: clampLat(lat), lng: normLng(lng), alt: 0.01, type: "user" };
-        globe.customLayerData(
-          [issData, userData, { type: "env" }]
-        );
-      },
-      setIssPosition(lat, lng) {
-        issData.lat = clampLat(lat);
-        issData.lng = normLng(lng);
-
-        // Direct mesh update - no layer rebuild for frame-sync performance
-        if (issMesh && globeInstance) {
-          try {
-            const c = globeInstance.getCoords(issData.lat, issData.lng, issData.alt);
-            issMesh.position.set(c.x, c.y, c.z);
-          } catch (e) {
-            console.warn("ISS direct position update error:", e);
-          }
-        }
-      },
-      startFollow() {
-        followEnabled = true;
-
-        // requestAnimationFrame kullanarak smooth hareket
-        const animate = () => {
-          if (!followEnabled || !globeInstance) {
-            if (animationFrameId) {
-              cancelAnimationFrame(animationFrameId);
-              animationFrameId = null;
-            }
-            return;
-          }
-
-          try {
-            const pov = globeInstance.pointOfView();
-            // Daha yavaş interpolasyon - smooth hareket için
-            const lerp = 0.02; // 0.1'den 0.02'ye düşürdük
-            pov.lat += (issData.lat - pov.lat) * lerp;
-            pov.lng += (issData.lng - pov.lng) * lerp;
-            pov.altitude += (1.8 - pov.altitude) * lerp; // Biraz daha uzak
-            globeInstance.pointOfView(pov, 0); // 0 = animasyon yok, manuel kontrol
-          } catch (e) {
-            console.warn("Globe follow error:", e);
-          }
-
-          animationFrameId = requestAnimationFrame(animate);
-        };
-
-        animate();
-      },
-      stopFollow() {
-        followEnabled = false;
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId);
-          animationFrameId = null;
-        }
-      },
-
-      updateColors(accentColor) {
-        if (!globeInstance) return;
-
-        // Define gradients based on accent color
-        // Simple hex to rgba conversion for gradients could be done, or just use solid for now
-        // Let's rely on the pathsData re-evaluation if we force it
-
-        // Force path update to pick up new colors if we make pathColor function dynamic
-        // A better way is to store the color and use it in pathColor callback
-        this._accentColor = accentColor;
-
-        // Re-process paths to trigger color update
-        const currentPaths = globeInstance.pathsData();
-        globeInstance.pathsData([...currentPaths]);
-      },
-
-      _accentColor: null, // Store current accent
-
-      updateTrajectory(pastPoints, futurePoints) {
-        if (!globeInstance) {
-          console.warn('[Globe] Not initialized yet');
-          return;
-        }
-
-        try {
-          // Combine past and future as separate path objects
-          const trajectoryPaths = [];
-
-          // Past trajectory (current accent color)
-          if (pastPoints && pastPoints.length > 1) {
-            trajectoryPaths.push({
-              coords: pastPoints.map(p => ({ lat: p.lat, lng: p.lng })),
-              type: 'past'
+            starsGeo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+            const starsMat = new THREE.PointsMaterial({
+              color: 0xffffff,
+              size: 0.7,
+              sizeAttenuation: false
             });
+            const stars = new THREE.Points(starsGeo, starsMat);
+
+            // ☀️ IŞIKLANDIRMA
+            const amb = new THREE.AmbientLight(0xffffff, 0.5);
+            const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+            sun.position.set(150, 150, 150);
+
+            group.add(stars, amb, sun);
+            return group;
           }
+          return null;
+        });
 
-          // Future trajectory (orange/gold - contrasting)
-          if (futurePoints && futurePoints.length > 1) {
-            trajectoryPaths.push({
-              coords: futurePoints.map(p => ({ lat: p.lat, lng: p.lng })),
-              type: 'future'
-            });
-          }
-
-          // Update globe paths
-          globeInstance.pathsData(trajectoryPaths)
-            .pathPoints('coords')
-            .pathPointLat(p => p.lat)
-            .pathPointLng(p => p.lng)
-            .pathColor(path => {
-              // Use stored accent color if available, else default Cyan
-              const accent = this._accentColor || '#00d4ff'; // default cyan
-
-              if (path.type === 'past') {
-                return [accent, accent];
-              }
-              return ['rgba(255, 165, 0, 0.6)', 'rgba(255, 140, 0, 0.3)']; // Orange gradient
-            })
-            .pathStroke(path => path.type === 'past' ? 2.5 : 1.5)
-            .pathDashLength(path => path.type === 'past' ? 0 : 0.3)  // Dashed for future
-            .pathDashGap(path => path.type === 'past' ? 0 : 0.15)
-            .pathPointAlt(() => 0.08); // ~ISS orbit altitude for depth perception
-
-          console.log(`[Globe] 🛤️ Trajectory updated: ${pastPoints?.length || 0} past, ${futurePoints?.length || 0} future`);
-        } catch (e) {
-          console.error('[Globe] Trajectory update error:', e);
+      loadRealisticISS().then(model => {
+        if (issMesh && issMesh.parent) {
+          const p = issMesh.parent;
+          const pos = issMesh.position.clone();
+          p.remove(issMesh);
+          model.position.copy(pos);
+          p.add(model);
+          issMesh = model;
         }
-      },
+      });
 
-      get instance() {
-        return globeInstance;
-      }
-    };
-
-    return globeWrapper;
+      startMasterLoop();
+    }, 500);
+    return globe;
   } catch (err) {
-    console.error("Globe initialization failed:", err);
-    // Clean up
-    if (globeContainer && globeContainer.parentNode) {
-      globeContainer.parentNode.removeChild(globeContainer);
-    }
-    globeContainer = null;
+    console.error(err);
     throw err;
   }
 }
 
-async function updateISS() {
-  try {
-    const r = await fetch("https://api.wheretheiss.at/v1/satellites/25544");
-    const j = await r.json();
-    issData.lat = clampLat(j.latitude);
-    issData.lng = normLng(j.longitude);
-    issData.alt = 0.06; // Daha yüksek - daha görünür
+function startMasterLoop() {
+  const update = () => {
+    if (!globe) return;
+    try {
+      // 1. ISS SMOOTH MOVEMENT
+      let dLat = targetPos.lat - renderPos.lat;
+      let dLng = targetPos.lng - renderPos.lng;
+      if (dLng > 180) dLng -= 360;
+      if (dLng < -180) dLng += 360;
 
-    // ISS ve diğer objeleri güncelle
-    globe.customLayerData(
-      userData ? [issData, userData, { type: "env" }] : [issData, { type: "env" }]
-    );
+      const dynamicLerp = 0.05;
+      renderPos.lat += dLat * dynamicLerp;
+      renderPos.lng += dLng * dynamicLerp;
+      renderPos.lng = normLng(renderPos.lng);
 
-    // Note: Old trail pathsData removed - trajectory now handled by boot.js
-  } catch (e) {
-    console.error("ISS update error", e);
-  }
+      if (issMesh) {
+        const c = globe.getCoords(renderPos.lat, renderPos.lng, ISS_ORBIT_ALTITUDE);
+        issMesh.position.set(c.x, c.y, c.z);
+        const bearing = getBearing(renderPos.lat, renderPos.lng, targetPos.lat, targetPos.lng);
+        issMesh.rotation.y = -bearing + Math.PI;
+      }
+
+      // 2. CAMERA FOLLOW (Sadece takip modu açıksa)
+      if (followEnabled) {
+        // Takip modunda manuel kontrolleri devre dışı bırak
+        if (globe.controls().enabled) {
+          globe.controls().enabled = false;
+        }
+
+        const pov = globe.pointOfView();
+        const fLerp = focusMode === 'iss' ? 0.06 : 0.03;
+        pov.lat += (renderPos.lat - pov.lat) * fLerp;
+
+        let pDLng = renderPos.lng - pov.lng;
+        if (pDLng > 180) pDLng -= 360;
+        if (pDLng < -180) pDLng += 360;
+        pov.lng += pDLng * fLerp;
+
+        if (focusMode === 'iss' && pov.altitude > 0.35) {
+          pov.altitude += (0.25 - pov.altitude) * 0.04;
+        }
+
+        globe.pointOfView(pov, 0);
+      } else {
+        // Takip kapalıyken manuel kontrolleri etkinleştir
+        if (!globe.controls().enabled) {
+          globe.controls().enabled = true;
+        }
+      }
+
+      // NOT: Trajectory güncellemesi burada YAPILMAMALI
+      // updateTrajectory fonksiyonu çağrıldığında trajectory güncellenir
+
+    } catch (e) { }
+    animationFrameId = requestAnimationFrame(update);
+  };
+  update();
 }
+
+export const globeActions = {
+  createGlobe: initGlobe,
+
+  setVisible(visible) {
+    if (globeContainer) {
+      globeContainer.style.display = visible ? 'block' : 'none';
+      if (visible && globe) {
+        setTimeout(() => {
+          globe.width(globeContainer.clientWidth);
+          globe.height(globeContainer.clientHeight);
+        }, 100);
+      }
+    }
+  },
+
+  setUserData(lat, lng) {
+    userData = { lat: clampLat(lat), lng: normLng(lng), alt: 0.01, type: "user" };
+    if (globe) globe.customLayerData([issData, userData, { type: "env" }]);
+  },
+
+  setIssPosition(lat, lng) {
+    targetPos.lat = clampLat(lat);
+    targetPos.lng = normLng(lng);
+    if (renderPos.lat === 0) {
+      renderPos.lat = targetPos.lat;
+      renderPos.lng = targetPos.lng;
+    }
+  },
+
+  setFocusMode(mode) {
+    focusMode = mode;
+    if (mode === 'iss') {
+      globe.pointOfView({ lat: renderPos.lat, lng: renderPos.lng, altitude: 0.3 }, 1000);
+      setTimeout(() => followEnabled = true, 1000);
+    } else {
+      followEnabled = false;
+      globe.pointOfView({ lat: 20, lng: renderPos.lng, altitude: 2.5 }, 1200);
+    }
+  },
+
+  getFocusMode() {
+    return focusMode;
+  },
+
+  startFollow() {
+    followEnabled = true;
+  },
+
+  stopFollow() {
+    followEnabled = false;
+  },
+
+  updateTrajectory(past, future) {
+    if (!globe) return;
+
+    console.log('[Globe] updateTrajectory called - Past:', past?.length, 'Future:', future?.length);
+
+    const paths = [];
+
+    // PAST TRAJECTORY (mavi) - ISS'in arkasındaki çizgi
+    if (past?.length > 1) {
+      const coords = past.map(p => ({ lat: p.lat, lng: p.lng }));
+      // Son noktayı ISS'in şu anki konumuna bağla
+      coords.push({ lat: renderPos.lat, lng: renderPos.lng });
+      paths.push({ coords, type: 'past' });
+      console.log('[Globe] Past trajectory:', coords.length, 'points');
+    }
+
+    // FUTURE TRAJECTORY (turuncu) - ISS'in önündeki çizgi
+    if (future?.length > 1) {
+      // İlk noktayı ISS'in şu anki konumuna bağla
+      const coords = [
+        { lat: renderPos.lat, lng: renderPos.lng },
+        ...future.map(p => ({ lat: p.lat, lng: p.lng }))
+      ];
+      paths.push({ coords, type: 'future' });
+      console.log('[Globe] Future trajectory:', coords.length, 'points');
+    }
+
+    // YENİ PATHS'İ SET ET - Tek işlemde hem paths hem de tüm config
+    console.log('[Globe] Setting', paths.length, 'path(s)');
+
+    // ÖNCE TAMAMEN TEMİZLE
+    globe.pathsData([]);
+
+    // Sonra yeniden set et - Globe.gl'in internal state'inin güncellenmesi için micro-delay
+    setTimeout(() => {
+      if (!globe) return;
+      globe.pathsData(paths)
+        .pathPoints('coords')
+        .pathPointLat(p => p.lat)
+        .pathPointLng(p => p.lng)
+        .pathColor(p => p.type === 'past' ? '#00d4ff' : '#FF8800')
+        .pathStroke(p => p.type === 'past' ? 3 : 2.5)
+        .pathDashLength(p => p.type === 'past' ? 0 : 0.4)
+        .pathDashGap(p => p.type === 'past' ? 0 : 0.2)
+        .pathPointAlt(ISS_ORBIT_ALTITUDE);
+    }, 0);
+  }
+};

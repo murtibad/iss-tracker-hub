@@ -39,25 +39,17 @@ export async function fetchCurrentWeather({ lat, lon } = {}) {
   return out;
 }
 
-// TR: Open-Meteo weather_code → kısa insan okunur etiket
+import { t } from '../i18n/i18n.js';
+
+// TR: Open-Meteo weather_code → i18n label
 export function weatherCodeLabel(code) {
   const c = Number(code);
   if (!Number.isFinite(c)) return "—";
 
-  // Kaynak: Open-Meteo WMO weather interpretation codes (özet eşleme)
-  if (c === 0) return "Açık";
-  if (c === 1) return "Çoğunlukla açık";
-  if (c === 2) return "Parçalı bulutlu";
-  if (c === 3) return "Kapalı";
+  // Use translation key if exists, else fallback
+  const key = `weather.code_${c}`;
+  const label = t(key);
 
-  if (c === 45 || c === 48) return "Sis";
-
-  if (c >= 51 && c <= 57) return "Çise";
-  if (c >= 61 && c <= 67) return "Yağmur";
-  if (c >= 71 && c <= 77) return "Kar";
-  if (c >= 80 && c <= 82) return "Sağanak";
-  if (c >= 85 && c <= 86) return "Kar sağanağı";
-  if (c >= 95 && c <= 99) return "Fırtına";
-
-  return `Kod ${c}`;
+  // If no translation found, return default code string
+  return (label && label !== key) ? label : `Code ${c}`;
 }

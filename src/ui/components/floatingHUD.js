@@ -1,6 +1,6 @@
 // src/ui/components/floatingHUD.js
 // Floating HUD - Simplified Mission Control v0.3.4
-// Simple mode (default) + Details mode (expandable)
+// Phase 6: Visual Refinement (Strict 18px+, Hero Metrics)
 
 import { openCrewModal } from "../crewWidgetView.js";
 import { getSmartUnits, t } from "../../i18n/i18n.js";
@@ -14,6 +14,34 @@ import { ICONS } from "../icons.js";
 export function createFloatingHUD(options = {}) {
   const card = document.createElement("div");
   card.className = "floating-hud glass-panel";
+
+  // Phase 6 Style Overrides
+  const style = document.createElement("style");
+  style.textContent = `
+    .hud-metric { display: flex; flex-direction: column; align-items: start; }
+    .hud-label { 
+        font-size: 18px !important; /* Strict 18px */
+        font-weight: 700; 
+        color: var(--muted); 
+        letter-spacing: 1px;
+    }
+    .hud-value { 
+        font-size: 32px !important; /* Hero Size */
+        font-weight: 800; 
+        color: var(--text);
+        line-height: 1.1;
+    }
+    .hud-unit { 
+        font-size: 18px !important; 
+        color: var(--accent);
+        font-weight: 600;
+    }
+    .hud-coord-label { font-size: 18px !important; color: var(--muted); }
+    .hud-coord-value { font-size: 20px !important; font-weight: 700; }
+    .hud-status-pill { font-size: 18px !important; padding: 4px 12px; }
+    .hud-vis-icon { font-size: 24px !important; }
+  `;
+  card.appendChild(style);
 
   let isDetailsMode = false;
   let isDebugMode = false;
@@ -54,10 +82,10 @@ export function createFloatingHUD(options = {}) {
 
           <!-- Right: Controls -->
           <div class="hud-section controls">
-             <button class="btn-cyber-mini crew-btn" title="${t('crew')}">
-                ${ICONS.users} <span>CREW</span>
+             <button class="btn-cyber-mini crew-btn" title="${t('crew')}" style="font-size: 18px;">
+                ${ICONS.users} <span style="font-size: 18px; font-weight: 700;">CREW</span>
              </button>
-             <button class="btn-cyber-mini debug-btn" data-toggle="debug" title="LOGS">
+             <button class="btn-cyber-mini debug-btn" data-toggle="debug" title="LOGS" style="font-size: 18px;">
                 ${ICONS.terminal || 'TERM'}
              </button>
           </div>

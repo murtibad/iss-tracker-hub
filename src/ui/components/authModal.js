@@ -6,9 +6,9 @@ import { t, getCurrentLanguage } from '../../i18n/i18n.js';
 import { ICONS } from '../icons.js';
 
 export function createAuthModal() {
-    const overlay = document.createElement('div');
-    overlay.className = 'auth-overlay';
-    overlay.style.cssText = `
+  const overlay = document.createElement('div');
+  overlay.className = 'auth-overlay';
+  overlay.style.cssText = `
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.8);
@@ -20,9 +20,9 @@ export function createAuthModal() {
     padding: 20px;
   `;
 
-    const modal = document.createElement('div');
-    modal.className = 'auth-modal hub-glass';
-    modal.style.cssText = `
+  const modal = document.createElement('div');
+  modal.className = 'auth-modal hub-glass';
+  modal.style.cssText = `
     width: 100%;
     max-width: 400px;
     border-radius: 16px;
@@ -32,29 +32,29 @@ export function createAuthModal() {
     box-shadow: 0 0 40px var(--neon-glow);
   `;
 
-    let mode = 'login'; // 'login', 'signup', 'reset'
+  let mode = 'login'; // 'login', 'signup', 'reset'
 
-    function render() {
-        const lang = getCurrentLanguage();
-        const labels = {
-            login: lang === 'tr' ? 'Giriş Yap' : 'Sign In',
-            signup: lang === 'tr' ? 'Kayıt Ol' : 'Sign Up',
-            reset: lang === 'tr' ? 'Şifre Sıfırla' : 'Reset Password',
-            email: lang === 'tr' ? 'E-posta' : 'Email',
-            password: lang === 'tr' ? 'Şifre' : 'Password',
-            name: lang === 'tr' ? 'Ad Soyad' : 'Full Name',
-            submit: mode === 'login' ? (lang === 'tr' ? 'Giriş' : 'Login')
-                : mode === 'signup' ? (lang === 'tr' ? 'Kayıt Ol' : 'Sign Up')
-                    : (lang === 'tr' ? 'Gönder' : 'Send'),
-            switchToSignup: lang === 'tr' ? 'Hesabınız yok mu? Kayıt olun' : "Don't have an account? Sign up",
-            switchToLogin: lang === 'tr' ? 'Zaten hesabınız var mı? Giriş yapın' : 'Already have an account? Sign in',
-            forgotPassword: lang === 'tr' ? 'Şifremi unuttum' : 'Forgot password',
-            backToLogin: lang === 'tr' ? '← Giriş ekranına dön' : '← Back to login',
-            googleSignIn: lang === 'tr' ? 'Google ile devam et' : 'Continue with Google',
-            or: lang === 'tr' ? 'veya' : 'or'
-        };
+  function render() {
+    const lang = getCurrentLanguage();
+    const labels = {
+      login: lang === 'tr' ? 'Giriş Yap' : 'Sign In',
+      signup: lang === 'tr' ? 'Kayıt Ol' : 'Sign Up',
+      reset: lang === 'tr' ? 'Şifre Sıfırla' : 'Reset Password',
+      email: lang === 'tr' ? 'E-posta' : 'Email',
+      password: lang === 'tr' ? 'Şifre' : 'Password',
+      name: lang === 'tr' ? 'Ad Soyad' : 'Full Name',
+      submit: mode === 'login' ? (lang === 'tr' ? 'Giriş' : 'Login')
+        : mode === 'signup' ? (lang === 'tr' ? 'Kayıt Ol' : 'Sign Up')
+          : (lang === 'tr' ? 'Gönder' : 'Send'),
+      switchToSignup: lang === 'tr' ? 'Hesabınız yok mu? Kayıt olun' : "Don't have an account? Sign up",
+      switchToLogin: lang === 'tr' ? 'Zaten hesabınız var mı? Giriş yapın' : 'Already have an account? Sign in',
+      forgotPassword: lang === 'tr' ? 'Şifremi unuttum' : 'Forgot password',
+      backToLogin: lang === 'tr' ? '← Giriş ekranına dön' : '← Back to login',
+      googleSignIn: lang === 'tr' ? 'Google ile devam et' : 'Continue with Google',
+      or: lang === 'tr' ? 'veya' : 'or'
+    };
 
-        modal.innerHTML = `
+    modal.innerHTML = `
       <div class="auth-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 class="cyber-glitch-text" data-text="${labels[mode]}" style="margin: 0; color: var(--accent); font-size: 20px;">
           ${labels[mode]}
@@ -139,135 +139,136 @@ export function createAuthModal() {
       </div>
     `;
 
-        // Event bindings
-        modal.querySelector('.auth-close').onclick = close;
+    // Event bindings
+    modal.querySelector('.auth-close').onclick = close;
 
-        modal.querySelectorAll('.auth-switch').forEach(link => {
-            link.onclick = (e) => {
-                e.preventDefault();
-                mode = link.dataset.mode;
-                render();
-            };
-        });
-
-        const form = modal.querySelector('.auth-form');
-        const errorEl = modal.querySelector('.auth-error');
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            errorEl.textContent = '';
-
-            const email = form.email.value.trim();
-            const password = form.password?.value || '';
-            const name = form.name?.value?.trim() || null;
-
-            let result;
-
-            if (mode === 'login') {
-                result = await signIn(email, password);
-            } else if (mode === 'signup') {
-                result = await signUp(email, password, name);
-            } else if (mode === 'reset') {
-                result = await resetPassword(email);
-                if (result.success) {
-                    errorEl.style.color = '#00ff00';
-                    errorEl.textContent = getCurrentLanguage() === 'tr'
-                        ? 'Şifre sıfırlama e-postası gönderildi'
-                        : 'Password reset email sent';
-                    return;
-                }
-            }
-
-            if (result.success) {
-                close();
-            } else {
-                errorEl.textContent = result.error;
-            }
-        };
-
-        const googleBtn = modal.querySelector('.btn-google');
-        if (googleBtn) {
-            googleBtn.onclick = async () => {
-                errorEl.textContent = '';
-                const result = await signInWithGoogle();
-                if (result.success) {
-                    close();
-                } else {
-                    errorEl.textContent = result.error;
-                }
-            };
-        }
-    }
-
-    function open(initialMode = 'login') {
-        mode = initialMode;
+    modal.querySelectorAll('.auth-switch').forEach(link => {
+      link.onclick = (e) => {
+        e.preventDefault();
+        mode = link.dataset.mode;
         render();
-        overlay.style.display = 'flex';
-    }
+      };
+    });
 
-    function close() {
-        overlay.style.display = 'none';
-    }
+    const form = modal.querySelector('.auth-form');
+    const errorEl = modal.querySelector('.auth-error');
 
-    overlay.onclick = (e) => {
-        if (e.target === overlay) close();
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+
+      const email = form.email.value.trim();
+      const password = form.password?.value || '';
+      const name = form.name?.value?.trim() || null;
+
+      let result;
+
+      if (mode === 'login') {
+        result = await signIn(email, password);
+      } else if (mode === 'signup') {
+        result = await signUp(email, password, name);
+      } else if (mode === 'reset') {
+        result = await resetPassword(email);
+        if (result.success) {
+          errorEl.style.color = '#00ff00';
+          errorEl.textContent = getCurrentLanguage() === 'tr'
+            ? 'Şifre sıfırlama e-postası gönderildi'
+            : 'Password reset email sent';
+          return;
+        }
+      }
+
+      if (result.success) {
+        close();
+      } else {
+        errorEl.textContent = result.error;
+      }
     };
 
-    overlay.appendChild(modal);
+    const googleBtn = modal.querySelector('.btn-google');
+    if (googleBtn) {
+      googleBtn.onclick = async () => {
+        errorEl.textContent = '';
+        const result = await signInWithGoogle();
+        if (result.success) {
+          close();
+        } else {
+          errorEl.textContent = result.error;
+        }
+      };
+    }
+  }
 
-    return {
-        el: overlay,
-        open,
-        close
-    };
+  function open(initialMode = 'login') {
+    mode = initialMode;
+    render();
+    overlay.style.display = 'flex';
+  }
+
+  function close() {
+    overlay.style.display = 'none';
+  }
+
+  overlay.onclick = (e) => {
+    if (e.target === overlay) close();
+  };
+
+  overlay.appendChild(modal);
+
+  return {
+    el: overlay,
+    open,
+    close
+  };
 }
 
 // User profile button for navbar
 export function createUserButton() {
-    const container = document.createElement('div');
-    container.className = 'user-button-container';
-    container.style.cssText = 'position: relative;';
+  const container = document.createElement('div');
+  container.className = 'user-button-container';
+  container.style.cssText = 'position: relative;';
 
-    const btn = document.createElement('button');
-    btn.className = 'btn user-btn';
-    btn.style.cssText = `
-    font-size: 14px;
-    padding: 8px 12px;
+  const btn = document.createElement('button');
+  btn.className = 'btn user-btn';
+  btn.style.cssText = `
+    font-size: 18px; /* Strict 18px */
+    padding: 8px 16px;
+    min-height: 44px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 12px;
     color: var(--text);
     cursor: pointer;
   `;
 
-    function render(user) {
-        if (user) {
-            const name = user.displayName || user.email.split('@')[0];
-            btn.innerHTML = `
-        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #000; font-weight: bold;">
+  function render(user) {
+    if (user) {
+      const name = user.displayName || user.email.split('@')[0];
+      btn.innerHTML = `
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #000; font-weight: bold;">
           ${name.charAt(0).toUpperCase()}
         </span>
-        <span style="max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
+        <span style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700;">${name}</span>
       `;
-        } else {
-            const lang = getCurrentLanguage();
-            btn.innerHTML = `
+    } else {
+      const lang = getCurrentLanguage();
+      btn.innerHTML = `
         ${ICONS.user || '👤'}
-        <span>${lang === 'tr' ? 'Giriş' : 'Login'}</span>
+        <span style="font-weight: 700;">${lang === 'tr' ? 'Giriş' : 'Login'}</span>
       `;
-        }
     }
+  }
 
-    // Listen for auth changes
-    onAuthChange(render);
+  // Listen for auth changes
+  onAuthChange(render);
 
-    container.appendChild(btn);
+  container.appendChild(btn);
 
-    return {
-        el: container,
-        button: btn
-    };
+  return {
+    el: container,
+    button: btn
+  };
 }

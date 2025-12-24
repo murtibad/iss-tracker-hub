@@ -9,7 +9,7 @@ import cities from "../assets/cities.tr.json";
 import { computePassBundle } from "../services/prediction.js";
 import { calculateTrajectory, trajectoryToGeoJSON } from "../services/trajectory.js";
 import { startMotion, getLastKnownData } from "../services/issMotion.js";
-import { createViewModeToggle, getInitialViewMode } from "../ui/viewModeToggleView.js";
+import { createViewModeToggle, getInitialViewMode, getInitialFocusMode } from "../ui/viewModeToggleView.js";
 import { createWeatherBadge } from "../ui/weatherBadgeView.js";
 import { fetchCurrentWeather, weatherCodeLabel } from "../services/weather.js";
 import { createThemePicker, applyGlassColor, getGlassColor } from "../ui/themePickerView.js";
@@ -29,7 +29,10 @@ import { createPassCard } from "../ui/passCardView.js";
 import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
 import { createNASALiveCard } from "../ui/components/NASALiveCard.js";
 import { createAuthModal, createUserButton } from "../ui/components/authModal.js";
+import { createHelpModal } from "../ui/components/helpModal.js"; // Help Modal
+import { schedulePassNotification, areNotificationsEnabled } from "../services/passNotification.js"; // Phase 5 Notifications
 import { onAuthChange, getUser, logout } from "../services/authService.js";
+import { showToast } from "../ui/components/toastManager.js"; // Phase 6 Feedback
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -71,29 +74,30 @@ function safeJsonParse(txt) {
     return null;
   }
 }
+// Safe localStorage wrapper
+const safeStorage = {
+  getItem: (key) => {
+    try {
+      return window.localStorage ? window.localStorage.getItem(key) : null;
+    } catch (e) {
+      console.warn('[Storage] getItem failed:', e);
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      if (window.localStorage) window.localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn('[Storage] setItem failed:', e);
+    }
+  }
+};
+
 function buildEl(tag, className, parent) {
   const n = document.createElement(tag);
   if (className) n.className = className;
   if (parent) parent.appendChild(n);
   return n;
-  // Safe localStorage wrapper
-  const safeStorage = {
-    getItem: (key) => {
-      try {
-        return window.localStorage ? window.safeStorage.getItem(key) : null;
-      } catch (e) {
-        console.warn('[Storage] getItem failed:', e);
-        return null;
-      }
-    },
-    setItem: (key, value) => {
-      try {
-        if (window.localStorage) window.safeStorage.setItem(key, value);
-      } catch (e) {
-        console.warn('[Storage] setItem failed:', e);
-      }
-    }
-  };
 }
 
 // ------- Theme (system/dark/light) -------
@@ -168,6 +172,7 @@ function applySkin(skin) {
 function setSkin(skin) {
   safeStorage.setItem(SKIN_KEY, skin);
   applySkin(skin);
+  showToast(skin === "realistic" ? t('skinRealistic') || "Realistic Mode" : t('skinLiquid') || "Liquid Mode");
 }
 
 // ------- Yer/konum yardımcıları -------
@@ -338,18 +343,25 @@ export async function boot(store, rootEl) {
   const actions = buildEl("div", "hub-actions", topbar);
 
   // Follow pill (the only essential control in top bar)
-  const followPill = buildEl("div", "hub-pill", actions);
+  const followPill = buildEl("button", "btn hub-pill", actions); // Changed to button for semantics
   const followDot = buildEl("div", "hub-dot", followPill);
   const followTxt = buildEl("div", "", followPill);
-  followTxt.textContent = t('follow') + ": " + t('on');
 
-  // Settings button (opens settings modal)
+  // Explicit "Mode" explanation
+  const modeLabel = t('follow') === 'Takip' ? 'Modu' : 'Mode';
+  followTxt.innerHTML = `<span style="font-weight:400; opacity:0.8">ISS ${modeLabel}:</span> <strong>${t('on')}</strong>`;
+
+  followPill.setAttribute("aria-label", t('follow'));
+  followPill.style.minHeight = "44px";
+
+  // Settings button (opens settings modal) - Explicit Label for Elderly UX
   const settingsBtn = buildEl("button", "btn settings-btn", actions);
   settingsBtn.type = "button";
-  settingsBtn.innerHTML = ICONS.settings;
+  // Icon + Text Structure
+  settingsBtn.innerHTML = `${ICONS.settings} <span>${t('settings')}</span>`;
   settingsBtn.title = t('settings');
   settingsBtn.setAttribute("aria-label", t('settings'));
-  settingsBtn.style.cssText = "font-size: 18px; padding: 8px 12px;";
+  settingsBtn.style.cssText = "font-size: 18px; padding: 8px 16px; min-height: 44px;";
 
   // Create Settings Modal
   const settingsModal = createSettingsModal({
@@ -365,6 +377,25 @@ export async function boot(store, rootEl) {
   // ========== AUTH MODAL ==========
   const authModal = createAuthModal();
   rootEl.appendChild(authModal.el);
+
+  // ========== HELP MODAL ==========
+  const helpModal = createHelpModal();
+  rootEl.appendChild(helpModal.el);
+
+  // Help Button (Top Bar)
+  const helpBtn = buildEl("button", "btn help-btn", actions);
+  helpBtn.type = "button";
+  // Icon + Text Structure (Elderly UX)
+  // Reusing settings icon temporarily if no help icon, or use generic '?'
+  const helpIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+  helpBtn.innerHTML = `${helpIcon} <span>${t('helpTitle').split(' ')[0]}</span>`;
+  helpBtn.title = t('helpTitle');
+  helpBtn.setAttribute("aria-label", t('helpTitle'));
+  helpBtn.style.cssText = "font-size: 18px; padding: 8px 16px; min-height: 44px;";
+
+  helpBtn.addEventListener("click", () => {
+    helpModal.open();
+  });
 
   // User button in topbar
   const userButton = createUserButton();
@@ -398,34 +429,35 @@ export async function boot(store, rootEl) {
 
   // Version label
   const version = buildEl("div", "hub-ver", overlay);
-  // Pass Card Section
+  // Pass Card Section - Masaüstünde sağ altta görünür
   const passSection = buildEl("div", "pass-section", overlay);
   passSection.id = "pass-section";
   passSection.style.cssText = `
     position: fixed;
     bottom: 80px;
     right: 20px;
-    max-width: 400px;
+    max-width: 380px;
     width: calc(100% - 40px);
     z-index: 100;
-    display: none;
+    display: block;
   `;
 
   const passCard = createPassCard();
   passSection.appendChild(passCard.el);
   version.textContent = CONFIG?.VERSION || "v0.2.2";
 
-  // ========== NASA LIVE CARD ==========
+  // ========== NASA LIVE CARD - Sol altta, HUD'ın üstünde ==========
   const nasaSection = buildEl("div", "nasa-section", overlay);
   nasaSection.id = "nasa-section";
   nasaSection.style.cssText = `
     position: fixed;
-    bottom: 80px;
+    bottom: 200px;
     left: 20px;
-    right: 20px;
-    max-width: 500px;
+    max-width: 400px;
+    width: calc(50% - 40px);
+    max-width: 420px;
     z-index: 100;
-    display: none;
+    display: block;
   `;
   const nasaCard = createNASALiveCard();
   nasaSection.appendChild(nasaCard.el);
@@ -526,6 +558,15 @@ export async function boot(store, rootEl) {
       const nextPass = bundle?.nextPass || null;
 
       setPredictionFromPass(nextPass);
+
+      // Phase 5: Schedule Notifications
+      if (nextPass && areNotificationsEnabled()) {
+        schedulePassNotification({
+          startTime: nextPass.aosMs,
+          maxElevation: nextPass.maxElev
+        });
+      }
+
       localState.lastPredictionRefresh = Date.now();
 
       if (!nextPass) {
@@ -548,11 +589,14 @@ export async function boot(store, rootEl) {
   function renderPrediction() {
     const p = localState.prediction;
 
+    // Pass section her zaman görünür (masaüstünde)
+    // Mobilde CSS tarafından kontrol edilir
+    if (window.innerWidth > 768) {
+      passSection.style.display = 'block';
+    }
+
     // Update pass card
     if (p && p.aosMs) {
-      // Show pass card
-      passSection.style.display = 'block';
-
       // Calculate countdown
       const now = Date.now();
       const diffMs = p.aosMs - now;
@@ -568,8 +612,12 @@ export async function boot(store, rootEl) {
         countdownText
       });
     } else {
-      // Hide pass card when no pass
-      passSection.style.display = 'none';
+      // Veri henüz yok - bekleme durumu
+      passCard.setState({
+        nextPass: null,
+        nextVisiblePass: null,
+        countdownText: localState.predictionBusy ? t('passCalculating') : '--:--:--'
+      });
     }
   }
 
@@ -625,7 +673,10 @@ export async function boot(store, rootEl) {
     globeLoading = true;
     try {
       const mod = await import("../ui/globeView.js");
-      globe = await mod.createGlobe(rootEl);
+      const globeApi = mod.globeActions;
+      globe = await globeApi.createGlobe(rootEl);
+      // API objesini dön
+      globe = globeApi;
       // Skin uygulanmış olsun
       applySkin(getInitialSkin());
       return globe;
@@ -680,7 +731,18 @@ export async function boot(store, rootEl) {
   // Dashboard buttons trigger this via querySelectorAll event listeners
   const viewToggle = createViewModeToggle({
     initialMode: viewMode,
-    onChange: (mode) => applyViewMode(mode)
+    onChange: (mode) => applyViewMode(mode),
+    onFocusChange: (focusMode) => {
+      // Globe odak modunu değiştir
+      if (globe && globe.setFocusMode) {
+        try {
+          globe.setFocusMode(focusMode);
+          log(`[3D] Focus mode: ${focusMode === 'iss' ? 'ISS takibi' : 'Dünya görünümü'}`);
+        } catch (e) {
+          console.warn("Globe focus mode error:", e);
+        }
+      }
+    }
   });
   viewToggleRef = viewToggle;
   rootEl.appendChild(viewToggle.el);
@@ -708,6 +770,7 @@ export async function boot(store, rootEl) {
         windKmh: w.windKmh,
         codeLabel: label,
         timeLabel,
+        code: w.code // Pass WMO code for visibility hint
       });
     } catch {
       weatherBadge.setState({
@@ -937,6 +1000,7 @@ export async function boot(store, rootEl) {
 
     syncCityText();
     log(t('locSaved') + `: ${placeLabel(selectedPlace)}`);
+    showToast(t('locSaved') || "Location Saved", 'success');
 
     closeLocModal();
     await calcPredictionNow({ forceLog: true });
