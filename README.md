@@ -9,6 +9,24 @@ Real-time International Space Station tracking with immersive 3D visualization a
 
 ![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
+## 🆕 What's New in v1.0.0 (December 2024)
+
+### 🌙 Immersive 3D Experience
+- **Realistic Moon & Sun** - Celestial bodies with glow effects in 3D globe view
+- **Dynamic Theme System** - Light mode: white space with dark stars / Dark mode: black space with white stars
+- **Theme-aware 2D Map** - MapTiler Positron (light) / Darkmatter (dark) automatic switching
+
+### 🎨 Complete Theme Overhaul
+- Full UI transformation between light/dark modes
+- Globe atmosphere glow matches accent color
+- Smooth CSS transitions throughout
+
+### 🐛 Bug Fixes
+- Fixed 2D map drag issue (user can now pan freely)
+- Fixed trajectory lines crossing through globe (antimeridian handling)
+- Fixed crew widget translations and image fallbacks
+- Removed intrusive "stale data" warning bar
+
 ## ✨ Features
 
 | Feature | Description |
