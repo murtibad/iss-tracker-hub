@@ -2,30 +2,56 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://murtibad.github.io/iss-tracker-hub/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-orange)](package.json)
+[![Version](https://img.shields.io/badge/version-1.1.0-orange)](package.json)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Real-time International Space Station tracking with immersive 3D visualization and personalized pass predictions.
 
 ![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
-## 🆕 What's New in v1.0.0 (December 2024)
+## 🆕 What's New in v1.1.0 (December 25, 2024)
 
 ### 🌙 Immersive 3D Experience
-- **Realistic Moon & Sun** - Celestial bodies with glow effects in 3D globe view
+- **Realistic Moon & Sun** - Beautiful celestial bodies with glow/corona effects
 - **Dynamic Theme System** - Light mode: white space with dark stars / Dark mode: black space with white stars
 - **Theme-aware 2D Map** - MapTiler Positron (light) / Darkmatter (dark) automatic switching
+- **Globe Atmosphere Glow** - Dynamically matches your chosen accent color
 
 ### 🎨 Complete Theme Overhaul
-- Full UI transformation between light/dark modes
-- Globe atmosphere glow matches accent color
-- Smooth CSS transitions throughout
+- Full UI transformation between light/dark modes (not just text colors!)
+- Cards, panels, and all components adapt to theme
+- Smooth CSS transitions and animations throughout the app
+- "Butter smooth" feel with staggered entry animations
 
-### 🐛 Bug Fixes
-- Fixed 2D map drag issue (user can now pan freely)
-- Fixed trajectory lines crossing through globe (antimeridian handling)
-- Fixed crew widget translations and image fallbacks
-- Removed intrusive "stale data" warning bar
+### � NASA Live Stream
+- Updated to reliable YouTube embed sources (NASA TV Public, ISS HD Earth View)
+- Full i18n support for stream labels (Turkish/English)
+- Professional UI without emojis
+
+### 👨‍🚀 Crew Widget Improvements
+- Added complete `crewParams` translations (TR/EN)
+- Image fallback for broken Wikipedia links
+- Fixed "undefined" role text issue
+
+### 🗺️ Map & Navigation Fixes
+- **2D Map Drag Fix** - Users can now freely pan the map (follow mode disables on interaction)
+- **Trajectory Lines Fix** - Proper antimeridian (180°/-180°) crossing handling
+- No more lines cutting through the Earth!
+
+### 🔧 Technical Improvements
+- Removed intrusive "Veriler güncel olmayabilir" (stale data) warning bar
+- Auth modal error animations
+- Help modal professional styling (removed emojis)
+- HUD layout spacing improvements
+- ESLint configuration added
+- Motion utilities refactored
+
+### 📦 New Files
+- `src/styles/animations.css` - Global smooth animations
+- `src/ui/intro.js` - Landing animation system
+- `src/ui/widgets/apiStatusWidget.js` - API status monitoring
+- `CHANGELOG.md` - Version history
+- `CONTRIBUTING.md` - Contribution guidelines
 
 ## ✨ Features
 
