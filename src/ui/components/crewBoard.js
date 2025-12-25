@@ -82,9 +82,10 @@ export function createCrewBoard() {
         `;
 
         const info = document.createElement('div');
-        // Role translation
+        // Role translation - doğru key lookup
         const RoleParams = t('crewParams');
-        const roleLabel = RoleParams ? RoleParams[member.key] : member.key;
+        // member.key 'bioCdr' veya 'bioFe' şeklinde, crewParams içinde bu key'ler var
+        const roleLabel = RoleParams && RoleParams[member.key] ? RoleParams[member.key] : (member.key === 'bioCdr' ? 'Commander' : 'Flight Engineer');
 
         info.innerHTML = `
             <div style="font-weight:700; font-size:20px; color: var(--text);">${member.name}</div>
