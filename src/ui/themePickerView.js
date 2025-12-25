@@ -62,6 +62,14 @@ export function applyGlassColor(color) {
   root.style.setProperty("--glass-hue", h);
   root.style.setProperty("--glass-sat", `${s}%`);
   root.style.setProperty("--accent", color);
+
+  // Dispatch event for Globe to pick up
+  window.dispatchEvent(new CustomEvent('themeChanged', {
+    detail: {
+      color: color,
+      type: 'accent'
+    }
+  }));
 }
 
 export function createThemePicker() {

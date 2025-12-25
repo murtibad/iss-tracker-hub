@@ -446,21 +446,24 @@
     .floating-hud {
         left: 10px;
         right: 10px;
-        bottom: 70px;
+        bottom: 90px;
         width: calc(100% - 20px);
         max-width: 100%;
         min-width: unset;
     }
 
-    /* NASA Section - Hidden by default on mobile, shown via tab */
+    /* NASA Section - Tam genişlik, harita/bilgi tab'larında gizli */
     #nasa-section,
     .nasa-section {
         display: none !important;
+        position: fixed;
+        top: 70px;
         left: 10px;
         right: 10px;
-        bottom: 70px;
+        bottom: 90px;
         width: calc(100% - 20px);
         max-width: 100%;
+        overflow-y: auto;
     }
 
     body[data-mobile-view="nasa"] #nasa-section,
@@ -468,15 +471,18 @@
         display: block !important;
     }
 
-    /* Pass Section - Hidden by default on mobile, shown via tab */
+    /* Pass Section - Tam genişlik, harita/bilgi tab'larında gizli */
     #pass-section,
     .pass-section {
         display: none !important;
+        position: fixed;
+        top: 70px;
         left: 10px;
         right: 10px;
-        bottom: 70px;
+        bottom: 90px;
         width: calc(100% - 20px);
         max-width: 100%;
+        overflow-y: auto;
     }
 
     body[data-mobile-view="passes"] #pass-section,
@@ -484,12 +490,12 @@
         display: block !important;
     }
 
-    /* Telemetry View - Show HUD */
+    /* Telemetry View - Show HUD only */
     body[data-mobile-view="telemetry"] .floating-hud {
         display: flex !important;
     }
 
-    /* Map view - hide all widgets except HUD */
+    /* Map view - show only HUD */
     body[data-mobile-view="map"] .floating-hud {
         display: flex !important;
     }
@@ -501,13 +507,79 @@
 
     /* Weather badge - mobile position */
     .weather-badge {
-        bottom: 140px !important;
+        bottom: 160px !important;
         right: 10px !important;
     }
 
     /* View toggle - mobile position */
     .view-toggle {
-        bottom: 80px !important;
+        bottom: 100px !important;
         right: 10px !important;
+    }
+}
+
+/* =====================================================
+   DESKTOP: Clean Layout
+   ===================================================== */
+@media (min-width: 769px) {
+
+    /* NASA section - sağ üst */
+    #nasa-section,
+    .nasa-section {
+        display: block !important;
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        max-width: 360px;
+        width: 35%;
+        min-width: 280px;
+    }
+
+    /* Pass section - sağ alt */
+    #pass-section,
+    .pass-section {
+        display: block !important;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        max-width: 320px;
+        width: 30%;
+    }
+
+    /* Floating HUD - sol alt */
+    .floating-hud {
+        left: 24px;
+        bottom: 24px;
+        width: auto;
+        min-width: 480px;
+        max-width: 600px;
+        padding: 8px;
+        /* Internal padding controlled by flex gap now */
+    }
+
+    .hud-main-row {
+        gap: 32px;
+        /* Daha fazla boşluk */
+        padding: 24px 32px;
+    }
+
+    /* Desktop View Toggle Position */
+    .view-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: fixed;
+        bottom: 140px;
+        /* Above Pass Card */
+        right: 24px;
+        z-index: 1000;
+    }
+
+    /* Ensure specific overlapping preventions */
+    #pass-section,
+    .pass-section {
+        bottom: 24px;
+        right: 24px;
+        z-index: 900;
     }
 }

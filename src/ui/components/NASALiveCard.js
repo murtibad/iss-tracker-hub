@@ -28,8 +28,10 @@ export function createNASALiveCard() {
   `;
 
   const title = document.createElement('div');
-  title.textContent = "🔴 " + (t('nasa')?.title || "NASA Live");
-  title.style.cssText = "font-size: 20px; font-weight: 800; color: var(--accent);";
+  // Use CSS dot instead of emoji
+  const dot = `<span style="display:inline-block; width:10px; height:10px; background:var(--danger); border-radius:50%; margin-right:8px; box-shadow:0 0 8px var(--danger);"></span>`;
+  title.innerHTML = dot + (t('nasaTitle') || "NASA Live");
+  title.style.cssText = "font-size: 20px; font-weight: 800; color: var(--accent); display: flex; align-items: center;";
   header.appendChild(title);
 
   // Video Wrapper
@@ -62,7 +64,7 @@ export function createNASALiveCard() {
 
   const startBtn = document.createElement('button');
   startBtn.className = "btn";
-  startBtn.innerHTML = t('nasa')?.btnStart || "📺 Start Stream";
+  startBtn.innerHTML = (t('nasaStart') || "Start Stream");
   startBtn.style.cssText = `
     font-size: 20px; /* Large Text */
     padding: 16px 32px;
@@ -78,11 +80,26 @@ export function createNASALiveCard() {
   startOverlay.appendChild(startBtn);
   vidWrap.appendChild(startOverlay);
 
-  // Stream Sources (Localized)
+  // Stream Sources - Official YouTube Embeds (More reliable than IBM/Ustream)
   const streams = [
-    { id: 'hd', labelKey: 'streamCam1', videoId: 'xRPjKQtRKT8' },
-    { id: 'std', labelKey: 'streamTv', videoId: '21X5lGlDOfg' },
-    { id: 'media', labelKey: 'streamMedia', videoId: '86YLFOog4GM' }
+    {
+      id: 'hd',
+      labelKey: 'streamCam1', // HD View
+      // NASA Live: Earth From Space (Official Stream)
+      embedUrl: 'https://www.youtube.com/embed/xRPjKQtRXR8?autoplay=1&mute=1'
+    },
+    {
+      id: 'std',
+      labelKey: 'streamTv', // NASA TV
+      // NASA Live: Official Stream of NASA TV's Public Channel
+      embedUrl: 'https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1&mute=1'
+    },
+    {
+      id: 'media',
+      labelKey: 'streamMedia', // Media/Tour
+      // ISS Tour in 4K (Recorded, always verified working)
+      embedUrl: 'https://www.youtube.com/embed/SGP6Y0Pnhe4?autoplay=1&mute=1'
+    }
   ];
 
   let activeStream = streams[0];
@@ -100,7 +117,7 @@ export function createNASALiveCard() {
   const renderControls = () => {
     controls.innerHTML = "";
     streams.forEach(s => {
-      const label = t('nasa')?.[s.labelKey] || s.id;
+      const label = t(s.labelKey) || s.id;
       const isActive = s.id === activeStream.id;
 
       const btn = document.createElement('button');
@@ -129,8 +146,8 @@ export function createNASALiveCard() {
   };
 
   const loadVideo = () => {
-    // Only set src when explicitly requested
-    const newSrc = `https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0`;
+    // Use embedUrl directly from stream object
+    const newSrc = activeStream.embedUrl;
     if (iframe.src !== newSrc) {
       iframe.src = newSrc;
     }

@@ -247,7 +247,33 @@ const DICTIONARY = {
         calendarDownloaded: "Downloaded!",
         enableNotifications: "Enable Notifications",
         notificationsEnabled: "Notifications Enabled",
-        passReminder: "ISS Pass Reminder"
+        passReminder: "ISS Pass Reminder",
+
+        // NASA Live & Skins
+        nasaNote: "⚠️ Stream may have interruptions based on ISS signal status.",
+        skinRealistic: "Realistic Mode",
+        skinLiquid: "Liquid Mode",
+        skinCyberpunk: "Cyberpunk Mode",
+
+        nasaTitle: "NASA Live",
+        nasaStart: "Start Stream",
+        streamCam1: "HD View",
+        streamTv: "NASA TV",
+        streamMedia: "Media",
+
+        crewParams: {
+            title: "Expedition Crew",
+            labelStatic: "Reference Data (Not Live)",
+            bioCdr: "Commander",
+            bioFe: "Flight Engineer",
+            bio1: "Commander (Roscosmos)",
+            bio2: "Flight Engineer (Roscosmos)",
+            bio3: "Flight Engineer (NASA)",
+            bio4: "Flight Engineer (NASA)",
+            bio5: "Flight Engineer (NASA)",
+            bio6: "Flight Engineer (NASA)",
+            bio7: "Flight Engineer (Roscosmos)"
+        }
     },
     tr: {
         // Genel
@@ -486,7 +512,33 @@ const DICTIONARY = {
         calendarDownloaded: "İndirildi!",
         enableNotifications: "Bildirimleri Aç",
         notificationsEnabled: "Bildirimler Açık",
-        passReminder: "ISS Geçiş Hatırlatıcısı"
+        passReminder: "ISS Geçiş Hatırlatıcısı",
+
+        // NASA Live & Skins
+        nasaNote: "⚠️ ISS sinyal durumuna göre canlı yayında kesintiler olabilir.",
+        skinRealistic: "Gerçekçi Mod",
+        skinLiquid: "Sıvı Mod",
+        skinCyberpunk: "Siberpunk Mod",
+
+        nasaTitle: "NASA Canlı",
+        nasaStart: "Yayını Başlat",
+        streamCam1: "HD Görüntü",
+        streamTv: "NASA TV",
+        streamMedia: "Medya",
+
+        crewParams: {
+            title: "Sefer Mürettebatı",
+            labelStatic: "Referans Verisi (Canlı Değil)",
+            bioCdr: "Komutan",
+            bioFe: "Uçuş Mühendisi",
+            bio1: "Komutan (Ruscosmos)",
+            bio2: "Uçuş Mühendisi (Ruscosmos)",
+            bio3: "Uçuş Mühendisi (NASA)",
+            bio4: "Uçuş Mühendisi (NASA)",
+            bio5: "Uçuş Mühendisi (NASA)",
+            bio6: "Uçuş Mühendisi (NASA)",
+            bio7: "Uçuş Mühendisi (Ruscosmos)"
+        }
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},
@@ -534,20 +586,36 @@ export function setLanguage(lang) {
 export function t(key) {
     const dict = DICTIONARY[currentLanguage];
 
-    // Primary: Current language
-    if (dict && dict[key]) {
-        return dict[key];
-    }
+    // Nested key desteği (örn: 'notify.btnAlertOff')
+    const getNestedValue = (obj, path) => {
+        const parts = path.split('.');
+        let current = obj;
+        for (const part of parts) {
+            if (current && typeof current === 'object' && part in current) {
+                current = current[part];
+            } else {
+                return undefined;
+            }
+        }
+        return typeof current === 'string' ? current : undefined;
+    };
+
+    // Primary: Current language - önce nested, sonra direct
+    const nestedValue = getNestedValue(dict, key);
+    if (nestedValue) return nestedValue;
+    if (dict && dict[key] && typeof dict[key] === 'string') return dict[key];
 
     // Fallback 1: TR (default)
-    if (currentLanguage !== 'tr' && DICTIONARY['tr'][key]) {
-        console.warn(`[i18n] Missing "${key}" in "${currentLanguage}", using TR fallback`);
+    const trNested = getNestedValue(DICTIONARY['tr'], key);
+    if (trNested) return trNested;
+    if (DICTIONARY['tr'][key] && typeof DICTIONARY['tr'][key] === 'string') {
         return DICTIONARY['tr'][key];
     }
 
     // Fallback 2: EN
-    if (currentLanguage !== 'en' && DICTIONARY['en'][key]) {
-        console.warn(`[i18n] Missing "${key}" in "${currentLanguage}", using EN fallback`);
+    const enNested = getNestedValue(DICTIONARY['en'], key);
+    if (enNested) return enNested;
+    if (DICTIONARY['en'][key] && typeof DICTIONARY['en'][key] === 'string') {
         return DICTIONARY['en'][key];
     }
 

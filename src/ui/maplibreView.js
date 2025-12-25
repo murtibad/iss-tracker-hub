@@ -12,23 +12,27 @@ import 'maplibre-gl/dist/maplibre-gl.css';
  * @returns {Object} Map instance and control methods
  */
 export function createMapLibreView(container, options = {}) {
-    const { center = [0, 0], zoom = 2 } = options;
+    const { center = [0, 0], zoom = 2, onUserInteraction } = options;
 
     console.log('[MapLibre] 🗺️ Initialization started');
     console.log('[MapLibre] Container:', container);
     console.log('[MapLibre] Options:', { center, zoom });
 
-    // MapTiler Dark Matter style URL
+    // MapTiler styles - theme aware
     const MAPTILER_API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
-    console.log('[MapLibre] API Key loaded:', MAPTILER_API_KEY ? `${MAPTILER_API_KEY.substring(0, 8)}...` : 'MISSING!');
+    console.log('[MapLibre] API Key:', MAPTILER_API_KEY ? 'Loaded ✓' : 'MISSING!');
 
     if (!MAPTILER_API_KEY) {
         console.error('[MapLibre] ❌ VITE_MAPTILER_API_KEY is not defined in .env!');
         return null;
     }
 
-    const styleUrl = `https://api.maptiler.com/maps/darkmatter/style.json?key=${MAPTILER_API_KEY}`;
-    console.log('[MapLibre] Style URL:', styleUrl);
+    // Theme-aware style selection
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const darkStyle = `https://api.maptiler.com/maps/darkmatter/style.json?key=${MAPTILER_API_KEY}`;
+    const lightStyle = `https://api.maptiler.com/maps/positron/style.json?key=${MAPTILER_API_KEY}`;
+    const styleUrl = isLight ? lightStyle : darkStyle;
+    console.log('[MapLibre] Style:', isLight ? 'Light (Positron)' : 'Dark (Darkmatter)');
 
     // Initialize map
     console.log('[MapLibre] Creating Map instance...');
@@ -37,10 +41,28 @@ export function createMapLibreView(container, options = {}) {
         style: styleUrl,
         center,
         zoom,
-        pitch: 0, // 2D view initially
+        pitch: 0,
         bearing: 0,
-        antialias: true, // Smooth edges
+        antialias: true,
         attributionControl: true
+    });
+
+    // Detect user interaction to stop auto-follow
+    if (onUserInteraction) {
+        ['dragstart', 'touchstart', 'wheel', 'mousedown'].forEach(event => {
+            map.on(event, () => {
+                onUserInteraction();
+            });
+        });
+    }
+
+    // Listen for theme changes to switch map style
+    window.addEventListener('themeChanged', (e) => {
+        const { theme } = e.detail;
+        const newIsLight = theme === 'light' || document.documentElement.getAttribute('data-theme') === 'light';
+        const newStyle = newIsLight ? lightStyle : darkStyle;
+        map.setStyle(newStyle);
+        console.log('[MapLibre] Style switched to:', newIsLight ? 'Light' : 'Dark');
     });
 
     console.log('[MapLibre] Map instance created:', map);

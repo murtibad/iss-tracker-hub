@@ -1,9 +1,9 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Build
 dist/
+build/
 
 # IDE
 .vscode/
@@ -19,7 +19,31 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Env
+# Env (Security - NEVER commit these)
 .env
 .env.local
+.env.*.local
+.env.production
+.env.development
+
+# Security - Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Test
+coverage/
+.nyc_output/
+
+# Misc
+*.bak
+*.backup

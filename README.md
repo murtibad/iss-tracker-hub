@@ -1,42 +1,45 @@
 # 🛰️ ISS Tracker HUB
 
-Real-time International Space Station tracking with 3D visualization and personalized pass predictions.
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://murtibad.github.io/iss-tracker-hub/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-orange)](package.json)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**Current Version:** v0.3.3 (beta)
+Real-time International Space Station tracking with immersive 3D visualization and personalized pass predictions.
+
+![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
 ## ✨ Features
 
-### Core Tracking
-- 🌍 **2D/3D View Toggle** - MapLibre GL map or immersive 3D globe
-- 🛰️ **Real-time Telemetry** - Live ISS position, velocity, altitude
-- 📍 **Pass Predictions** - Calculate when ISS is visible from your location
-- 🌤️ **Weather Integration** - Current conditions at ISS location
-
-### PWA & Offline
-- 📱 **Installable PWA** - Add to home screen, works like a native app
-- 🔌 **Offline-ready** - App shell cached for offline usage
-- 🚀 **Runtime Caching** - ISS API and geocoding cached (Network First)
-- ⚠️ **Network Status** - Visual indicators for offline/stale data
-
-### Localization & Accessibility
-- 🌐 **i18n Support** - Turkish (TR) and English (EN)
-- ♿ **A11y Baseline** - Keyboard navigation, ARIA labels, focus management
-- 🎨 **Glassmorphism UI** - Modern, premium design
-
-### Additional
-- 👨‍🚀 **Crew Info** - Who's on the ISS right now
-- 📱 **Fully Responsive** - Desktop, tablet, mobile
+| Feature | Description |
+|---------|-------------|
+| 🌍 **2D/3D Toggle** | Seamless switch between MapLibre Dark Matter and immersive 3D globe |
+| 🛰️ **Real-time Telemetry** | Live ISS position, velocity (27,600 km/h), and altitude (408 km) |
+| 📍 **Pass Predictions** | SGP4-based calculations for when ISS is visible from your location |
+| 👨‍🚀 **Live Crew Info** | Current ISS expedition members fetched from Open Notify API |
+| 📺 **NASA Live Stream** | HD Earth views from space with multiple camera options |
+| 🌤️ **Weather Context** | Current viewing conditions at ISS ground track location |
+| 🔌 **PWA & Offline** | Installable, works offline with cached data |
+| 🌐 **i18n Support** | Turkish (TR) and English (EN) with smart units |
+| ♿ **Accessibility** | WCAG 2.1 baseline, elderly-friendly (18px base font) |
 
 ## 🚀 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/murtibad/iss-tracker-hub.git
+cd iss-tracker-hub
+
 # Install dependencies
 npm install
 
-# Development server
+# Create environment file (see Configuration section)
+cp .env.example .env
+
+# Start development server
 npm run dev
 
-# Production build
+# Build for production
 npm run build
 
 # Preview production build
@@ -45,118 +48,162 @@ npm run preview
 
 ## 🌐 Live Demo
 
-[View on GitHub Pages](https://github.com/yourusername/iss-tracker-hub)
+**[View on GitHub Pages →](https://murtibad.github.io/iss-tracker-hub/)**
 
 ## 📡 Data Sources
 
-- **ISS Position**: [Where The ISS At API](https://wheretheiss.at/)
-- **Weather**: [Open-Meteo](https://open-meteo.com/)
-- **Crew**: [Open Notify API](http://open-notify.org/)
-- **Geocoding**: [Nominatim / OpenStreetMap](https://nominatim.openstreetmap.org/)
+| Provider | Data |
+|----------|------|
+| [Where The ISS At](https://wheretheiss.at/) | Primary ISS telemetry (lat, lon, alt, velocity) |
+| [Open Notify API](http://open-notify.org/) | Crew information, fallback position |
+| [CelesTrak](https://celestrak.org/) | TLE data for SGP4 calculations |
+| [Open-Meteo](https://open-meteo.com/) | Weather at ISS ground location |
+| [Nominatim/OSM](https://nominatim.openstreetmap.org/) | Geocoding for location search |
 
 ## 🛠️ Tech Stack
 
 ### Core
-- ⚡ **Vite** - Fast build tool
-- 🗺️ **MapLibre GL** - 2D map rendering
-- 🌍 **Globe.gl** - 3D Earth visualization
-- 🎨 **Vanilla JS** - No framework, pure JavaScript
+- ⚡ **[Vite 6](https://vitejs.dev/)** - Fast build tool with HMR
+- 🗺️ **[MapLibre GL](https://maplibre.org/)** - 2D map rendering (Dark Matter theme)
+- 🌍 **[Globe.gl](https://globe.gl/)** - 3D Earth visualization with Three.js
+- 🎨 **Vanilla JS** - No framework, pure ES6+ JavaScript
+
+### Science
+- 📐 **[satellite.js](https://github.com/shashwatak/satellite-js)** - TLE/SGP4 orbit calculations
+- 🌐 **Custom i18n** - Lightweight translation system
 
 ### PWA & Caching
-- 📦 **vite-plugin-pwa** - Service Worker generation
+- 📦 **[vite-plugin-pwa](https://vite-plugin-pwa.netlify.app/)** - Service Worker generation
 - 🔄 **Workbox** - Runtime caching strategies
-- 💾 **Cache First** - App shell (HTML/CSS/JS/icons)
-- 🌐 **Network First** - API data (ISS: 5min TTL, Geocoding: 24h TTL)
+- 💾 **Cache First** - App shell (HTML/CSS/JS)
+- 🌐 **Network First** - API data (5min/24h TTL)
 
-### Utilities
-- 📐 **satellite.js** - TLE-based orbit calculations
-- 🌍 **i18n** - Custom lightweight translation system
-- ♿ **A11y** - WCAG 2.1 baseline compliance
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# MapTiler API Key (Required for 2D map)
+VITE_MAPTILER_API_KEY=your_maptiler_key
+
+# Firebase (Optional - for future authentication)
+VITE_FIREBASE_API_KEY=your_firebase_key
+VITE_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+```
+
+### Application Config
+
+Edit `src/constants/config.js` for:
+- Update intervals (telemetry, weather, predictions)
+- Minimum pass elevation angle (default: 20°)
+- API endpoints
+- UI timing settings
 
 ## 📂 Project Structure
 
 ```
 iss-tracker-hub/
 ├── public/
-│   ├── icons/              # PWA icons
+│   ├── icons/              # PWA icons (192, 512px)
+│   ├── models/             # 3D models (ISS.glb)
 │   └── manifest.json       # PWA manifest
 ├── src/
 │   ├── app/
-│   │   └── boot.js         # Main application entry
+│   │   └── boot.js         # Main application entry & orchestration
 │   ├── ui/
 │   │   ├── components/     # Reusable UI components
-│   │   ├── globeView.js    # 3D globe
-│   │   ├── maplibreView.js # 2D map
-│   │   └── ...
+│   │   │   ├── floatingHUD.js
+│   │   │   ├── NASALiveCard.js
+│   │   │   ├── mobileNavBar.js
+│   │   │   └── toastManager.js
+│   │   ├── globeView.js    # 3D globe (Globe.gl + Three.js)
+│   │   ├── maplibreView.js # 2D map (MapLibre GL)
+│   │   └── passCardView.js # Pass prediction display
 │   ├── services/
-│   │   ├── prediction.js   # Pass calculations
-│   │   ├── issMotion.js    # Telemetry & interpolation
-│   │   └── weather.js      # Weather API
+│   │   ├── iss.js          # 3-tier ISS data fetcher
+│   │   ├── issMotion.js    # 60fps smooth interpolation
+│   │   ├── prediction.js   # SGP4 pass calculations
+│   │   ├── crew.js         # Dynamic crew fetching
+│   │   └── weather.js      # Open-Meteo integration
+│   ├── utils/
+│   │   └── utils.js        # Common helpers (DRY)
+│   ├── constants/
+│   │   └── config.js       # Centralized configuration
 │   ├── i18n/
-│   │   └── i18n.js         # Translation system
+│   │   └── i18n.js         # Translation system (TR/EN)
 │   └── styles/
-│       └── theme.css       # Glassmorphism theme
-├── vite.config.js          # Vite + PWA config
+│       ├── theme.css       # Main theme (glassmorphism)
+│       ├── layout.css      # Responsive grid
+│       ├── animations.css  # Micro-interactions
+│       └── accessibility.css
+├── vite.config.js          # Vite + PWA configuration
 └── package.json
 ```
 
-## 🔧 Configuration
-
-Edit `src/constants/config.js`:
-- Update intervals (telemetry, weather, predictions)
-- Minimum pass elevation angle
-- Default theme/language
-- API endpoints
-
-## 🌐 PWA Notes
+## 🌐 PWA Features
 
 ### What Works Offline
 - ✅ App shell (UI, styles, scripts)
 - ✅ Cached ISS data (up to 5 minutes old)
 - ✅ Cached geocoding results (up to 24 hours old)
+- ✅ 3D model assets
 
 ### What Requires Network
 - ❌ Live ISS telemetry updates
 - ❌ Fresh weather data
 - ❌ New geocoding searches
-
-### Intentionally Excluded
-- Push notifications (beta scope)
-- Background sync (future enhancement)
+- ❌ NASA live streams
 
 ## 🎯 Roadmap
 
-### Completed (v0.3.3)
-- ✅ i18n Phase 1 & 2 (TR/EN)
-- ✅ PWA Phase 1 & 2 (Installable + Runtime caching)
-- ✅ A11y baseline (keyboard nav, ARIA, focus)
-- ✅ Offline/stale status indicators
-- ✅ **Mobile UX Upgrade** (Bottom Navigation Bar)
-- ✅ **3D Globe** (Singleton fixes & Performance)
-- ✅ **GitHub Pages Compatibility** (Fixed paths & API keys)
+### ✅ Completed (v1.0.0)
+- Real-time 2D/3D ISS tracking
+- SGP4-based pass predictions
+- Dynamic crew info from API
+- NASA live stream integration
+- PWA with offline support
+- i18n (TR/EN) with smart units
+- Accessibility baseline (WCAG 2.1)
+- Modern animations & transitions
+- Mobile-responsive bottom navigation
 
-### Backlog (Nice-to-Have)
-- Advanced error handling
-- Code splitting & lazy loading
-- Push notifications (opt-in)
+### 🔮 Future Enhancements
+- [ ] Day/Night terminator visualization
+- [ ] Push notifications for passes
+- [ ] Multiple satellite tracking
+- [ ] Historical pass data
+- [ ] User accounts & saved locations
 
 ## 🤝 Contributing
 
-Pull requests are welcome! For major changes, please open an issue first.
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
+
+```bash
+# Fork the repo, then:
+git checkout -b feature/amazing-feature
+git commit -m 'Add amazing feature'
+git push origin feature/amazing-feature
+# Open a Pull Request
+```
 
 ## 📜 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- NASA and the ISS crew
-- Open-source API providers
-- OpenStreetMap community
-- Vite & Workbox teams
+- **NASA** and the ISS crew for inspiring humanity
+- **Open Notify API** for free ISS data
+- **OpenStreetMap** community for geocoding
+- **CelesTrak** for TLE orbital elements
+- **Globe.gl** and **MapLibre** teams for visualization tools
 
 ---
 
-**Made with ❤️ for space enthusiasts**
-
-**Status:** Beta | **Version:** v0.3.3 | **Last Updated:** December 2025
+<p align="center">
+  <strong>Made with ❤️ for space enthusiasts</strong><br>
+  <sub>Version 1.0.0 | December 2025</sub>
+</p>

@@ -1,8 +1,17 @@
 // src/state/store.js
 // Türkçe yorum: Tek store. UI sadece burayı okur. (Kontrol burada)
+// EN: Centralized state management with Observer Pattern (Stateful Architecture)
 
 import { CONFIG } from "../constants/config.js";
 
+/**
+ * STATEFUL ARCHITECTURE
+ * ---------------------
+ * Bu uygulama Observer Pattern tabanlı merkezi state yönetimi kullanır.
+ * - State: Uygulamanın tüm durumu tek bir nesne içinde tutulur
+ * - Subscribe: Bileşenler state değişikliklerini dinler
+ * - Update: State değiştiğinde tüm dinleyiciler bilgilendirilir
+ */
 export function createStore() {
   const state = {
     app: {
@@ -37,9 +46,28 @@ export function createStore() {
     ui: {
       follow: true,
     },
+
+    // API STATUS TRACKING (Stateful Pattern)
+    // Her API için durum bilgileri tutuluyor
+    apis: {
+      wheretheiss: { status: 'idle', lastCall: null, responseTime: null, error: null },
+      opennotify: { status: 'idle', lastCall: null, responseTime: null, error: null },
+      celestrak: { status: 'idle', lastCall: null, responseTime: null, error: null },
+      openmeteo: { status: 'idle', lastCall: null, responseTime: null, error: null },
+      nominatim: { status: 'idle', lastCall: null, responseTime: null, error: null },
+      wikipedia: { status: 'idle', lastCall: null, responseTime: null, error: null },
+    },
+
+    // SESSION STATE (tarayıcı oturumu boyunca)
+    session: {
+      startedAt: Date.now(),
+      apiCallCount: 0,
+      lastActivity: Date.now(),
+    },
   };
 
   const listeners = new Set();
+
 
   function notify() {
     for (const fn of listeners) fn(getState());
@@ -73,8 +101,23 @@ export function createStore() {
     return () => listeners.delete(fn);
   }
 
+  // API Status güncelleme yardımcı fonksiyonu
+  function updateApiStatus(apiName, statusData) {
+    if (state.apis[apiName]) {
+      Object.assign(state.apis[apiName], statusData);
+      state.session.lastActivity = Date.now();
+      notify();
+    }
+  }
+
+  // API çağrı sayacı
+  function incrementApiCalls() {
+    state.session.apiCallCount++;
+    state.session.lastActivity = Date.now();
+  }
+
   // TR: Actions'ı boot bağlayacak (store.actions = {...})
   // Bu dosyada action tanımlamıyoruz ki boot kontrol etsin.
 
-  return { getState, setState, patch, update, subscribe };
+  return { getState, setState, patch, update, subscribe, updateApiStatus, incrementApiCalls };
 }

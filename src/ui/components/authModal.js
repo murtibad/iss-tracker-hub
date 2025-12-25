@@ -156,6 +156,7 @@ export function createAuthModal() {
     form.onsubmit = async (e) => {
       e.preventDefault();
       errorEl.textContent = '';
+      errorEl.style.color = '#ff4444';
 
       const email = form.email.value.trim();
       const password = form.password?.value || '';
@@ -163,25 +164,36 @@ export function createAuthModal() {
 
       let result;
 
-      if (mode === 'login') {
-        result = await signIn(email, password);
-      } else if (mode === 'signup') {
-        result = await signUp(email, password, name);
-      } else if (mode === 'reset') {
-        result = await resetPassword(email);
-        if (result.success) {
-          errorEl.style.color = '#00ff00';
-          errorEl.textContent = getCurrentLanguage() === 'tr'
-            ? 'Şifre sıfırlama e-postası gönderildi'
-            : 'Password reset email sent';
-          return;
+      try {
+        if (mode === 'login') {
+          result = await signIn(email, password);
+        } else if (mode === 'signup') {
+          result = await signUp(email, password, name);
+        } else if (mode === 'reset') {
+          result = await resetPassword(email);
+          if (result.success) {
+            errorEl.style.color = '#00ff00';
+            errorEl.textContent = getCurrentLanguage() === 'tr'
+              ? 'Şifre sıfırlama e-postası gönderildi'
+              : 'Password reset email sent';
+            return;
+          }
         }
-      }
 
-      if (result.success) {
-        close();
-      } else {
-        errorEl.textContent = result.error;
+        if (result.success) {
+          close();
+        } else {
+          errorEl.textContent = result.error || 'Authentication error';
+          errorEl.classList.remove('show');
+          void errorEl.offsetWidth;
+          errorEl.classList.add('show');
+        }
+      } catch (err) {
+        console.error('[AuthModal] Error:', err);
+        errorEl.textContent = err.message || (getCurrentLanguage() === 'tr' ? 'Bir hata oluştu' : 'An error occurred');
+        errorEl.classList.remove('show');
+        void errorEl.offsetWidth;
+        errorEl.classList.add('show');
       }
     };
 
@@ -189,11 +201,22 @@ export function createAuthModal() {
     if (googleBtn) {
       googleBtn.onclick = async () => {
         errorEl.textContent = '';
-        const result = await signInWithGoogle();
-        if (result.success) {
-          close();
-        } else {
-          errorEl.textContent = result.error;
+        try {
+          const result = await signInWithGoogle();
+          if (result.success) {
+            close();
+          } else {
+            errorEl.textContent = result.error || 'Google sign-in failed';
+            errorEl.classList.remove('show');
+            void errorEl.offsetWidth;
+            errorEl.classList.add('show');
+          }
+        } catch (err) {
+          console.error('[AuthModal] Google Error:', err);
+          errorEl.textContent = err.message || 'Login error';
+          errorEl.classList.remove('show');
+          void errorEl.offsetWidth;
+          errorEl.classList.add('show');
         }
       };
     }

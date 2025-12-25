@@ -39,10 +39,6 @@ export function createNetworkStatusBar() {
             bar.style.background = "rgba(239, 68, 68, 0.95)"; // red
             text.textContent = "🔴 " + t('offline');
             bar.style.display = "block";
-        } else if (isStale) {
-            bar.style.background = "rgba(251, 191, 36, 0.95)"; // yellow/orange
-            text.textContent = "⚠️ " + t('staleData');
-            bar.style.display = "block";
         } else {
             bar.style.display = "none";
         }

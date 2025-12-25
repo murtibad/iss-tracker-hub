@@ -1,29 +1,108 @@
 /* src/styles/fixes.css */
-/* TR: Leaflet katmanları bazen HUD’un üstüne biniyordu.
-   Bu dosya HUD’u her zaman en üstte tutar.
-   EN: Force HUD layers above Leaflet panes/controls reliably. */
+/* TR: Harita katmanları bazen HUD'un üstüne biniyordu.
+   Bu dosya HUD'u her zaman en üstte tutar.
+   EN: Force HUD layers above map panes/controls reliably. */
 
-/* --- Leaflet’i aşağı al --- */
-.leaflet-container { z-index: 0 !important; }
-.leaflet-pane { z-index: 1 !important; }
-.leaflet-tile-pane { z-index: 2 !important; }
-.leaflet-overlay-pane { z-index: 3 !important; }
-.leaflet-shadow-pane { z-index: 4 !important; }
-.leaflet-marker-pane { z-index: 5 !important; }
+/* --- Leaflet z-index (legacy) --- */
+.leaflet-container {
+   z-index: 0 !important;
+}
 
-/* Leaflet UI kontrolleri (zoom/attribution) HUD’un üstüne çıkmasın */
+.leaflet-pane {
+   z-index: 1 !important;
+}
+
+.leaflet-tile-pane {
+   z-index: 2 !important;
+}
+
+.leaflet-overlay-pane {
+   z-index: 3 !important;
+}
+
+.leaflet-shadow-pane {
+   z-index: 4 !important;
+}
+
+.leaflet-marker-pane {
+   z-index: 5 !important;
+}
+
+/* Leaflet UI kontrolleri (zoom/attribution) HUD'un üstüne çıkmasın */
 .leaflet-top,
-.leaflet-bottom { z-index: 50 !important; }
+.leaflet-bottom {
+   z-index: 50 !important;
+}
 
-.leaflet-control { z-index: 60 !important; }
+.leaflet-control {
+   z-index: 60 !important;
+}
 
-/* --- HUD’u en üste kilitle --- */
-.glass-header { z-index: 5000 !important; }
-.pass-card { z-index: 4800 !important; }
+/* --- MapLibre GL z-index --- */
+.maplibregl-map {
+   z-index: 0 !important;
+}
+
+.maplibregl-canvas-container {
+   z-index: 1 !important;
+}
+
+.maplibregl-canvas {
+   z-index: 1 !important;
+}
+
+/* MapLibre markers - MUST be above canvas */
+.maplibregl-marker {
+   z-index: 100 !important;
+   pointer-events: auto !important;
+}
+
+/* ISS Marker - Highest priority among markers */
+.iss-marker {
+   z-index: 200 !important;
+   pointer-events: auto !important;
+   /* Ensure visibility */
+   opacity: 1 !important;
+   visibility: visible !important;
+}
+
+/* Home Marker */
+.home-marker {
+   z-index: 150 !important;
+}
+
+/* MapLibre popup above markers */
+.maplibregl-popup {
+   z-index: 300 !important;
+}
+
+/* MapLibre controls */
+.maplibregl-ctrl-top-right,
+.maplibregl-ctrl-top-left,
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+   z-index: 50 !important;
+}
+
+/* --- HUD'u en üste kilitle --- */
+.glass-header {
+   z-index: 5000 !important;
+}
+
+.pass-card {
+   z-index: 4800 !important;
+}
 
 /* Terminal ve kontrol paneli classları projede var */
-.terminal { z-index: 4700 !important; }
-.cp { z-index: 4600 !important; }
+.terminal {
+   z-index: 4700 !important;
+}
+
+.cp {
+   z-index: 4600 !important;
+}
 
 /* Konum overlay / modal gibi şeyler en üstte kalsın */
-.loc-overlay { z-index: 9999 !important; }
+.loc-overlay {
+   z-index: 9999 !important;
+}

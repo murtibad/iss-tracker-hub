@@ -33,6 +33,11 @@ import { createHelpModal } from "../ui/components/helpModal.js"; // Help Modal
 import { schedulePassNotification, areNotificationsEnabled } from "../services/passNotification.js"; // Phase 5 Notifications
 import { onAuthChange, getUser, logout } from "../services/authService.js";
 import { showToast } from "../ui/components/toastManager.js"; // Phase 6 Feedback
+import { createIntro } from "../ui/intro.js"; // Phase X Landing Animation
+
+// API Status Widget (Stateful Architecture Demonstration)
+import { createApiStatusWidget, reportApiCall } from "../ui/widgets/apiStatusWidget.js";
+import "../styles/apiStatusWidget.css";
 
 // WhereTheISS.at
 const ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
@@ -310,6 +315,11 @@ async function tryGetGpsOnce({ timeoutMs = 9000 } = {}) {
 export async function boot(store, rootEl) {
   if (!rootEl) throw new Error("rootEl missing");
 
+  // Show intro animation (first visit only)
+  createIntro(() => {
+    console.log('[boot] Intro complete');
+  });
+
   // Initialize i18n system (auto-detect from IP if first time)
   try {
     const lang = await initI18n();
@@ -420,6 +430,9 @@ export async function boot(store, rootEl) {
   const networkStatus = createNetworkStatusBar();
   rootEl.appendChild(networkStatus.el);
 
+  // ========== API STATUS WIDGET: Stateful Architecture Demo ==========
+  const apiStatusWidget = createApiStatusWidget(rootEl, store);
+
   // Use dashboard's integrated log for status updates
   // Landing Hero
   const log = dashboard.getLogFn();
@@ -429,16 +442,16 @@ export async function boot(store, rootEl) {
 
   // Version label
   const version = buildEl("div", "hub-ver", overlay);
-  // Pass Card Section - Masaüstünde sağ altta görünür
+  // Pass Card Section - Sağ altta, kompakt
   const passSection = buildEl("div", "pass-section", overlay);
   passSection.id = "pass-section";
   passSection.style.cssText = `
     position: fixed;
-    bottom: 80px;
+    bottom: 20px;
     right: 20px;
-    max-width: 380px;
+    max-width: 320px;
     width: calc(100% - 40px);
-    z-index: 100;
+    z-index: 200;
     display: block;
   `;
 
@@ -446,17 +459,17 @@ export async function boot(store, rootEl) {
   passSection.appendChild(passCard.el);
   version.textContent = CONFIG?.VERSION || "v0.2.2";
 
-  // ========== NASA LIVE CARD - Sol altta, HUD'ın üstünde ==========
+  // ========== NASA LIVE CARD - Sağ üst köşe, pass kartı üstünde ==========
   const nasaSection = buildEl("div", "nasa-section", overlay);
   nasaSection.id = "nasa-section";
   nasaSection.style.cssText = `
     position: fixed;
-    bottom: 200px;
-    left: 20px;
-    max-width: 400px;
-    width: calc(50% - 40px);
-    max-width: 420px;
-    z-index: 100;
+    top: 80px;
+    right: 20px;
+    max-width: 360px;
+    width: calc(40% - 20px);
+    min-width: 280px;
+    z-index: 150;
     display: block;
   `;
   const nasaCard = createNASALiveCard();
@@ -471,7 +484,7 @@ export async function boot(store, rootEl) {
     padding: 8px;
     opacity: 0.7;
   `;
-  nasaNote.textContent = "⚠️ ISS sinyal durumuna göre canlı yayında kesintiler olabilir.";
+  nasaNote.textContent = t('nasaNote') || "⚠️ Stream may have interruptions based on ISS signal status.";
 
   // ---------- Local state ----------
   const localState = {
@@ -624,7 +637,11 @@ export async function boot(store, rootEl) {
   // ------- MapLibre GL map -------
   const mapView = createMapLibreView(mapEl, {
     center: CONFIG?.DEFAULT_CENTER || [35, 39], // [lng, lat] in MapLibre
-    zoom: CONFIG?.DEFAULT_ZOOM || 4
+    zoom: CONFIG?.DEFAULT_ZOOM || 4,
+    onUserInteraction: () => {
+      // Disable follow mode on user interaction
+      setFollowUI(false);
+    }
   });
   const { map, issMarker } = mapView;
 
@@ -692,9 +709,20 @@ export async function boot(store, rootEl) {
 
   function applyViewMode(mode) {
     viewMode = mode === "3d" ? "3d" : "2d";
-    mapEl.style.display = viewMode === "2d" ? "block" : "none";
+
+    // Add transition animation
+    const animDuration = 400; // ms
 
     if (viewMode === "3d") {
+      // Fade out 2D map
+      mapEl.style.transition = `opacity ${animDuration}ms ease`;
+      mapEl.style.opacity = '0';
+
+      setTimeout(() => {
+        mapEl.style.display = "none";
+        mapEl.style.opacity = '1';
+      }, animDuration);
+
       ensureGlobe()
         .then((g) => {
           if (!g) {
@@ -719,7 +747,27 @@ export async function boot(store, rootEl) {
           try { viewToggleRef?.setMode("2d"); } catch { }
         });
     } else {
-      try { globe?.setVisible(false); } catch { }
+      // Fade out 3D globe
+      const globeContainer = document.getElementById('globe-3d-canvas-container');
+      if (globeContainer) {
+        globeContainer.style.transition = `opacity ${animDuration}ms ease`;
+        globeContainer.style.opacity = '0';
+        setTimeout(() => {
+          try { globe?.setVisible(false); } catch { }
+          globeContainer.style.opacity = '1';
+        }, animDuration);
+      } else {
+        try { globe?.setVisible(false); } catch { }
+      }
+
+      // Fade in 2D map
+      mapEl.style.opacity = '0';
+      mapEl.style.display = "block";
+      setTimeout(() => {
+        mapEl.style.transition = `opacity ${animDuration}ms ease`;
+        mapEl.style.opacity = '1';
+      }, 50);
+
       // 2D'ye geçerken globe takibini durdur
       try { globe?.stopFollow(); } catch { }
     }
@@ -1089,11 +1137,8 @@ export async function boot(store, rootEl) {
     }
   }
 
-  // Start the motion system
-  startMotion({
-    onPosition: handleMotionUpdate,
-    onData: handleNewData
-  });
+  // NOTE: Motion system started below in unified block (line ~1191)
+  // Removed duplicate startMotion call to prevent double initialization
 
   renderPrediction();
   startUiTick();
@@ -1106,8 +1151,8 @@ export async function boot(store, rootEl) {
   async function updateTrajectoryOnMap() {
     try {
       const now = Date.now();
-      // Minimum 3 minute between updates
-      if (now - lastTrajectoryUpdateAt < 3 * 60 * 1000) return;
+      // Minimum 45 seconds between updates
+      if (now - lastTrajectoryUpdateAt < 45 * 1000) return;
       lastTrajectoryUpdateAt = now;
 
       log('[Trajectory] Hesaplanıyor...');
@@ -1173,10 +1218,10 @@ export async function boot(store, rootEl) {
     }
   }
 
-  // Refresh trajectory every 5 minutes
+  // Refresh trajectory every 1 minute
   trajectoryTimer = setInterval(() => {
     updateTrajectoryOnMap();
-  }, 5 * 60 * 1000);
+  }, 1 * 60 * 1000);
 
   // ========== SMOOTH MOTION SYSTEM ==========
   // 2D: Native marker updated on data arrival (sticky during pan)
@@ -1304,7 +1349,7 @@ export async function boot(store, rootEl) {
 
   // Phase 7: Network Feedback
   window.addEventListener('offline', () => {
-    showToast(`${t('connectionLost')} • ${t('staleData')}`, 'error');
+    // showToast(`${t('connectionLost')} • ${t('staleData')}`, 'error'); // Removed as per user request
     networkStatus.setOffline(true);
   });
 

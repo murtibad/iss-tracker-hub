@@ -69,6 +69,11 @@ export function createCrewBoard() {
 
         const img = document.createElement('img');
         img.src = member.photo;
+        // Fallback for broken Wikipedia links
+        img.onerror = () => {
+            img.src = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+            img.style.filter = "invert(1) opacity(0.8)"; // Make it look like a silhouette on dark theme
+        };
         img.style.cssText = `
             width: 72px; height: 72px; /* Large Image */
             border-radius: 50%;

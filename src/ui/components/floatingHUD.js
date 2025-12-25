@@ -18,28 +18,31 @@ export function createFloatingHUD(options = {}) {
   // Phase 6 Style Overrides
   const style = document.createElement("style");
   style.textContent = `
-    .hud-metric { display: flex; flex-direction: column; align-items: start; }
+    .hud-metric { display: flex; flex-direction: column; align-items: start; min-width: 110px; }
     .hud-label { 
-        font-size: 18px !important; /* Strict 18px */
+        font-size: 14px !important; 
         font-weight: 700; 
         color: var(--muted); 
         letter-spacing: 1px;
+        margin-bottom: 6px;
     }
     .hud-value { 
-        font-size: 32px !important; /* Hero Size */
+        font-size: 36px !important; 
         font-weight: 800; 
         color: var(--text);
-        line-height: 1.1;
+        line-height: 1;
+        margin-bottom: 4px;
     }
     .hud-unit { 
-        font-size: 18px !important; 
+        font-size: 14px !important; 
         color: var(--accent);
         font-weight: 600;
+        opacity: 0.8;
     }
-    .hud-coord-label { font-size: 18px !important; color: var(--muted); }
-    .hud-coord-value { font-size: 20px !important; font-weight: 700; }
-    .hud-status-pill { font-size: 18px !important; padding: 4px 12px; }
-    .hud-vis-icon { font-size: 24px !important; }
+    .hud-coord-label { font-size: 14px !important; color: var(--muted); margin-bottom: 4px; }
+    .hud-coord-value { font-size: 18px !important; font-weight: 700; font-family: var(--font-mono); }
+    .hud-status-pill { font-size: 14px !important; padding: 6px 16px; margin-right: 12px; }
+    .hud-vis-icon { font-size: 28px !important; }
   `;
   card.appendChild(style);
 

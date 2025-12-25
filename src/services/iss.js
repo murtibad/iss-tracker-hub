@@ -6,7 +6,7 @@ import { getIssTle } from './tle.js';
 import * as satellite from 'satellite.js';
 
 const PRIMARY_API = "https://api.wheretheiss.at/v1/satellites/25544";
-const SECONDARY_API = "http://api.open-notify.org/iss-now.json";
+const SECONDARY_API = "https://api.open-notify.org/iss-now.json";
 
 /**
  * Normalize ISS data to consistent format

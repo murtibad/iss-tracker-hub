@@ -51,9 +51,10 @@ export function createHelpModal() {
 
             <!-- Tabs (Mandatory Tabbed Interface) -->
             <div class="help-tabs" style="display: flex; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
-                ${createTabBtn('about', help.tabAbout, activeTab === 'about')}
-                ${createTabBtn('glossary', help.tabGlossary, activeTab === 'glossary')}
-                ${createTabBtn('tips', help.tabTips, activeTab === 'tips')}
+                ${createTabBtn('about', help?.tabAbout || 'About', activeTab === 'about')}
+                ${createTabBtn('glossary', help?.tabGlossary || 'Glossary', activeTab === 'glossary')}
+                ${createTabBtn('tips', help?.tabTips || 'Tips', activeTab === 'tips')}
+                ${createTabBtn('apis', 'APIs', activeTab === 'apis')}
             </div>
 
             <!-- Content Area (Scrollable) -->
@@ -104,27 +105,37 @@ export function createHelpModal() {
 
         if (tab === 'about') {
             return `
-                <h3 style="${hStyle} margin-top: 0;">${help.aboutTitle}</h3>
-                <p style="${pStyle}">${help.aboutText1}</p>
-                <p style="${pStyle}">${help.aboutText2}</p>
+                <h3 style="${hStyle} margin-top: 0;">${help?.aboutTitle || 'About ISS'}</h3>
+                <p style="${pStyle}">${help?.aboutText1 || ''}</p>
+                <p style="${pStyle}">${help?.aboutText2 || ''}</p>
                 
                 <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-top: 24px;">
-                    <div style="${pStyle} font-weight: 700;">📏 ${help.aboutSize}</div>
-                    <div style="${pStyle} font-weight: 700;">🚀 ${help.aboutSpeed}</div>
+                    <div style="${pStyle} font-weight: 700;">• ${help?.aboutSize || ''}</div>
+                    <div style="${pStyle} font-weight: 700;">• ${help?.aboutSpeed || ''}</div>
                 </div>
             `;
         } else if (tab === 'glossary') {
             return `
-                ${createTerm(help.termAos, help.defAos, hStyle, pStyle)}
-                ${createTerm(help.termLos, help.defLos, hStyle, pStyle)}
-                ${createTerm(help.termAlt, help.defAlt, hStyle, pStyle)}
-                ${createTerm(help.termMag, help.defMag, hStyle, pStyle)}
+                ${createTerm(help?.termAos || 'AOS', help?.defAos || '', hStyle, pStyle)}
+                ${createTerm(help?.termLos || 'LOS', help?.defLos || '', hStyle, pStyle)}
+                ${createTerm(help?.termAlt || 'Altitude', help?.defAlt || '', hStyle, pStyle)}
+                ${createTerm(help?.termMag || 'Brightness', help?.defMag || '', hStyle, pStyle)}
             `;
         } else if (tab === 'tips') {
             return `
-                 ${createTerm(help.tip1Title, help.tip1Text, hStyle, pStyle, '⭐')}
-                 ${createTerm(help.tip2Title, help.tip2Text, hStyle, pStyle, '🕒')}
-                 ${createTerm(help.tip3Title, help.tip3Text, hStyle, pStyle, '🔭')}
+                 ${createTerm(help?.tip1Title || 'Tip 1', help?.tip1Text || '', hStyle, pStyle)}
+                 ${createTerm(help?.tip2Title || 'Tip 2', help?.tip2Text || '', hStyle, pStyle)}
+                 ${createTerm(help?.tip3Title || 'Tip 3', help?.tip3Text || '', hStyle, pStyle)}
+            `;
+        } else if (tab === 'apis') {
+            return `
+                <h3 style="${hStyle} margin-top: 0;">Data Sources & APIs</h3>
+                ${createTerm('Where The ISS At?', 'Real-time telemetry and coordinate data.', hStyle, pStyle)}
+                ${createTerm('Open Notify', 'Current crew information provided by NASA.', hStyle, pStyle)}
+                ${createTerm('Open-Meteo', 'Real-time weather data for ground locations.', hStyle, pStyle)}
+                ${createTerm('Nominatim (OSM)', 'Reverse geocoding to find city names.', hStyle, pStyle)}
+                ${createTerm('MapTiler Cloud', 'High-performance map tiles (Dark Matter).', hStyle, pStyle)}
+                ${createTerm('NASA YouTube', 'Official live video streams from the station.', hStyle, pStyle)}
             `;
         }
     }

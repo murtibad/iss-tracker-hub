@@ -34,8 +34,8 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
   wrap.id = "isshub-viewmode-toggle";
   wrap.style.cssText = `
     position: fixed;
-    right: 16px;
-    bottom: 56px;
+    right: 350px;
+    bottom: 20px;
     z-index: 1300;
     display: flex;
     flex-direction: column;

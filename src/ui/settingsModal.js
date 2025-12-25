@@ -1,10 +1,14 @@
 import { t, getCurrentLanguage, setLanguage } from "../i18n/i18n.js";
 import { ICONS } from "./icons.js";
 import { setTheme, setColorPalette, setLanguage as saveLanguagePref } from "../services/userPreferences.js";
+import { CONFIG } from "../constants/config.js";
 
 export function createSettingsModal(options = {}) {
   const modal = document.createElement("div");
   modal.className = "hub-modal-overlay hidden";
+
+  // Available languages (fully translated)
+  const AVAILABLE_LANGS = ['tr', 'en'];
 
   const languages = [
     { code: 'en', label: 'English', flag: '🇬🇧' }, { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
@@ -46,11 +50,25 @@ export function createSettingsModal(options = {}) {
         <div class="settings-group">
           <div class="settings-label">${t('language')}</div>
           <div class="settings-controls" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-            ${languages.map(l => `
-                <button class="settings-btn" data-lang="${l.code}" aria-label="${l.label}" style="font-size:11px; padding:6px;">
-                    ${l.flag} ${l.code.toUpperCase()}
+            ${languages.map(l => {
+    const isAvailable = AVAILABLE_LANGS.includes(l.code);
+    const lockIcon = isAvailable ? '' : '🔒';
+    const disabledStyle = isAvailable ? '' : 'opacity: 0.5; cursor: not-allowed;';
+    const title = isAvailable ? l.label : (getCurrentLanguage() === 'tr' ? 'Yakında gelecek' : 'Coming soon');
+    return `
+                <button class="settings-btn ${isAvailable ? '' : 'locked'}" 
+                        data-lang="${l.code}" 
+                        aria-label="${l.label}" 
+                        title="${title}"
+                        ${isAvailable ? '' : 'disabled'}
+                        style="font-size:11px; padding:6px; ${disabledStyle}">
+                    ${l.flag} ${l.code.toUpperCase()} ${lockIcon}
                 </button>
-            `).join('')}
+              `;
+  }).join('')}
+          </div>
+          <div class="settings-hint" style="font-size:10px; opacity:0.6; margin-top:6px;">
+            🔒 = ${getCurrentLanguage() === 'tr' ? 'Yakında eklenecek' : 'Coming soon'}
           </div>
         </div>
 
@@ -78,8 +96,8 @@ export function createSettingsModal(options = {}) {
 
         <!-- Meta Info -->
         <div class="settings-meta">
-          ISS Tracker HUB v0.3.2<br>
-          Restoration Build
+          ISS Tracker HUB ${CONFIG.VERSION}<br>
+          <span style="opacity:0.6; font-size:10px;">${CONFIG.VERSION_CODENAME || 'Orbital'} Edition</span>
         </div>
       </div>
     </div>
@@ -140,12 +158,29 @@ export function createSettingsModal(options = {}) {
 
   // Theme logic
   const themeBtns = modal.querySelectorAll("[data-theme]");
+  // Get initial theme from localStorage or system
+  const savedTheme = localStorage.getItem("issThemeMode") || 'system';
   themeBtns.forEach(btn => {
+    if (btn.dataset.theme === savedTheme) btn.classList.add("active");
+
     btn.addEventListener("click", () => {
       const theme = btn.dataset.theme;
-      document.documentElement.setAttribute("data-theme", theme === 'system' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light') : theme);
+      // If system, check preference, otherwise use selected theme
+      const effTheme = theme === 'system' ?
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light') :
+        theme;
+
+      document.documentElement.setAttribute("data-theme", effTheme);
       localStorage.setItem("issThemeMode", theme);
-      setTheme(theme); // Sync to cloud
+
+      // Dispatch event for Globe
+      window.dispatchEvent(new CustomEvent('themeChanged', {
+        detail: {
+          theme: effTheme,
+          type: 'mode'
+        }
+      }));
+
       themeBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
     });

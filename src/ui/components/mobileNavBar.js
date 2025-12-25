@@ -46,13 +46,12 @@ export function createMobileNavBar(actions) {
     `;
     bar.appendChild(style);
 
-    // Tabs configuration
+    // Tabs configuration - 4 ana sekme
     const tabs = [
         { id: "map", icon: ICONS.map, label: t('navMap') || "Harita" },
-        { id: "nasa", icon: ICONS.video || ICONS.play, label: t('navNasaTV') || "NASA TV" },
-        { id: "telemetry", icon: ICONS.activity, label: t('navTelemetry') || "Veriler" },
-        { id: "passes", icon: ICONS.globe, label: t('navPasses') || "Geçişler" },
-        { id: "settings", icon: ICONS.settings, label: t('settings') || "Ayarlar" }
+        { id: "telemetry", icon: ICONS.activity, label: t('navTelemetry') || "Bilgi" },
+        { id: "nasa", icon: ICONS.video || ICONS.play, label: "NASA" },
+        { id: "passes", icon: ICONS.globe, label: t('navPasses') || "Geçiş" }
     ];
 
     let activeTab = "map";

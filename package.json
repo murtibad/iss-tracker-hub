@@ -1,7 +1,7 @@
 {
   "name": "iss-tracker-hub",
   "version": "1.0.0",
-  "description": "Real-time ISS tracker with 3D visualization and personalized home location",
+  "description": "Real-time ISS tracker with 3D visualization, pass predictions, and live crew info",
   "author": "murtibad",
   "license": "MIT",
   "private": true,
@@ -10,22 +10,37 @@
     "type": "git",
     "url": "https://github.com/murtibad/iss-tracker-hub"
   },
+  "keywords": [
+    "iss",
+    "space-station",
+    "tracker",
+    "3d-visualization",
+    "nasa",
+    "astronomy",
+    "globe",
+    "maplibre"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
     "gh-pages": "^6.3.0",
-    "vite": "^5.4.0",
+    "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.2.0"
   },
   "dependencies": {
-    "date-fns": "^2.30.0",
+    "date-fns": "^4.1.0",
     "firebase": "^12.7.0",
     "globe.gl": "^2.45.0",
     "maplibre-gl": "^5.15.0",
     "satellite.js": "^6.0.1",
     "three": "^0.182.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

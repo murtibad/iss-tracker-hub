@@ -92,30 +92,40 @@ body {
 }
 
 
-/* Light Mode Theme */
+/* Light Mode Theme - DRAMATIC TRANSFORMATION */
 :root[data-theme="light"] {
-  --bg: #f0f4f8;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f8f9fa;
+  /* Pure white/cream backgrounds */
+  --bg: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
 
-  --card: rgba(255, 255, 255, 0.95);
-  --card2: rgba(245, 248, 252, 0.90);
-  --card-hover: rgba(240, 244, 248, 0.95);
+  /* Cards - solid light with subtle shadows */
+  --card: rgba(255, 255, 255, 0.98);
+  --card2: rgba(248, 250, 252, 0.95);
+  --card-hover: rgba(241, 245, 249, 0.98);
 
-  --text: rgba(20, 25, 35, 0.95);
-  --muted: rgba(80, 90, 110, 0.75);
+  /* Dark text for contrast */
+  --text: #0f172a;
+  --muted: #475569;
 
-  /* Light mode keeps accent colors but adjusted for contrast */
-  --accent: #0077b6;
-  --accent-secondary: #00b4d8;
-  --accent-tertiary: #0096c7;
+  /* Vibrant accent for light mode */
+  --accent: #0284c7;
+  --accent-secondary: #0ea5e9;
+  --accent-tertiary: #38bdf8;
 
-  --border: rgba(0, 119, 182, 0.25);
-  --ring: rgba(0, 119, 182, 0.12);
+  /* Borders - subtle but visible */
+  --border: rgba(2, 132, 199, 0.3);
+  --ring: rgba(2, 132, 199, 0.15);
 
-  --shadow: 0 4px 12px rgba(0, 30, 60, 0.08);
-  --shadow-lg: 0 8px 20px rgba(0, 30, 60, 0.12);
-  --shadow-xl: 0 12px 28px rgba(0, 30, 60, 0.15);
+  /* Soft shadows */
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Light mode body - pure white */
+:root[data-theme="light"] body {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
 }
 
 
@@ -278,7 +288,9 @@ body {
 
 .hub-title {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   line-height: 1.1;
 }
 
@@ -290,9 +302,12 @@ body {
 
 .hub-title .s {
   font-weight: 800;
-  font-size: 18px;
-  /* Strict 18px */
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--accent);
+  background: rgba(0, 243, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
 }
 
 .hub-actions {
@@ -543,26 +558,22 @@ body {
 }
 
 /* -----------------------------------------------------
-   Version label
+   Version label - Sol alt köşe (örtüşme yok)
 ----------------------------------------------------- */
 .hub-ver,
 .version-label {
-  position: absolute;
-  right: 12px;
+  position: fixed;
+  left: 12px;
   bottom: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 14px;
-  /* Exception: Version label is not primary UI, but 14px ok? User said Strict. Let's make it 16px at least or 18px. */
-  font-size: 18px;
-  /* Strict 18px compliance */
-  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--muted);
   pointer-events: none;
-  border: 1px solid var(--ring);
-  background: var(--card);
-  z-index: 2000;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
 }
 
 :root[data-theme="light"] .hub-ver,
