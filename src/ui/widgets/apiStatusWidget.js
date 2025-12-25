@@ -30,8 +30,9 @@ export function createApiStatusWidget(parentEl, store) {
     container.className = 'api-status-widget';
     container.innerHTML = `
     <div class="api-status-header">
-      <span class="api-status-icon">⚡</span>
-      <span class="api-status-title">API Durumları</span>
+      <span class="api-status-icon">🌐</span>
+      <span class="api-status-title">API Servisleri</span>
+      <span class="api-badge">CANLI</span>
       <button class="api-status-toggle" aria-label="Collapse">▼</button>
     </div>
     <div class="api-status-body">
@@ -43,11 +44,11 @@ export function createApiStatusWidget(parentEl, store) {
     </div>
   `;
 
-    // Toggle collapse - VARSAYILAN KAPALI
+    // Toggle collapse - VARSAYILAN KAPALI (kompakt görünüm)
     const toggleBtn = container.querySelector('.api-status-toggle');
     const body = container.querySelector('.api-status-body');
 
-    // Varsayılan olarak kapalı başla
+    // Varsayılan olarak KAPALI başla (kompakt)
     body.classList.add('collapsed');
     toggleBtn.textContent = '▶';
 

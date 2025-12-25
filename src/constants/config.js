@@ -6,9 +6,9 @@ export const CONFIG = {
   // =====================
   // VERSION INFO
   // =====================
-  VERSION: "v1.0.0",
-  VERSION_DATE: "2025-01",
-  VERSION_CODENAME: "Orbital",
+  VERSION: "v1.2.0",
+  VERSION_DATE: "2025-12",
+  VERSION_CODENAME: "Celestial",
 
   // =====================
   // PASS PREDICTION

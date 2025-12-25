@@ -75,6 +75,8 @@ body {
   inset: 0;
   z-index: 0;
   /* Map at bottom */
+  pointer-events: auto;
+  /* CRITICAL: Allow map interactions (pan, zoom, drag) */
 }
 
 .hub-overlay {
@@ -212,6 +214,8 @@ body {
   height: 100%;
   z-index: 1;
   /* Map layer at bottom */
+  pointer-events: auto;
+  /* Allow map interactions */
 }
 
 .hub-overlay {

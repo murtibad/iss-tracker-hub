@@ -131,8 +131,8 @@ export async function initGlobe(parentContainer) {
       const isLight = theme === 'light' || document.documentElement.getAttribute('data-theme') === 'light';
       const accentColor = typeof color === 'string' ? color : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
 
-      // 1. Background Color - WHITE for light, BLACK for dark
-      globe.backgroundColor(isLight ? '#f8fafc' : '#000005');
+      // 1. Background Color - Space-like dark blue-gray for light, BLACK for dark
+      globe.backgroundColor(isLight ? '#1a1a2e' : '#000005');
 
       // 2. Atmosphere glow - accent color
       globe.atmosphereColor(accentColor);
@@ -140,16 +140,27 @@ export async function initGlobe(parentContainer) {
       // 3. Update all celestial objects via stored references
       const env = window._globeEnv;
       if (env) {
-        // Stars - black on white, white on black
-        env.starsMat.color.set(isLight ? 0x333333 : 0xffffff);
-        env.starsMat.opacity = isLight ? 0.6 : 0.9;
+        // Stars - very dark for light theme (space feel), white on dark
+        env.starsMat.color.set(isLight ? 0x666688 : 0xffffff);
+        env.starsMat.opacity = isLight ? 0.7 : 0.9;
 
-        // Moon
-        env.moonMat.emissive.set(isLight ? 0x444444 : 0x111111);
+        // Moon and glow
+        env.moonMat.color.set(isLight ? 0xd0d0d0 : 0xb0b0b0);
+        env.moonMat.emissive.set(isLight ? 0x333333 : 0x111111);
+        if (env.moonGlowMat) {
+          env.moonGlowMat.color.set(isLight ? 0xaaaacc : 0x6666aa);
+          env.moonGlowMat.opacity = isLight ? 0.15 : 0.1;
+        }
 
-        // Sun
-        env.sunMat.color.set(isLight ? 0xffaa00 : 0xffdd44);
-        env.coronaMat.color.set(isLight ? 0xffcc00 : 0xffff88);
+        // Sun and corona layers
+        env.sunMat.color.set(isLight ? 0xffcc00 : 0xffee44);
+        if (env.innerCoronaMat) {
+          env.innerCoronaMat.color.set(isLight ? 0xffdd00 : 0xffff88);
+        }
+        env.coronaMat.color.set(isLight ? 0xffaa00 : 0xffdd66);
+        if (env.outerGlowMat) {
+          env.outerGlowMat.color.set(isLight ? 0xff8800 : 0xffcc44);
+        }
 
         // Ambient light - brighter for light mode
         env.amb.intensity = isLight ? 0.7 : 0.4;
@@ -201,7 +212,7 @@ export async function initGlobe(parentContainer) {
             starsGeo.setAttribute("size", new THREE.Float32BufferAttribute(sizes, 1));
 
             const starsMat = new THREE.PointsMaterial({
-              color: isLightInit ? 0x222222 : 0xffffff, // Dark stars on light, white on dark
+              color: isLightInit ? 0x666688 : 0xffffff, // Space-tinted stars on light, white on dark
               size: 1.5,
               sizeAttenuation: false,
               transparent: true,
@@ -210,45 +221,187 @@ export async function initGlobe(parentContainer) {
             const stars = new THREE.Points(starsGeo, starsMat);
             stars.name = 'starfield';
 
-            // 🌙 AY (Moon) - Realistic textured sphere
-            const moonGeo = new THREE.SphereGeometry(15, 32, 32);
+            // 🌙 AY (Moon) - Realistic detailed sphere with crater texture
+            const moonGeo = new THREE.SphereGeometry(18, 64, 64);
+
+            // Create procedural moon texture with craters
+            const moonCanvas = document.createElement('canvas');
+            moonCanvas.width = 512;
+            moonCanvas.height = 256;
+            const moonCtx = moonCanvas.getContext('2d');
+
+            // Base moon color
+            const moonBaseColor = isLightInit ? '#b8b8b8' : '#a0a0a0';
+            moonCtx.fillStyle = moonBaseColor;
+            moonCtx.fillRect(0, 0, 512, 256);
+
+            // Add crater-like spots
+            for (let i = 0; i < 80; i++) {
+              const x = Math.random() * 512;
+              const y = Math.random() * 256;
+              const r = 3 + Math.random() * 15;
+              const darkness = 0.7 + Math.random() * 0.3;
+
+              const gradient = moonCtx.createRadialGradient(x, y, 0, x, y, r);
+              gradient.addColorStop(0, `rgba(60, 60, 65, ${darkness})`);
+              gradient.addColorStop(0.6, `rgba(80, 80, 85, ${darkness * 0.6})`);
+              gradient.addColorStop(1, 'rgba(100, 100, 105, 0)');
+
+              moonCtx.fillStyle = gradient;
+              moonCtx.beginPath();
+              moonCtx.arc(x, y, r, 0, Math.PI * 2);
+              moonCtx.fill();
+            }
+
+            // Add mare (dark patches)
+            for (let i = 0; i < 8; i++) {
+              const x = Math.random() * 512;
+              const y = Math.random() * 256;
+              const r = 30 + Math.random() * 50;
+
+              const gradient = moonCtx.createRadialGradient(x, y, 0, x, y, r);
+              gradient.addColorStop(0, 'rgba(70, 70, 75, 0.4)');
+              gradient.addColorStop(1, 'rgba(90, 90, 95, 0)');
+
+              moonCtx.fillStyle = gradient;
+              moonCtx.beginPath();
+              moonCtx.arc(x, y, r, 0, Math.PI * 2);
+              moonCtx.fill();
+            }
+
+            const moonTexture = new THREE.CanvasTexture(moonCanvas);
+            moonTexture.wrapS = THREE.RepeatWrapping;
+            moonTexture.wrapT = THREE.RepeatWrapping;
+
             const moonMat = new THREE.MeshStandardMaterial({
-              color: 0xcccccc,
-              roughness: 0.8,
-              metalness: 0.1,
-              emissive: isLightInit ? 0x222222 : 0x111111,
-              emissiveIntensity: 0.3
+              map: moonTexture,
+              color: isLightInit ? 0xd0d0d0 : 0xb0b0b0,
+              roughness: 0.95,
+              metalness: 0.0,
+              emissive: isLightInit ? 0x333333 : 0x111111,
+              emissiveIntensity: 0.2,
+              bumpScale: 0.02
             });
             const moon = new THREE.Mesh(moonGeo, moonMat);
-            moon.position.set(-400, 150, -300); // Far left-upper
+            moon.position.set(-400, 180, -350);
             moon.name = 'moon';
 
-            // Moon craters (simple bump simulation via geometry)
+            // Moon glow (subtle atmospheric effect)
+            const moonGlowGeo = new THREE.SphereGeometry(22, 32, 32);
+            const moonGlowMat = new THREE.MeshBasicMaterial({
+              color: isLightInit ? 0xaaaacc : 0x6666aa,
+              transparent: true,
+              opacity: isLightInit ? 0.15 : 0.1,
+              side: THREE.BackSide
+            });
+            const moonGlow = new THREE.Mesh(moonGlowGeo, moonGlowMat);
+            moonGlow.position.copy(moon.position);
+            moonGlow.name = 'moonGlow';
+
             moon.castShadow = true;
             moon.receiveShadow = true;
 
-            // ☀️ GÜNEŞ (Sun) - Glowing sphere with corona
-            const sunGeo = new THREE.SphereGeometry(50, 32, 32);
+            // ☀️ GÜNEŞ (Sun) - Realistic glowing sun with animated corona
+            const sunGeo = new THREE.SphereGeometry(55, 64, 64);
+
+            // Create procedural sun texture with surface activity
+            const sunCanvas = document.createElement('canvas');
+            sunCanvas.width = 512;
+            sunCanvas.height = 256;
+            const sunCtx = sunCanvas.getContext('2d');
+
+            // Base sun gradient
+            const sunGradient = sunCtx.createLinearGradient(0, 0, 512, 256);
+            sunGradient.addColorStop(0, '#fff5d0');
+            sunGradient.addColorStop(0.5, '#ffdd00');
+            sunGradient.addColorStop(1, '#ffaa00');
+            sunCtx.fillStyle = sunGradient;
+            sunCtx.fillRect(0, 0, 512, 256);
+
+            // Add solar activity spots
+            for (let i = 0; i < 40; i++) {
+              const x = Math.random() * 512;
+              const y = Math.random() * 256;
+              const r = 5 + Math.random() * 20;
+
+              const gradient = sunCtx.createRadialGradient(x, y, 0, x, y, r);
+              gradient.addColorStop(0, 'rgba(255, 255, 200, 0.8)');
+              gradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.4)');
+              gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
+              sunCtx.fillStyle = gradient;
+              sunCtx.beginPath();
+              sunCtx.arc(x, y, r, 0, Math.PI * 2);
+              sunCtx.fill();
+            }
+
+            const sunTexture = new THREE.CanvasTexture(sunCanvas);
+
             const sunMat = new THREE.MeshBasicMaterial({
-              color: isLightInit ? 0xffaa00 : 0xffdd44,
+              map: sunTexture,
+              color: isLightInit ? 0xffcc00 : 0xffee44,
               transparent: true,
               opacity: 1
             });
             const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-            sunMesh.position.set(800, 300, 500); // Far right-upper
+            sunMesh.position.set(850, 350, 550);
             sunMesh.name = 'sunMesh';
 
-            // Sun Corona (glow effect)
-            const coronaGeo = new THREE.SphereGeometry(70, 32, 32);
-            const coronaMat = new THREE.MeshBasicMaterial({
-              color: isLightInit ? 0xffcc00 : 0xffff88,
+            // Inner corona (bright glow)
+            const innerCoronaGeo = new THREE.SphereGeometry(75, 32, 32);
+            const innerCoronaMat = new THREE.MeshBasicMaterial({
+              color: isLightInit ? 0xffdd00 : 0xffff88,
               transparent: true,
-              opacity: 0.3,
+              opacity: 0.4,
+              side: THREE.BackSide
+            });
+            const innerCorona = new THREE.Mesh(innerCoronaGeo, innerCoronaMat);
+            innerCorona.position.copy(sunMesh.position);
+            innerCorona.name = 'innerCorona';
+
+            // Outer corona (diffuse glow)
+            const coronaGeo = new THREE.SphereGeometry(100, 32, 32);
+            const coronaMat = new THREE.MeshBasicMaterial({
+              color: isLightInit ? 0xffaa00 : 0xffdd66,
+              transparent: true,
+              opacity: 0.2,
               side: THREE.BackSide
             });
             const corona = new THREE.Mesh(coronaGeo, coronaMat);
             corona.position.copy(sunMesh.position);
             corona.name = 'sunCorona';
+
+            // Sun rays/flare effect (sprite-based)
+            const outerGlowGeo = new THREE.SphereGeometry(130, 16, 16);
+            const outerGlowMat = new THREE.MeshBasicMaterial({
+              color: isLightInit ? 0xff8800 : 0xffcc44,
+              transparent: true,
+              opacity: 0.08,
+              side: THREE.BackSide
+            });
+            const outerGlow = new THREE.Mesh(outerGlowGeo, outerGlowMat);
+            outerGlow.position.copy(sunMesh.position);
+            outerGlow.name = 'sunOuterGlow';
+
+            // Animate sun corona pulsation
+            const animateSun = () => {
+              const time = Date.now() * 0.001;
+              if (innerCorona && innerCoronaMat) {
+                innerCoronaMat.opacity = 0.35 + Math.sin(time * 2) * 0.1;
+              }
+              if (corona && coronaMat) {
+                coronaMat.opacity = 0.18 + Math.sin(time * 1.5 + 1) * 0.05;
+              }
+              if (outerGlow && outerGlowMat) {
+                outerGlowMat.opacity = 0.06 + Math.sin(time + 2) * 0.03;
+              }
+              // Slow rotation for sun surface
+              if (sunMesh) {
+                sunMesh.rotation.y += 0.0003;
+              }
+              requestAnimationFrame(animateSun);
+            };
+            animateSun();
 
             // ☀️ IŞIKLANDIRMA
             const amb = new THREE.AmbientLight(0xffffff, isLightInit ? 0.6 : 0.4);
@@ -257,11 +410,19 @@ export async function initGlobe(parentContainer) {
             sun.name = 'sunLight';
             amb.name = 'ambientLight';
 
-            group.add(stars, moon, sunMesh, corona, amb, sun);
+            group.add(stars, moon, moonGlow, sunMesh, innerCorona, corona, outerGlow, amb, sun);
             group.name = 'envGroup';
 
             // Store references for theme updates
-            window._globeEnv = { stars, starsMat, moon, moonMat, sunMesh, sunMat, corona, coronaMat, amb, sun };
+            window._globeEnv = {
+              stars, starsMat,
+              moon, moonMat, moonGlow, moonGlowMat,
+              sunMesh, sunMat,
+              innerCorona, innerCoronaMat,
+              corona, coronaMat,
+              outerGlow, outerGlowMat,
+              amb, sun
+            };
 
             return group;
           }
@@ -414,75 +575,344 @@ export const globeActions = {
   }
 };
 
+// =====================================================================
+// ISS YÖRÜNGE ÇİZGİSİ (TRAJECTORY) RENDER SİSTEMİ
+// =====================================================================
+// Amaç: ISS'nin geçmiş ve gelecek yörüngesini 3D dünya üzerinde çizmek
+// 
+// VERİ FORMATI:
+// - Trajectory verisi {lat, lng, alt?, time?} objelerinden oluşur
+// - Antimeridian (180°/-180°) geçişinde çizgi düzgün şekilde bölünür
+//
+// RENK AYARLARI (SABİT - tema bağımsız):
+// - Geçmiş çizgi: TURUNCU (#ff6b35)
+// - Gelecek çizgi: YEŞİL (#00ff88)
+// - Bu renkler asla değişmez, her zaman ayırt edilebilir olmalı
+//
+// ÖZELLİKLER:
+// - Ok işaretleri: gelecek yörünge yönünü gösterir
+// - Legend: sağ alt köşede çizgi açıklamaları
+// =====================================================================
+
+// Sabit renkler
+const TRAJECTORY_COLORS = {
+  past: '#ff6b35',       // Turuncu - geçmiş yörünge (SABİT, değişmez)
+  futureDefault: '#00d4ff' // Fallback renk (site accent yoksa)
+};
+
 /**
- * Split trajectory into chunks to handle antimeridian (180/-180) crossing.
- * This prevents lines from cutting through the globe.
+ * Gelecek yörünge rengini al (site accent rengine göre)
+ * @returns {string} CSS color değeri
  */
-function chunkTrajectory(coords) {
-  const chunks = [];
-  let currentChunk = [];
+function getFutureColor() {
+  return window._currentThemeAccent ||
+    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() ||
+    TRAJECTORY_COLORS.futureDefault;
+}
+
+// Yükseklik - ISS ile AYNI OLMALI
+const TRAJECTORY_ALTITUDE = 0.15; // ISS_ORBIT_ALTITUDE ile aynı
+
+/**
+ * Antimeridian (180°/-180°) longitude değerini normalize eder
+ */
+function normalizeLng(lng) {
+  while (lng > 180) lng -= 360;
+  while (lng < -180) lng += 360;
+  return lng;
+}
+
+/**
+ * İki nokta arasında antimeridian geçişi var mı kontrol et
+ * @param {number} lng1 - İlk longitude
+ * @param {number} lng2 - İkinci longitude
+ * @returns {boolean}
+ */
+function crossesAntimeridian(lng1, lng2) {
+  // 180 derece farkı geçiyorsa antimeridian crossing var
+  return Math.abs(lng2 - lng1) > 180;
+}
+
+/**
+ * Antimeridian geçiş noktasını hesapla (interpolasyon)
+ * @param {{lat: number, lng: number}} p1 - Başlangıç noktası
+ * @param {{lat: number, lng: number}} p2 - Bitiş noktası
+ * @returns {{crossLat: number, side1Lng: number, side2Lng: number}}
+ */
+function getAntimeridianCrossing(p1, p2) {
+  // Normalize longitudes for calculation
+  let lng1 = p1.lng;
+  let lng2 = p2.lng;
+
+  // Adjust for crossing
+  if (lng2 - lng1 > 180) lng2 -= 360;
+  if (lng1 - lng2 > 180) lng1 -= 360;
+
+  // Find where the line crosses 180 or -180
+  const targetLng = lng1 > 0 ? 180 : -180;
+  const t = (targetLng - lng1) / (lng2 - lng1);
+  const crossLat = p1.lat + t * (p2.lat - p1.lat);
+
+  return {
+    crossLat,
+    side1Lng: lng1 > 0 ? 180 : -180,
+    side2Lng: lng1 > 0 ? -180 : 180
+  };
+}
+
+/**
+ * Koordinatları antimeridian geçişlerinde böler.
+ * Her segment [lat, lng, alt] formatında array'ler içerir.
+ * 
+ * @param {Array<{lat: number, lng: number}>} coords - Koordinat noktaları
+ * @returns {Array<Array<[number, number, number]>>} - Bölünmüş segmentler
+ */
+function splitAtAntimeridian(coords) {
+  if (!coords || coords.length < 2) return [];
+
+  const segments = [];
+  let currentSegment = [];
 
   for (let i = 0; i < coords.length; i++) {
     const curr = coords[i];
-    if (currentChunk.length > 0) {
-      const prev = currentChunk[currentChunk.length - 1];
-      // Check for longitude wrap (> 100 deg jump is suspicious for contiguous orbit)
-      if (Math.abs(curr.lng - prev.lng) > 100) {
-        if (currentChunk.length > 1) chunks.push(currentChunk);
-        currentChunk = [];
-      }
+
+    // Geçersiz koordinat kontrolü
+    if (curr == null || typeof curr.lat !== 'number' || typeof curr.lng !== 'number' ||
+      isNaN(curr.lat) || isNaN(curr.lng)) {
+      continue;
     }
-    // Store as [lat, lng, alt] for simpler pathPoints usage
-    currentChunk.push([curr.lat, curr.lng, 0.08]); // Hardcoded safe altitude (approx 500km relative to radius 1)
+
+    if (currentSegment.length === 0) {
+      currentSegment.push([curr.lat, normalizeLng(curr.lng), TRAJECTORY_ALTITUDE]);
+      continue;
+    }
+
+    const prevPoint = coords[i - 1];
+    if (!prevPoint) {
+      currentSegment.push([curr.lat, normalizeLng(curr.lng), TRAJECTORY_ALTITUDE]);
+      continue;
+    }
+
+    // Antimeridian geçişi kontrolü
+    if (crossesAntimeridian(prevPoint.lng, curr.lng)) {
+      // Geçiş noktasını hesapla
+      const crossing = getAntimeridianCrossing(prevPoint, curr);
+
+      // Mevcut segment'e kenar noktası ekle
+      currentSegment.push([crossing.crossLat, crossing.side1Lng, TRAJECTORY_ALTITUDE]);
+
+      // Segment'i kaydet (en az 2 nokta varsa)
+      if (currentSegment.length >= 2) {
+        segments.push(currentSegment);
+      }
+
+      // Yeni segment başlat (diğer taraftan)
+      currentSegment = [[crossing.crossLat, crossing.side2Lng, TRAJECTORY_ALTITUDE]];
+    }
+
+    // Normal nokta ekle
+    currentSegment.push([curr.lat, normalizeLng(curr.lng), TRAJECTORY_ALTITUDE]);
   }
-  if (currentChunk.length > 1) chunks.push(currentChunk);
-  return chunks;
+
+  // Son segment'i ekle
+  if (currentSegment.length >= 2) {
+    segments.push(currentSegment);
+  }
+
+  return segments;
 }
 
+/**
+ * Ok işaretlerini oluşturur (gelecek yörünge yönü için)
+ * @param {Array<{lat: number, lng: number}>} coords - Koordinatlar
+ * @param {number} interval - Kaç noktada bir ok konulacak
+ * @returns {Array<{lat: number, lng: number, alt: number}>}
+ */
+function createArrowMarkers(coords, interval = 15) {
+  if (!coords || coords.length < interval) return [];
+
+  const markers = [];
+  for (let i = interval; i < coords.length; i += interval) {
+    const point = coords[i];
+    if (point && typeof point.lat === 'number' && typeof point.lng === 'number') {
+      markers.push({
+        lat: point.lat,
+        lng: point.lng,
+        alt: TRAJECTORY_ALTITUDE + 0.02,
+        type: 'arrow'
+      });
+    }
+  }
+  return markers;
+}
+
+/**
+ * Legend (açıklama kutusu) oluştur/güncelle
+ */
+function createOrUpdateLegend() {
+  let legend = document.getElementById('trajectory-legend');
+
+  if (!legend) {
+    legend = document.createElement('div');
+    legend.id = 'trajectory-legend';
+    legend.style.cssText = `
+      position: fixed;
+      bottom: 130px;
+      left: 16px;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      padding: 8px 12px;
+      z-index: 90;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    `;
+
+    legend.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 8px; opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+        🛰️ Yörünge Çizgileri
+      </div>
+      <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 24px; height: 3px; background: ${TRAJECTORY_COLORS.past}; border-radius: 2px; margin-right: 10px;"></div>
+        <span>Geçmiş Yol</span>
+      </div>
+      <div style="display: flex; align-items: center;">
+        <div id="legend-future-line" style="width: 24px; height: 3px; background: ${getFutureColor()}; border-radius: 2px; margin-right: 10px; position: relative;">
+          <span style="position: absolute; right: -6px; top: -4px; font-size: 10px;">▸</span>
+        </div>
+        <span>Gelecek Yol →</span>
+      </div>
+    `;
+
+    // Globe container'ın parent'ına ekle
+    const container = document.querySelector('#globe-3d-canvas-container')?.parentElement || document.body;
+    container.appendChild(legend);
+  }
+
+  // Tema kontrolü
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  legend.style.background = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)';
+  legend.style.color = isLight ? '#1a1a2e' : 'white';
+  legend.style.borderColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+
+  // Gelecek çizgisi rengini güncelle (tema accent'e göre)
+  const futureLine = legend.querySelector('#legend-future-line');
+  if (futureLine) {
+    futureLine.style.background = getFutureColor();
+  }
+}
+
+/**
+ * Yörünge çizgilerini 3D dünya üzerinde render eder.
+ * Bu fonksiyon tema değişikliklerinde otomatik çağrılır.
+ */
 function renderTrajectoryLines() {
   if (!globe) return;
+
   const { past, future } = rawTrajectory;
+
+  // Veri yoksa boş render ve legend gizle
+  if ((!past || past.length === 0) && (!future || future.length === 0)) {
+    globe.pathsData([]);
+    const legend = document.getElementById('trajectory-legend');
+    if (legend) legend.style.display = 'none';
+    return;
+  }
+
+  // ISS pozisyonu henüz gelmemişse (0,0) render yapma - ilk açılış hatası önlenir
+  if (renderPos.lat === 0 && renderPos.lng === 0) {
+    console.log('[Trajectory] Waiting for valid ISS position...');
+    return;
+  }
+
+  // Legend'ı göster/oluştur
+  createOrUpdateLegend();
+  const legend = document.getElementById('trajectory-legend');
+  if (legend) legend.style.display = 'block';
+
   const allPaths = [];
+  const arrowPoints = [];
 
-  // Dynamic Theme Colors
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  const accent = window._currentThemeAccent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  // ========== GEÇMİŞ YÖRÜNGE (TURUNCU) ==========
+  if (past && past.length > 1) {
+    const pastWithCurrent = [
+      ...past,
+      { lat: renderPos.lat, lng: renderPos.lng }
+    ];
 
-  // Colors based on theme
-  const pastColor = isLight ? 'rgba(0,0,0,0.4)' : 'rgba(0, 212, 255, 0.5)'; // Black/Cyan
-  const futureColor = accent; // Uses current theme accent
-
-  // 1. Process Past Path
-  if (past?.length > 1) {
-    const pastFull = [...past, { lat: renderPos.lat, lng: renderPos.lng }];
-    const chunks = chunkTrajectory(pastFull);
-    chunks.forEach(chunk => {
-      allPaths.push({ coords: chunk, color: pastColor, type: 'past' });
+    const segments = splitAtAntimeridian(pastWithCurrent);
+    segments.forEach(segment => {
+      allPaths.push({
+        coords: segment,
+        color: TRAJECTORY_COLORS.past,
+        type: 'past'
+      });
     });
   }
 
-  // 2. Process Future Path
-  if (future?.length > 1) {
-    const futureFull = [{ lat: renderPos.lat, lng: renderPos.lng }, ...future];
-    const chunks = chunkTrajectory(futureFull);
-    chunks.forEach(chunk => {
-      allPaths.push({ coords: chunk, color: futureColor, type: 'future' });
+  // ========== GELECEK YÖRÜNGE (YEŞİL) ==========
+  if (future && future.length > 1) {
+    const futureWithCurrent = [
+      { lat: renderPos.lat, lng: renderPos.lng },
+      ...future
+    ];
+
+    const segments = splitAtAntimeridian(futureWithCurrent);
+    segments.forEach(segment => {
+      allPaths.push({
+        coords: segment,
+        color: getFutureColor(),
+        type: 'future'
+      });
     });
+
+    // Ok işaretleri ekle (sadece gelecek yörünge için)
+    const arrows = createArrowMarkers(future);
+    arrowPoints.push(...arrows);
   }
 
-  // Render Paths
-  globe.pathsData(allPaths)
+  // ========== ÇİZGİLERİ RENDER ET ==========
+  // Globe.gl'de renk güncellemesi için önce veriyi temizle, sonra yeniden ayarla
+  // Bu zorunlu çünkü pathColor accessor'u mevcut path'leri güncellemez
+
+  // Accessors'ları ayarla
+  globe
     .pathPoints(d => d.coords)
     .pathPointLat(p => p[0])
     .pathPointLng(p => p[1])
-    .pathPointAlt(p => p[2]) // Use the altitude stored in point
+    .pathPointAlt(p => p[2])
     .pathColor(d => d.color)
-    .pathStroke(2)
-    .pathDashLength(d => d.type === 'future' ? 0.2 : 0) // Dash future
-    .pathDashGap(d => d.type === 'future' ? 0.1 : 0)
-    .pathDashAnimateTime(d => d.type === 'future' ? 1500 : 0)
-    .pathResolution(2); // Reduced resolution for performance, Globe.gl handles interpolation
+    .pathStroke(d => d.type === 'past' ? 2.5 : 3)
+    .pathDashLength(0)
+    .pathDashGap(0)
+    .pathDashAnimateTime(0)
+    .pathResolution(6);
+
+  // Veriyi ayarla
+  globe.pathsData(allPaths);
+
+  console.log('[Trajectory] Rendered', allPaths.length, 'path segments. Past color:', TRAJECTORY_COLORS.past, 'Future color:', getFutureColor());
 }
 
 // Global hook for theme change updates
-window._updateTrajectoryColors = () => renderTrajectoryLines();
+// Tema değiştiğinde çağrılır - zorla yeniden render yapar
+window._updateTrajectoryColors = () => {
+  console.log('[Trajectory] Theme changed, forcing re-render with new accent:', getFutureColor());
+
+  if (globe) {
+    // Path'leri tamamen temizle
+    globe.pathsData([]);
+
+    // Bir sonraki frame'de yeniden render yap
+    requestAnimationFrame(() => {
+      renderTrajectoryLines();
+      createOrUpdateLegend();
+    });
+  } else {
+    createOrUpdateLegend();
+  }
+};

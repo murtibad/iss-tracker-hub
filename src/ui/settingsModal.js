@@ -213,6 +213,14 @@ export function createSettingsModal(options = {}) {
       // Visual feedback
       colorBtns.forEach(b => b.style.outline = 'none');
       btn.style.outline = '2px solid #fff';
+
+      // Dispatch themeChanged event for Globe trajectory colors - IMMEDIATE UPDATE
+      window.dispatchEvent(new CustomEvent('themeChanged', {
+        detail: {
+          color: colorHex,
+          type: 'accent'
+        }
+      }));
     });
   });
 
