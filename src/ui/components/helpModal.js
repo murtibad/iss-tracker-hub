@@ -172,29 +172,7 @@ export function createHelpModal() {
         }
     }
 
-    function createTerm(title, def, hStyle, pStyle, icon = '') {
-        return `
-            <div style="margin-bottom: 24px; border-bottom: 1px solid var(--ring); padding-bottom: 16px;">
-                <div style="${hStyle} margin-top: 0;">${icon} ${title}</div>
-                <div style="${pStyle} margin-bottom: 0;">${def}</div>
-            </div>
-        `;
-    }
-
-    function open() {
-        render(); // Re-render to catch language changes
-        overlay.style.display = 'flex';
-    }
-
-    function close() {
-        overlay.style.display = 'none';
-    }
-
-    overlay.onclick = (e) => {
-        if (e.target === overlay) close();
-    };
-
-    overlay.appendChild(modal);
+    render(); // Initial render so content is populated immediately
 
     return {
         el: overlay,

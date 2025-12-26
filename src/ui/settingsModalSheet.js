@@ -30,6 +30,16 @@ export function createSettingsSheet(options = {}) {
     const modalElement = originalModal.el;
     const modalContent = modalElement.querySelector('.settings-modal');
 
+    // Hide internal header and remove inner card styling (borders/shadows)
+    const innerHeader = modalContent.querySelector('.hub-modal-header');
+    if (innerHeader) innerHeader.style.display = 'none';
+    modalContent.style.boxShadow = 'none';
+    modalContent.style.border = 'none';
+    modalContent.style.background = 'transparent';
+    modalContent.style.padding = '0';
+    modalContent.style.margin = '0';
+    modalContent.style.maxHeight = 'none';
+
     // Create bottom sheet with settings content
     const sheet = new BottomSheet({
         title: 'Settings',
@@ -43,9 +53,9 @@ export function createSettingsSheet(options = {}) {
         }
     });
 
-    // Desktop: Add docking position class
+    // Desktop: Add docking position class (Dock near the top-right button)
     if (window.innerWidth >= 641) {
-        sheet.el.classList.add('dock-bottom-right');
+        sheet.el.classList.add('dock-top-right');
     }
 
     // Return API compatible with original modal
