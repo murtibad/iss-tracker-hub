@@ -69,9 +69,21 @@
 .version-label {
     top: 70px !important;
     /* Below top bar */
-    right: 12px !important;
+    right: 20px !important;
     left: auto !important;
     bottom: auto !important;
     z-index: 100 !important;
-    opacity: 0.5 !important;
+    opacity: 0.6 !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 4px !important;
+}
+
+/* View Mode Toggle - Move to Middle Right (Safe Zone) */
+#isshub-viewmode-toggle {
+    top: 60vh !important;
+    /* Middle-Lower Right */
+    bottom: auto !important;
+    right: 24px !important;
+    flex-direction: column !important;
+    transform: translateY(-50%) !important;
 }
