@@ -1,6 +1,6 @@
 {
   "name": "iss-tracker-hub",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Real-time ISS tracker with 3D visualization, pass predictions, and live crew info",
   "author": "murtibad",
   "license": "MIT",

@@ -722,28 +722,176 @@ function splitAtAntimeridian(coords) {
   return segments;
 }
 
-/**
- * Ok işaretlerini oluşturur (gelecek yörünge yönü için)
- * @param {Array<{lat: number, lng: number}>} coords - Koordinatlar
- * @param {number} interval - Kaç noktada bir ok konulacak
- * @returns {Array<{lat: number, lng: number, alt: number}>}
- */
-function createArrowMarkers(coords, interval = 15) {
-  if (!coords || coords.length < interval) return [];
+// ========== ARROW ANIMATION SYSTEM ==========
+// Animation state for 3D globe arrows
+let arrowAnimationId = null;
+const ARROW_SPACING_3D = 25.0; // Degrees between arrows (visual density) - Increased from 8.0
+const ARROW_SPEED_3D = 0.012; // Animation speed (degrees per ms) - Increased to match spacing
+let trajectoryCoords = { past: [], future: [] }; // Store coords for animation
 
-  const markers = [];
-  for (let i = interval; i < coords.length; i += interval) {
-    const point = coords[i];
-    if (point && typeof point.lat === 'number' && typeof point.lng === 'number') {
-      markers.push({
-        lat: point.lat,
-        lng: point.lng,
-        alt: TRAJECTORY_ALTITUDE + 0.02,
-        type: 'arrow'
-      });
+/**
+ * Create SVG triangle arrow
+ * @param {string} color - Arrow color
+ * @param {number} size - Arrow size in pixels
+ * @returns {string} SVG string
+ */
+function createArrowSvg(color, size = 16) {
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+      <path d="M12 2l-8 14h16z" fill="${color}" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linejoin="round"/>
+    </svg>
+  `;
+}
+
+/**
+ * Calculate distance between two [lat, lng] or [lng, lat] points (simple Euclidean for arrow spacing)
+ * @param {Array} p1 - [x, y] point
+ * @param {Array} p2 - [x, y] point
+ * @returns {number} Distance
+ */
+function getDist(p1, p2) {
+  return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+}
+
+/**
+ * Calculate bearing (direction) between two lat/lng points
+ * @param {Array} p1 - [lat, lng] point
+ * @param {Array} p2 - [lat, lng] point
+ * @returns {number} Bearing in degrees
+ */
+function getBearingFromPoints(p1, p2) {
+  const lat1 = p1[0];
+  const lng1 = p1[1];
+  const lat2 = p2[0];
+  const lng2 = p2[1];
+
+  const dLon = (lng2 - lng1) * Math.PI / 180;
+  const lat1Rad = lat1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180;
+
+  const y = Math.sin(dLon) * Math.cos(lat2Rad);
+  const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+    Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
+  return Math.atan2(y, x) * 180 / Math.PI;
+}
+
+/**
+ * Generate arrow points along a path with interpolation
+ * @param {Array<Array>} path - Array of [lat, lng, alt] coordinates
+ * @param {number} startOffset - Starting offset for animation phase
+ * @param {string} color - Arrow color
+ * @returns {Array} Array of arrow point objects for htmlElementsData
+ */
+function generateArrowPoints(path, startOffset, color) {
+  if (!path || path.length < 2) return [];
+
+  const points = [];
+  const segLens = [];
+
+  // Calculate segment lengths
+  for (let i = 0; i < path.length - 1; i++) {
+    // Check for antimeridian jump
+    const dLng = Math.abs(path[i][1] - path[i + 1][1]);
+    if (dLng > 180) {
+      segLens.push(0); // Skip world wrap segments
+    } else {
+      const d = getDist([path[i][0], path[i][1]], [path[i + 1][0], path[i + 1][1]]);
+      segLens.push(d);
     }
   }
-  return markers;
+
+  // Walk the path and place arrows
+  let pathDist = 0;
+  let nextArrowDist = startOffset;
+
+  for (let i = 0; i < segLens.length; i++) {
+    const segLen = segLens[i];
+    if (segLen === 0) {
+      pathDist += segLen;
+      continue;
+    }
+
+    const segStartDist = pathDist;
+    const segEndDist = pathDist + segLen;
+
+    // Place arrows within this segment
+    while (nextArrowDist < segEndDist) {
+      const fraction = (nextArrowDist - segStartDist) / segLen;
+      const p1 = path[i];
+      const p2 = path[i + 1];
+
+      const lat = p1[0] + (p2[0] - p1[0]) * fraction;
+      const lng = p1[1] + (p2[1] - p1[1]) * fraction;
+      const alt = p1[2]; // Use altitude from path
+      const bearing = getBearingFromPoints([p1[0], p1[1]], [p2[0], p2[1]]);
+
+      points.push({
+        lat,
+        lng,
+        alt,
+        rotation: bearing + 90, // Adjust rotation by 90 degrees to match SVG orientation
+        color
+      });
+
+      nextArrowDist += ARROW_SPACING_3D;
+    }
+    pathDist += segLen;
+  }
+
+  return points;
+}
+
+/**
+ * Start arrow animation loop
+ * Animates arrows along past and future trajectories using htmlElementsData
+ */
+function startArrowAnimation() {
+  if (arrowAnimationId) cancelAnimationFrame(arrowAnimationId);
+
+  if (!globe) return;
+
+  const animate = () => {
+    const now = Date.now();
+    const phase = (now * ARROW_SPEED_3D) % ARROW_SPACING_3D;
+
+    // Combine past and future arrow points
+    const allArrows = [];
+
+    // Generate past arrows (orange)
+    if (trajectoryCoords.past && trajectoryCoords.past.length > 0) {
+      const pastArrows = generateArrowPoints(trajectoryCoords.past, phase, TRAJECTORY_COLORS.past);
+      allArrows.push(...pastArrows);
+    }
+
+    // Generate future arrows (cyan/theme color)
+    if (trajectoryCoords.future && trajectoryCoords.future.length > 0) {
+      const futureArrows = generateArrowPoints(trajectoryCoords.future, phase, getFutureColor());
+      allArrows.push(...futureArrows);
+    }
+
+    // Update globe with new arrow positions
+    if (globe.htmlElementsData) {
+      globe
+        .htmlElementsData(allArrows)
+        .htmlElement(d => {
+          const el = document.createElement('div');
+          el.innerHTML = createArrowSvg(d.color, 14);
+          el.style.pointerEvents = 'none';
+          el.style.transform = `rotate(${d.rotation}deg)`;
+          el.style.transformOrigin = 'center';
+          return el;
+        })
+        .htmlLat(d => d.lat)
+        .htmlLng(d => d.lng)
+        .htmlAltitude(d => d.alt);
+    }
+
+    arrowAnimationId = requestAnimationFrame(animate);
+  };
+
+  animate();
+  console.log('[Trajectory] Arrow animation started');
 }
 
 /**
@@ -823,19 +971,12 @@ function renderTrajectoryLines() {
     return;
   }
 
-  // ISS pozisyonu henüz gelmemişse (0,0) render yapma - ilk açılış hatası önlenir
-  if (renderPos.lat === 0 && renderPos.lng === 0) {
-    console.log('[Trajectory] Waiting for valid ISS position...');
-    return;
-  }
-
   // Legend'ı göster/oluştur
   createOrUpdateLegend();
   const legend = document.getElementById('trajectory-legend');
   if (legend) legend.style.display = 'block';
 
   const allPaths = [];
-  const arrowPoints = [];
 
   // ========== GEÇMİŞ YÖRÜNGE (TURUNCU) ==========
   if (past && past.length > 1) {
@@ -845,6 +986,7 @@ function renderTrajectoryLines() {
     ];
 
     const segments = splitAtAntimeridian(pastWithCurrent);
+    // splitAtAntimeridian already returns [[lat, lng, alt], ...] format
     segments.forEach(segment => {
       allPaths.push({
         coords: segment,
@@ -852,16 +994,30 @@ function renderTrajectoryLines() {
         type: 'past'
       });
     });
+
+    // Store flattened coords for arrow animation
+    trajectoryCoords.past = segments.flat();
   }
 
-  // ========== GELECEK YÖRÜNGE (YEŞİL) ==========
+  // ========== GELECEK YÖRÜNGE (CYAN) ==========
   if (future && future.length > 1) {
-    const futureWithCurrent = [
-      { lat: renderPos.lat, lng: renderPos.lng },
-      ...future
-    ];
+    let futureWithCurrent;
+
+    // Check distance to first future point to prevent glitches (e.g. crossing antimeridian or bad data)
+    // getDist returns Euclidean distance in degrees. If > 10 degrees, don't connect.
+    const distToFirst = future[0] ? getDist([renderPos.lat, renderPos.lng], [future[0].lat, future[0].lng]) : 0;
+
+    if (distToFirst < 10) {
+      futureWithCurrent = [
+        { lat: renderPos.lat, lng: renderPos.lng },
+        ...future
+      ];
+    } else {
+      futureWithCurrent = [...future];
+    }
 
     const segments = splitAtAntimeridian(futureWithCurrent);
+    // splitAtAntimeridian already returns [[lat, lng, alt], ...] format
     segments.forEach(segment => {
       allPaths.push({
         coords: segment,
@@ -870,15 +1026,11 @@ function renderTrajectoryLines() {
       });
     });
 
-    // Ok işaretleri ekle (sadece gelecek yörünge için)
-    const arrows = createArrowMarkers(future);
-    arrowPoints.push(...arrows);
+    // Store flattened coords for arrow animation
+    trajectoryCoords.future = segments.flat();
   }
 
   // ========== ÇİZGİLERİ RENDER ET ==========
-  // Globe.gl'de renk güncellemesi için önce veriyi temizle, sonra yeniden ayarla
-  // Bu zorunlu çünkü pathColor accessor'u mevcut path'leri güncellemez
-
   // Accessors'ları ayarla
   globe
     .pathPoints(d => d.coords)
@@ -887,15 +1039,23 @@ function renderTrajectoryLines() {
     .pathPointAlt(p => p[2])
     .pathColor(d => d.color)
     .pathStroke(d => d.type === 'past' ? 2.5 : 3)
-    .pathDashLength(0)
-    .pathDashGap(0)
-    .pathDashAnimateTime(0)
-    .pathResolution(6);
+    // Disable dash animation to prevent eye strain and sync issues
+    // Only future path is dashed (static)
+    .pathDashLength(d => d.type === 'future' ? 0.05 : 1)     // Small dashes for future, solid for past
+    .pathDashGap(d => d.type === 'future' ? 0.05 : 0)        // Small gaps for future
+    .pathDashAnimateTime(0) // STOP ANIMATION - Fixes desync and eye strain
+    .pathResolution(8); // Higher resolution for smoother curves
 
-  // Veriyi ayarla
-  globe.pathsData(allPaths);
+  // Veriyi ayarla - requestAnimationFrame ile globe'un hazır olmasını garantiliyoruz
+  requestAnimationFrame(() => {
+    if (globe && globe.pathsData) {
+      globe.pathsData(allPaths);
+      console.log('[Trajectory] Rendered', allPaths.length, 'path segments. Past color:', TRAJECTORY_COLORS.past, 'Future color:', getFutureColor());
 
-  console.log('[Trajectory] Rendered', allPaths.length, 'path segments. Past color:', TRAJECTORY_COLORS.past, 'Future color:', getFutureColor());
+      // Start arrow animation with trajectory data
+      startArrowAnimation();
+    }
+  });
 }
 
 // Global hook for theme change updates
