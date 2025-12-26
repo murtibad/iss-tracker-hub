@@ -29,6 +29,9 @@ window.FEATURE_MOBILE_LAYOUT = true;
 window.FEATURE_MOBILE_BOTTOM_BAR = true; // PHASE 1: Bottom control bar
 window.FEATURE_BOTTOM_SHEETS = true; // PHASE 2: Bottom sheet system
 
+// PHASE 3: Gesture Controller (auto-initializes if FEATURE_BOTTOM_SHEETS is true)
+import './utils/gestureController.js';
+
 if (window.FEATURE_MOBILE_LAYOUT && window.innerWidth <= 640) {
     document.body.classList.add('mobile-ux-enabled');
 }
