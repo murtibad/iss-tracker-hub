@@ -194,6 +194,12 @@
         bottom: 24px;
         left: 24px;
     }
+
+    .bottom-sheet-container.docked.dock-center {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
 }
 
 /* Reduced motion support */

@@ -23,6 +23,8 @@ import { ICONS } from "../ui/icons.js";
 import { createFloatingHUD } from "../ui/components/floatingHUD.js";
 import { createSettingsModal } from "../ui/settingsModal.js";
 import { createSettingsSheet } from "../ui/settingsModalSheet.js"; // PHASE 2: Settings as bottom sheet (SAFE ADDITIVE)
+import { createHelpSheet } from "../ui/helpModalSheet.js"; // PHASE 2: Help as bottom sheet (SAFE ADDITIVE)
+import { createAuthSheet } from "../ui/authModalSheet.js"; // PHASE 2: Auth as bottom sheet (SAFE ADDITIVE)
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
 import { createPassCard } from "../ui/passCardView.js";
@@ -382,12 +384,16 @@ export async function boot(store, rootEl) {
     settingsModal.open();
   });
 
-  // ========== AUTH MODAL ==========
-  const authModal = createAuthModal();
+  // ========== AUTH MODAL/SHEET (PHASE 2: Sheet when feature enabled) ==========
+  const authModal = window.FEATURE_BOTTOM_SHEETS
+    ? createAuthSheet()
+    : createAuthModal();
   rootEl.appendChild(authModal.el);
 
-  // ========== HELP MODAL ==========
-  const helpModal = createHelpModal();
+  // ========== HELP MODAL/SHEET (PHASE 2: Sheet when feature enabled) ==========
+  const helpModal = window.FEATURE_BOTTOM_SHEETS
+    ? createHelpSheet()
+    : createHelpModal();
   rootEl.appendChild(helpModal.el);
 
   // Help Button (Top Bar)
