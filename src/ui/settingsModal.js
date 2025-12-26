@@ -1,4 +1,5 @@
 import { t, getCurrentLanguage, setLanguage } from "../i18n/i18n.js";
+import { themeManager } from "../services/themeManager.js";
 import { ICONS } from "./icons.js";
 import { setTheme, setColorPalette, setLanguage as saveLanguagePref } from "../services/userPreferences.js";
 import { CONFIG } from "../constants/config.js";
@@ -170,6 +171,10 @@ export function createSettingsModal(options = {}) {
         (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light') :
         theme;
 
+      // Use ThemeManager to handle state and notification
+      themeManager.setMode(theme);
+
+      // Legacy/External support (Globe etc)
       document.documentElement.setAttribute("data-theme", effTheme);
       localStorage.setItem("issThemeMode", theme);
 
@@ -206,6 +211,9 @@ export function createSettingsModal(options = {}) {
       root.style.setProperty('--accent', colorHex);
       root.style.setProperty('--neon-cyan', colorHex); // Override main neon color
       root.style.setProperty('--border', `rgba(${hexToRgb(colorHex)}, 0.3)`);
+
+      // Update ThemeManager
+      themeManager.setPalette(colorName.toUpperCase());
 
       localStorage.setItem("issAccentColor", colorName);
       setColorPalette(colorName.toUpperCase()); // Sync to cloud

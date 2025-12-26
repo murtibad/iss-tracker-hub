@@ -164,5 +164,18 @@ export function createNASALiveCard() {
   // Initial Render
   renderControls();
 
+  // Language Change Handler
+  window.addEventListener('language-change', () => {
+    // Update title
+    const dot = `<span style="display:inline-block; width:10px; height:10px; background:var(--danger); border-radius:50%; margin-right:8px; box-shadow:0 0 8px var(--danger);"></span>`;
+    title.innerHTML = dot + (t('nasaTitle') || "NASA Live");
+
+    // Update start button
+    startBtn.innerHTML = (t('nasaStart') || "Start Stream");
+
+    // Update stream controls
+    renderControls();
+  });
+
   return { el: container };
 }

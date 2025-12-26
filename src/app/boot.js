@@ -17,7 +17,6 @@ import { showLocationWelcome } from "../ui/locationWelcomeModal.js";
 // languagePickerView removed - succeeded by Settings Modal
 import { initI18n, t, getCurrentLanguage, getSpeedUnit, getDistanceUnit } from "../i18n/i18n.js";
 
-import { openCrewModal } from "../ui/crewWidgetView.js";
 import { ICONS } from "../ui/icons.js";
 
 // Floating HUD (Compact Telemetry v0.3.3)
@@ -316,9 +315,6 @@ export async function boot(store, rootEl) {
   if (!rootEl) throw new Error("rootEl missing");
 
   // Show intro animation (first visit only)
-  createIntro(() => {
-    console.log('[boot] Intro complete');
-  });
 
   // Initialize i18n system (auto-detect from IP if first time)
   try {
@@ -435,9 +431,8 @@ export async function boot(store, rootEl) {
 
   // Use dashboard's integrated log for status updates
   // Landing Hero
-  const log = dashboard.getLogFn();
+  const log = (msg) => console.log(`[ISS] ${msg}`);
 
-  // Reference for terminal subtitle updates
   const termSub = { textContent: "" };  // Placeholder - dashboard manages this internally
 
   // Version label
@@ -1123,15 +1118,6 @@ export async function boot(store, rootEl) {
     // 3. Refresh Weather
     refreshWeatherForIss(data.lat, data.lon);
 
-    // 4. Update Terminal Log (occasional)
-    const logEvery = Number(CONFIG?.TERMINAL_TELEMETRY_LOG_INTERVAL_MS ?? 15000);
-    const nowLog = Date.now();
-    if (nowLog - localState.lastTelemetryLogAt >= logEvery) {
-      localState.lastTelemetryLogAt = nowLog;
-      log(`[ISS] 📡 ${data.source}: lat=${fmtNum(data.lat, 2)} lon=${fmtNum(data.lon, 2)} alt=${fmtInt(data.altKm)}km v=${fmtInt(data.velKmh)}`);
-    }
-
-    // 5. Check Predictions content if needed
     if (!localState.prediction && Number.isFinite(localState.obsLat)) {
       calcPredictionNow().catch(() => { });
     }
@@ -1263,7 +1249,6 @@ export async function boot(store, rootEl) {
         visibility: "daylight" // Default, API may provide this
       });
 
-      // Update terminal timestamp
       const now = new Date();
       termSub.textContent = `Son güncelleme: ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())} [${data.source}]`;
 

@@ -37,7 +37,6 @@ export const LANGUAGES = {
             navPasses: 'Geçişler',
             hudShowDetails: 'Detaylar',
             hudHideDetails: 'Gizle',
-            hudDebug: 'Terminal',
 
             // Modals
             selectLocation: 'Yer Seçimi',
@@ -97,7 +96,6 @@ export const LANGUAGES = {
             kw: 'kW',
             degrees: '°',
 
-            // Terminal/Console
             bootReady: 'boot> hazır',
             locationSet: 'Konum ayarlandı',
             themeChanged: 'Tema değişti',
@@ -157,7 +155,6 @@ export const LANGUAGES = {
             navPasses: 'Passes',
             hudShowDetails: 'Show Details',
             hudHideDetails: 'Hide Details',
-            hudDebug: 'Debug',
 
             selectLocation: 'Select Location',
             searchCity: 'Search City',
@@ -206,7 +203,6 @@ export const LANGUAGES = {
             kw: 'kW',
             degrees: '°',
 
-            // Terminal/Console
             bootReady: 'boot> ready',
             locationSet: 'Location set',
             themeChanged: 'Theme changed',

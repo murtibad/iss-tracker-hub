@@ -2,14 +2,29 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://murtibad.github.io/iss-tracker-hub/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.2.0-orange)](package.json)
+[![Version](https://img.shields.io/badge/version-1.2.1-orange)](package.json)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Real-time International Space Station tracking with immersive 3D visualization and personalized pass predictions.
 
 ![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
-## 🆕 What's New in v1.2.0 "Celestial" (December 25, 2024)
+## 🆕 What's New in v1.2.1 "Cleanup" (December 26, 2024)
+
+### 🧹 Code Cleanup & Optimization
+- **Terminal/Debug Removal** - Removed all terminal and debug panel code for cleaner codebase
+- **Crew UI Consolidation** - Moved crew information to dedicated tab in Help modal
+- **Performance Improvements** - Removed unused imports, CSS, and configuration
+- **Bug Fixes** - Fixed boot.js crash caused by removed dashboard functions
+
+### 🎯 UI Simplification
+- **Cleaner HUD** - Removed debug button, focused on essential telemetry display
+- **Help Modal Enhancement** - Added "Crew" tab showing astronaut names, roles, and days in space
+- **Code Quality** - Eliminated unused files (terminalView.js, controlPanelView.js, crewWidgetView.js)
+
+---
+
+## 📦 Previous Updates (v1.2.0 "Celestial")
 
 ### 🌙 Realistic Celestial Bodies
 - **Procedural Moon Texture** - Craters, mare regions, and soft atmospheric glow

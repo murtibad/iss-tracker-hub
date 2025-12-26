@@ -460,37 +460,6 @@ body {
   grid-row: 1;
 }
 
-/* Terminal Area - Spans full bottom or center bottom */
-.hub-bottom {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.hub-bottom>* {
-  pointer-events: auto;
-}
-
-/* -----------------------------------------------------
-   HUD/Widgets (Restyling for Grid)
------------------------------------------------------ */
-/* Remove absolute positioning from cards since they are now in the grid */
-.hub-cards {
-  position: static;
-  /* Was absolute */
-  width: 100%;
-  top: auto;
-  left: auto;
-}
-
-.hub-terminal {
-  position: static;
-  /* Was absolute */
-  width: 100%;
-  max-width: 100%;
-  height: 120px;
   border-radius: 12px 12px 0 0;
   border-bottom: none;
   /* Connect to bottom edge */
@@ -1057,17 +1026,6 @@ body {
   }
 
   /* Terminal - Bottom, NOT overlapping */
-  .hub-terminal {
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    width: auto;
-    max-width: calc(100% - 16px);
-    height: 120px;
-    font-size: 9px;
-    padding: 8px;
-  }
-
   .term-title {
     font-size: 10px;
   }
@@ -2156,12 +2114,6 @@ select:focus-visible,
   animation: slideDown 0.3s ease;
 }
 
-.terminal-line {
-  margin: 2px 0;
-  opacity: 0.8;
-}
-
-.hud-location {
   margin: 8px 0;
   opacity: 0.7;
   font-size: 12px;

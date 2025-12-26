@@ -166,27 +166,6 @@
     border-color: var(--accent);
 }
 
-/* Debug Terminal */
-.hud-debug-panel {
-    background: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid var(--border);
-    padding: 8px;
-}
-
-.hud-terminal-header {
-    font-size: 9px;
-    color: var(--muted);
-    margin-bottom: 4px;
-    text-transform: uppercase;
-}
-
-.hud-terminal-content {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    max-height: 80px;
-    overflow-y: auto;
-    color: var(--text);
-}
 
 .terminal-line {
     margin-bottom: 2px;

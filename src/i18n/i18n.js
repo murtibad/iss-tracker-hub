@@ -4,8 +4,8 @@
 const STORAGE_KEY = 'isshub:language';
 let currentLanguage = 'tr'; // Default logic will overwrite
 
-// Dictionary
-const DICTIONARY = {
+// Dictionary (exported for direct object access in components)
+export const DICTIONARY = {
     en: {
         // Common
         speed: "Speed",
@@ -385,6 +385,10 @@ const DICTIONARY = {
         "daysInSpace": "{d} gündür uzayda",
         "bioCdr": "Komutan",
         "bioFe": "Uçuş Mühendisi",
+
+        // Help
+        "helpTitle": "Yardım ve Rehber",
+        "helpDesc": "İstasyonu nasıl takip ederim",
 
         // Help System (Simplified)
         help: {

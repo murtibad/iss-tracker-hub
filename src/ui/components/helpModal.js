@@ -1,5 +1,7 @@
-import { t } from '../../i18n/i18n.js';
+import { t, getCurrentLanguage } from '../../i18n/i18n.js';
 import { ICONS } from '../icons.js';
+import { DICTIONARY } from '../../i18n/i18n.js'; // Import DICTIONARY for direct object access
+import { createCrewBoard } from '../components/crewBoard.js'; // Add Crew tab
 
 export function createHelpModal() {
     const overlay = document.createElement('div');
@@ -32,26 +34,33 @@ export function createHelpModal() {
     `;
 
     // Internal State
-    let activeTab = 'about'; // 'about', 'glossary', 'tips'
+    let activeTab = 'about'; // 'about', 'crew', 'glossary', 'tips', 'apis'
 
     function render() {
-        // Safe check for help object
-        const help = t('help');
-        // Fallback if translations missing (should not happen after i18n update)
-        if (!help) return;
+        // Get help object directly from dictionary
+        const lang = getCurrentLanguage();
+        const dict = DICTIONARY[lang] || DICTIONARY['tr']; // Fallback to Turkish
+        const help = dict.help;
+
+        // Fallback if help object missing
+        if (!help || typeof help !== 'object') {
+            modal.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text);">Help content not available</div>`;
+            return;
+        }
 
         modal.innerHTML = `
             <!-- Header -->
             <div class="help-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="margin: 0; font-size: 24px; color: var(--accent); font-weight: 900; letter-spacing: 0.5px;">
-                    ${ICONS.settings} ${t('help').tabAbout.split(' ')[0]} 
+                    ${ICONS.settings} ${t('helpTitle')} 
                 </h2>
                 <button class="help-close btn" style="font-size: 24px; background: transparent; border: none; color: var(--muted); cursor: pointer; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;">×</button>
             </div>
 
             <!-- Tabs (Mandatory Tabbed Interface) -->
-            <div class="help-tabs" style="display: flex; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+            <div class="help-tabs" style="display: flex; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); overflow-x: auto;">
                 ${createTabBtn('about', help?.tabAbout || 'About', activeTab === 'about')}
+                ${createTabBtn('crew', t('crew') || 'Crew', activeTab === 'crew')}
                 ${createTabBtn('glossary', help?.tabGlossary || 'Glossary', activeTab === 'glossary')}
                 ${createTabBtn('tips', help?.tabTips || 'Tips', activeTab === 'tips')}
                 ${createTabBtn('apis', 'APIs', activeTab === 'apis')}
@@ -70,8 +79,29 @@ export function createHelpModal() {
             btn.onclick = () => {
                 activeTab = btn.dataset.tab;
                 render();
+
+                // If crew tab, inject crew board
+                if (activeTab === 'crew') {
+                    const container = modal.querySelector('#crew-board-container');
+                    if (container) {
+                        container.innerHTML = '';
+                        const crewBoard = createCrewBoard();
+                        container.appendChild(crewBoard.el);
+                    }
+                }
             };
         });
+
+        // If initially showing crew tab, load crew board
+        if (activeTab === 'crew') {
+            setTimeout(() => {
+                const container = modal.querySelector('#crew-board-container');
+                if (container) {
+                    const crewBoard = createCrewBoard();
+                    container.appendChild(crewBoard.el);
+                }
+            }, 0);
+        }
     }
 
     // Helper: Create Tab Button (44px min height)
@@ -114,6 +144,9 @@ export function createHelpModal() {
                     <div style="${pStyle} font-weight: 700;">• ${help?.aboutSpeed || ''}</div>
                 </div>
             `;
+        } else if (tab === 'crew') {
+            // Return placeholder - will be populated by crew board component
+            return '<div id="crew-board-container"></div>';
         } else if (tab === 'glossary') {
             return `
                 ${createTerm(help?.termAos || 'AOS', help?.defAos || '', hStyle, pStyle)}
@@ -135,7 +168,6 @@ export function createHelpModal() {
                 ${createTerm('Open-Meteo', 'Real-time weather data for ground locations.', hStyle, pStyle)}
                 ${createTerm('Nominatim (OSM)', 'Reverse geocoding to find city names.', hStyle, pStyle)}
                 ${createTerm('MapTiler Cloud', 'High-performance map tiles (Dark Matter).', hStyle, pStyle)}
-                ${createTerm('NASA YouTube', 'Official live video streams from the station.', hStyle, pStyle)}
             `;
         }
     }

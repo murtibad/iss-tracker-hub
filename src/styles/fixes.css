@@ -93,12 +93,6 @@
    z-index: 4800 !important;
 }
 
-/* Terminal ve kontrol paneli classları projede var */
-.terminal {
-   z-index: 4700 !important;
-}
-
-.cp {
    z-index: 4600 !important;
 }
 

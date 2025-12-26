@@ -288,10 +288,20 @@ export function createUserButton() {
   // Listen for auth changes
   onAuthChange(render);
 
+  // Listen for language changes
+  window.addEventListener('language-change', () => {
+    const user = getUser();
+    render(user);
+  });
+
   container.appendChild(btn);
 
   return {
     el: container,
-    button: btn
+    button: btn,
+    updateLabel: () => {
+      const user = getUser();
+      render(user);
+    }
   };
 }

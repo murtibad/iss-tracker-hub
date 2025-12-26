@@ -25,7 +25,6 @@ export const CONFIG = {
   INTERVAL_WEATHER_REFRESH_MS: 45000, // Weather data refresh
   INTERVAL_TRAJECTORY_REFRESH: 60000, // Trajectory line refresh
   INTERVAL_UI_TICK: 1000, // UI countdown tick
-  TERMINAL_TELEMETRY_LOG_INTERVAL_MS: 10000, // Console log throttle
 
   // =====================
   // FOLLOW MODE

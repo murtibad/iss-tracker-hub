@@ -1,13 +1,13 @@
 // src/ui/components/floatingHUD.js
-// Floating HUD - Simplified Mission Control v0.3.4
+// Floating HUD - Simplified Mission Control v0.3.5
 // Phase 6: Visual Refinement (Strict 18px+, Hero Metrics)
+// Terminal/Debug removed - Crew moved to Help modal
 
-import { openCrewModal } from "../crewWidgetView.js";
 import { getSmartUnits, t } from "../../i18n/i18n.js";
 import { ICONS } from "../icons.js";
 
 /**
- * Creates a floating HUD card with Simple/Details modes
+ * Creates a floating HUD card displaying ISS telemetry
  * @param {Object} options - Configuration options
  * @returns {Object} HUD element and control methods
  */
@@ -46,9 +46,6 @@ export function createFloatingHUD(options = {}) {
   `;
   card.appendChild(style);
 
-  let isDetailsMode = false;
-  let isDebugMode = false;
-
   // Render Function - Cyberpunk Dashboard Style
   const render = () => {
     card.innerHTML = `
@@ -82,22 +79,6 @@ export function createFloatingHUD(options = {}) {
                 <div class="hud-vis-icon" data-visibility>${ICONS.sun}</div>
              </div>
           </div>
-
-          <!-- Right: Controls -->
-          <div class="hud-section controls">
-             <button class="btn-cyber-mini crew-btn" title="${t('crew')}" style="font-size: 18px;">
-                ${ICONS.users} <span style="font-size: 18px; font-weight: 700;">CREW</span>
-             </button>
-             <button class="btn-cyber-mini debug-btn" data-toggle="debug" title="LOGS" style="font-size: 18px;">
-                ${ICONS.terminal || 'TERM'}
-             </button>
-          </div>
-        </div>
-
-        <!-- Debug Terminal (Collapsible) -->
-        <div class="hud-debug-panel" style="display: none;">
-           <div class="hud-terminal-header">SYSTEM LOGS</div>
-           <div class="hud-terminal-content" data-terminal></div>
         </div>
       </div>
     `;
@@ -111,36 +92,13 @@ export function createFloatingHUD(options = {}) {
   const statusEl = card.querySelector("[data-status]");
   const visEl = card.querySelector("[data-visibility]");
   const locationEl = card.querySelector("[data-location]");
-  const terminalContainer = card.querySelector("[data-terminal]");
-
-  const debugPanel = card.querySelector(".hud-debug-panel");
-  const debugToggle = card.querySelector("[data-toggle='debug']");
-  const crewBtn = card.querySelector(".crew-btn");
 
   let lastData = {};
 
-  // Toggle Debug
-  debugToggle?.addEventListener("click", () => {
-    isDebugMode = !isDebugMode;
-    const isVisible = debugPanel.style.display !== 'none';
-    debugPanel.style.display = isVisible ? 'none' : 'block';
-    if (debugToggle) debugToggle.classList.toggle('active', !isVisible);
-  });
-
-  // Crew Button
-  crewBtn?.addEventListener("click", () => openCrewModal());
-
-  // Language Listener
+  // Language Listener - Re-render on language change
   window.addEventListener('language-change', () => {
-    if (statusText) statusText.textContent = t('connectionStable');
-    if (crewBtn) {
-      crewBtn.setAttribute('title', t('crew'));
-      crewBtn.querySelector('span').textContent = t('crew');
-    }
-    if (debugToggle) {
-      debugToggle.setAttribute('title', t('hudDebug'));
-      debugToggle.querySelector('span').textContent = t('hudDebug');
-    }
+    render();
+    // Re-update data display
     if (lastData.velocity) update(lastData);
   });
 
@@ -174,23 +132,6 @@ export function createFloatingHUD(options = {}) {
 
   return {
     el: card,
-    update,
-    log(line) {
-      if (statusEl) statusEl.textContent = line.substring(0, 30);
-      if (terminalContainer) {
-        const termLine = document.createElement("div");
-        termLine.className = "terminal-line";
-        termLine.textContent = `> ${line}`;
-        terminalContainer.appendChild(termLine);
-        // Keep last 10 lines
-        while (terminalContainer.children.length > 8) {
-          terminalContainer.removeChild(terminalContainer.firstChild);
-        }
-        terminalContainer.scrollTop = terminalContainer.scrollHeight;
-      }
-    },
-    getLogFn() {
-      return (line) => this.log(line);
-    }
+    update
   };
 }

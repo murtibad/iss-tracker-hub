@@ -46,11 +46,11 @@ export function createMobileNavBar(actions) {
     `;
     bar.appendChild(style);
 
-    // Tabs configuration - 4 ana sekme
+    // Tabs configuration - 3 ana sekme (NASA temporarily removed)
     const tabs = [
         { id: "map", icon: ICONS.map, label: t('navMap') || "Harita" },
         { id: "telemetry", icon: ICONS.activity, label: t('navTelemetry') || "Bilgi" },
-        { id: "nasa", icon: ICONS.video || ICONS.play, label: "NASA" },
+        // { id: "nasa", icon: ICONS.video || ICONS.play, label: "NASA" }, // Temporarily disabled
         { id: "passes", icon: ICONS.globe, label: t('navPasses') || "Geçiş" }
     ];
 
