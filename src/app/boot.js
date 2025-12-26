@@ -22,6 +22,7 @@ import { ICONS } from "../ui/icons.js";
 // Floating HUD (Compact Telemetry v0.3.3)
 import { createFloatingHUD } from "../ui/components/floatingHUD.js";
 import { createSettingsModal } from "../ui/settingsModal.js";
+import { createSettingsSheet } from "../ui/settingsModalSheet.js"; // PHASE 2: Settings as bottom sheet (SAFE ADDITIVE)
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
 import { createPassCard } from "../ui/passCardView.js";
@@ -370,10 +371,10 @@ export async function boot(store, rootEl) {
   settingsBtn.setAttribute("aria-label", t('settings'));
   settingsBtn.style.cssText = "font-size: 18px; padding: 8px 16px; min-height: 44px;";
 
-  // Create Settings Modal
-  const settingsModal = createSettingsModal({
-    onOpenLocation: () => openLocModal()
-  });
+  // Create Settings Modal/Sheet (PHASE 2: Bottom sheet when feature enabled)
+  const settingsModal = window.FEATURE_BOTTOM_SHEETS
+    ? createSettingsSheet({ onOpenLocation: () => openLocModal() })
+    : createSettingsModal({ onOpenLocation: () => openLocModal() });
   rootEl.appendChild(settingsModal.el);
 
   // Settings click handler
