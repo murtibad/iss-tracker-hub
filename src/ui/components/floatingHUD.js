@@ -6,6 +6,14 @@
 import { getSmartUnits, t } from "../../i18n/i18n.js";
 import { ICONS } from "../icons.js";
 
+// API definitions for status monitoring
+const API_DEFS = [
+  { key: 'wheretheiss', icon: '🛰️' },
+  { key: 'opennotify', icon: '📡' },
+  { key: 'openmeteo', icon: '🌤️' },
+  { key: 'nominatim', icon: '📍' }
+];
+
 /**
  * Creates a floating HUD card displaying ISS telemetry
  * @param {Object} options - Configuration options
@@ -41,8 +49,16 @@ export function createFloatingHUD(options = {}) {
     }
     .hud-coord-label { font-size: 14px !important; color: var(--muted); margin-bottom: 4px; }
     .hud-coord-value { font-size: 18px !important; font-weight: 700; font-family: var(--font-mono); }
-    .hud-status-pill { font-size: 14px !important; padding: 6px 16px; margin-right: 12px; }
+    .hud-status-pill { font-size: 14px !important; padding: 6px 12px; margin-right: 8px; cursor: pointer; transition: all 0.2s; }
+    .hud-status-pill:hover { background: rgba(255,255,255,0.1); }
     .hud-vis-icon { font-size: 28px !important; }
+    
+    /* API Status Mini Icons */
+    .hud-api-status { display: flex; gap: 4px; align-items: center; margin-right: 12px; }
+    .api-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.5; }
+    .api-dot.active { opacity: 1; box-shadow: 0 0 5px currentColor; }
+    .api-dot.loading { animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
   `;
   card.appendChild(style);
 
@@ -75,6 +91,9 @@ export function createFloatingHUD(options = {}) {
                 <span class="hud-coord-value" data-location>--.--, --.--</span>
              </div>
              <div class="hud-meta-row">
+                <div class="hud-api-status" title="API Status">
+                    ${API_DEFS.map(api => `<span class="api-dot" data-api-dot="${api.key}" title="${api.key}"></span>`).join('')}
+                </div>
                 <div class="hud-status-pill" data-status>${t('connectionStable')}</div>
                 <div class="hud-vis-icon" data-visibility>${ICONS.sun}</div>
              </div>
@@ -92,8 +111,44 @@ export function createFloatingHUD(options = {}) {
   const statusEl = card.querySelector("[data-status]");
   const visEl = card.querySelector("[data-visibility]");
   const locationEl = card.querySelector("[data-location]");
+  const apiDots = card.querySelectorAll("[data-api-dot]");
 
   let lastData = {};
+  const store = options.store;
+
+  // Store Subscription for API status
+  if (store) {
+    store.subscribe((state) => {
+      const apis = state.apis || {};
+      apiDots.forEach(dot => {
+        const key = dot.dataset.apiDot;
+        const apiState = apis[key] || {};
+        const status = apiState.status || 'idle';
+
+        dot.className = `api-dot ${status}`;
+        if (status === 'active' || status === 'loading') {
+          dot.style.color = 'var(--accent)';
+          dot.classList.add('active');
+        } else if (status === 'error') {
+          dot.style.color = '#ff4444';
+          dot.classList.add('active');
+        } else {
+          dot.style.color = 'gray';
+          dot.classList.remove('active');
+        }
+      });
+
+      // Update aggregate status pill if error
+      const hasError = Object.values(apis).some(a => a.status === 'error');
+      if (hasError && statusEl) {
+        statusEl.textContent = t('connectionError') || 'Sorun var';
+        statusEl.style.color = '#ff4444';
+      } else if (statusEl) {
+        statusEl.textContent = t('connectionStable');
+        statusEl.style.color = '';
+      }
+    });
+  }
 
   // Language Listener - Re-render on language change
   window.addEventListener('language-change', () => {

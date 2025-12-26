@@ -28,7 +28,7 @@ export function createSettingsSheet(options = {}) {
 
     // Extract content from original modal
     const modalElement = originalModal.el;
-    const modalContent = modalElement.querySelector('.hub-modal');
+    const modalContent = modalElement.querySelector('.settings-modal');
 
     // Create bottom sheet with settings content
     const sheet = new BottomSheet({

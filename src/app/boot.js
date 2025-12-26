@@ -428,7 +428,7 @@ export async function boot(store, rootEl) {
   });
 
   // ========== FLOATING HUD: Compact Telemetry Display ==========
-  const dashboard = createFloatingHUD();
+  const dashboard = createFloatingHUD({ store }); // Pass store for API monitoring
   rootEl.appendChild(dashboard.el);
   // Network Status Bar
   const networkStatus = createNetworkStatusBar();

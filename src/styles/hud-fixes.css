@@ -32,3 +32,10 @@
         max-width: 480px !important;
     }
 }
+
+/* Hide weather and API status widgets - integrated into HUD */
+.weather-badge,
+.weather-vis-hint,
+.api-status-widget {
+    display: none !important;
+}

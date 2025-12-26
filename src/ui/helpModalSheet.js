@@ -21,7 +21,7 @@ export function createHelpSheet() {
 
     // Extract content from original modal
     const modalElement = originalModal.el;
-    const modalContent = modalElement.querySelector('.hub-modal');
+    const modalContent = modalElement.querySelector('.help-modal');
 
     // Create bottom sheet with help content
     const sheet = new BottomSheet({
