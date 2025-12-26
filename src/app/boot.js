@@ -342,6 +342,8 @@ export async function boot(store, rootEl) {
   const topbar = buildEl("div", "hub-topbar hub-glass", overlay);
   const brand = buildEl("div", "hub-brand", topbar);
   const logo = buildEl("div", "hub-logo", brand);
+  // Add logo image
+  logo.innerHTML = `<img src="./icons/icon-192.png" alt="App Logo" style="width: 100%; height: 100%; object-fit: contain;">`;
   logo.setAttribute("aria-hidden", "true");
 
   const title = buildEl("div", "hub-title", brand);
