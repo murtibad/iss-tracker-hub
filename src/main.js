@@ -11,6 +11,7 @@ import "./styles/animations.css"; // <-- Modern micro-interactions and transitio
 import "./styles/mobile-layout.css"; // <-- PHASE 0: Mobile-first foundation (SAFE ADDITIVE)
 import "./styles/bottomControlBar.css"; // <-- PHASE 1: Bottom control bar (SAFE ADDITIVE)
 import "./styles/bottomSheet.css"; // <-- PHASE 2: Bottom sheet system (SAFE ADDITIVE)
+import "./styles/visual-polish.css"; // <-- VISUAL POLISH: Designer refinements
 
 import { createStore } from "./state/store.js";
 import { boot } from "./app/boot.js";
