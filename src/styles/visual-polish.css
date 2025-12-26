@@ -1,5 +1,5 @@
 /* =======================================================================
-   VISUAL POLISH: Designer Refinements
+   VISUAL POLISH: Designer Refinements (OVERRIDES theme.css)
    ======================================================================= 
    
    Goal: "Same site, but more professional and comfortable"
@@ -11,27 +11,19 @@
    4. Compact right panel (more map space)
    5. Subtle button glows (not distracting)
    
-   Note: Respects user color customization (var(--accent))
+   Note: Uses !important to override theme.css defaults
    ======================================================================= */
 
 :root {
-    /* 1. Increased Panel Transparency */
-    --card: rgba(10, 10, 18, 0.4);
-    /* was 0.6 → map shows through better */
-    --card2: rgba(15, 15, 25, 0.6);
-    /* was 0.8 → lighter, less "boxed" */
-    --card-hover: rgba(20, 20, 30, 0.7);
-    /* was 0.85 → consistent reduction */
+    /* 1. Increased Panel Transparency - OVERRIDE */
+    --card: rgba(10, 10, 18, 0.4) !important;
+    --card2: rgba(15, 15, 25, 0.6) !important;
+    --card-hover: rgba(20, 20, 30, 0.7) !important;
 
-    /* 2. Reduced Glow/Shadow Effects (50% reduction) */
-    --shadow: 0 0 8px rgba(0, 243, 255, 0.08);
-    /* was 15px / 0.1 */
-    --shadow-lg: 0 0 15px rgba(0, 243, 255, 0.1);
-    /* was 30px / 0.15 */
-    --shadow-xl: 0 0 22px rgba(0, 243, 255, 0.12);
-    /* was 45px / 0.2 */
-
-    /* Border already uses var(--border), no change needed */
+    /* 2. Reduced Glow/Shadow Effects (50% reduction) - OVERRIDE */
+    --shadow: 0 0 8px rgba(0, 243, 255, 0.08) !important;
+    --shadow-lg: 0 0 15px rgba(0, 243, 255, 0.1) !important;
+    --shadow-xl: 0 0 22px rgba(0, 243, 255, 0.12) !important;
 }
 
 /* 3. Thinner Borders (1px instead of 2px) */
@@ -40,98 +32,85 @@
 .button,
 .hub-modal,
 .settings-btn,
-.bottom-sheet {
-    border-width: 1px;
-    /* universal thin borders */
+.bottom-sheet,
+.hub-topbar {
+    border-width: 1px !important;
 }
 
 /* 4. Compact Right Panel (NASA Live) */
 .nasa-section {
-    max-width: 260px;
-    /* was potentially wider, now constrained */
+    max-width: 260px !important;
 }
 
 .nasa-card {
-    padding: 12px;
-    /* was 16-20px */
+    padding: 12px !important;
 }
 
 .nasa-card .btn,
 .nasa-card .button {
-    font-size: 13px;
-    /* was 16px */
-    padding: 8px 12px;
-    /* was 12px 20px */
-    min-height: 40px;
-    /* slightly smaller for compactness */
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    min-height: 40px !important;
 }
 
-/* 5. Subtle Button Glows (especially "Yayını Başlat") */
+/* 5. Subtle Button Glows */
 .nasa-stream-btn,
 .btn-primary,
-.button-primary {
-    box-shadow: 0 0 8px var(--accent);
-    /* was potentially 20px+ */
+.button-primary,
+button[onclick*="startStream"],
+button[onclick*="livestream"] {
+    box-shadow: 0 0 8px var(--accent) !important;
 }
 
 .nasa-stream-btn:hover,
 .btn-primary:hover,
 .button-primary:hover {
-    box-shadow: 0 0 12px var(--accent);
-    /* was potentially 30px+ */
+    box-shadow: 0 0 12px var(--accent) !important;
 }
 
 /* 6. Compact Top Navigation (Desktop) */
 .hub-topbar {
-    padding: 8px 12px;
-    /* was 10px 12px */
-    gap: 6px;
-    /* was 10px */
+    padding: 8px 12px !important;
+    gap: 6px !important;
 }
 
 @media (min-width: 641px) {
     .hub-topbar .btn {
-        min-width: 40px;
-        /* was 44px (desktop can be slightly smaller) */
-        padding: 8px 14px;
-        /* was 12px 20px */
+        min-width: 40px !important;
+        padding: 8px 14px !important;
     }
 }
 
 /* 7. Trajectory Opacity Balance */
 .trajectory-past,
 [data-trajectory="past"] {
-    opacity: 0.6;
-    /* was 0.8 → de-emphasize past */
+    opacity: 0.6 !important;
 }
 
 .trajectory-future,
 [data-trajectory="future"] {
-    opacity: 0.9;
-    /* emphasize where ISS is going */
+    opacity: 0.9 !important;
 }
 
-/* 8. Mobile Bottom Bar - Already implemented in bottomControlBar.css */
-/* Just ensure consistency here */
-@media (max-width: 640px) {
-    .bottom-control-bar {
-        padding: 12px;
-        gap: 8px;
-        /* was 12px */
-        background: rgba(10, 10, 16, 0.85);
-        backdrop-filter: blur(12px);
-    }
+/* Panels - Force transparency */
+.hub-glass {
+    background: var(--card) !important;
 }
 
-/* Light Mode Adjustments (same principles) */
+/* Sağ panel (NASA, Pass card) kompaktlaştır */
+.hub-right {
+    max-width: 280px !important;
+}
+
+.hub-right>* {
+    max-width: 260px !important;
+}
+
+/* Light Mode Adjustments */
 :root[data-theme="light"] {
-    --card: rgba(255, 255, 255, 0.85);
-    /* slightly more transparent */
-    --card2: rgba(248, 250, 252, 0.9);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    /* reduced */
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-    /* reduced */
-    --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.1);
-    /* reduced */
+    --card: rgba(255, 255, 255, 0.85) !important;
+    --card2: rgba(248, 250, 252, 0.9) !important;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.1) !important;
 }

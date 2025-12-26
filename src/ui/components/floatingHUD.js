@@ -57,12 +57,12 @@ export function createFloatingHUD(options = {}) {
           <!-- Left: Telemetry -->
           <div class="hud-section telemetry">
             <div class="hud-metric">
-              <span class="hud-label">VELOCITY</span>
+              <span class="hud-label">${t('speed') || 'HIZ'}</span>
               <span class="hud-value" data-speed>--</span>
               <span class="hud-unit">KM/H</span>
             </div>
             <div class="hud-metric">
-              <span class="hud-label">ALTITUDE</span>
+              <span class="hud-label">${t('altitude') || 'YÜKSEKLİK'}</span>
               <span class="hud-value" data-altitude>--</span>
               <span class="hud-unit">KM</span>
             </div>

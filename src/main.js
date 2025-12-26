@@ -12,6 +12,7 @@ import "./styles/mobile-layout.css"; // <-- PHASE 0: Mobile-first foundation (SA
 import "./styles/bottomControlBar.css"; // <-- PHASE 1: Bottom control bar (SAFE ADDITIVE)
 import "./styles/bottomSheet.css"; // <-- PHASE 2: Bottom sheet system (SAFE ADDITIVE)
 import "./styles/visual-polish.css"; // <-- VISUAL POLISH: Designer refinements
+import "./styles/hud-fixes.css"; // <-- FIX: Floating HUD z-index and overlap
 
 import { createStore } from "./state/store.js";
 import { boot } from "./app/boot.js";

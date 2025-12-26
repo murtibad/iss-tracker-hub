@@ -1,0 +1,34 @@
+/* =======================================================================
+   FLOATING HUD FIX: Z-index and Overlap Issues
+   ======================================================================= 
+   
+   Problem: HUD overlapping with other cards
+   Solution: Ensure proper z-index and positioning
+   ======================================================================= */
+
+/* Fix HUD z-index to prevent overlap */
+.floating-hud {
+    z-index: 1500 !important;
+    /* Above most UI, below modals (z-index: 2000+) */
+    position: fixed !important;
+}
+
+/* Ensure HUD doesn't overlap with bottom control bar on mobile */
+@media (max-width: 640px) {
+    body.mobile-ux-enabled .floating-hud {
+        bottom: 90px !important;
+        /* Above bottom control bar (72px) + margin */
+        left: 12px !important;
+        right: auto !important;
+        max-width: calc(100vw - 24px) !important;
+    }
+}
+
+/* Desktop: Keep HUD at bottom-left */
+@media (min-width: 641px) {
+    .floating-hud {
+        bottom: 24px !important;
+        left: 24px !important;
+        max-width: 480px !important;
+    }
+}
