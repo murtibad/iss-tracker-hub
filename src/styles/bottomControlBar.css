@@ -1,0 +1,137 @@
+/* =======================================================================
+   PHASE 1: BOTTOM CONTROL BAR STYLES (SAFE ADDITIVE FEATURE)
+   ======================================================================= */
+
+.bottom-control-bar {
+    /* Fixed positioning at bottom */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9000;
+
+    /* Safe-area insets for notched devices */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-top: 12px;
+
+    /* Glass morphism effect */
+    background: rgba(10, 10, 16, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    /* Flex layout for buttons */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 12px;
+
+    /* Border and shadow */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+
+    /* Smooth transitions */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hidden state */
+.bottom-control-bar.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Individual button styling */
+.bottom-bar-btn {
+    /* Touch target size: 52x52px minimum (WCAG AAA) */
+    min-width: 52px;
+    min-height: 52px;
+
+    /* Flex layout */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    /* Visual styling */
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text-secondary, #c0c0c0);
+
+    /* Remove default button styles */
+    cursor: pointer;
+    padding: 8px;
+    flex: 1;
+
+    /* Smooth transitions */
+    transition: all 0.2s ease;
+}
+
+/* Button hover state */
+.bottom-bar-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent, #00FF88);
+    color: var(--accent, #00FF88);
+    transform: translateY(-2px);
+}
+
+/* Button active state */
+.bottom-bar-btn.active {
+    background: rgba(0, 255, 136, 0.15);
+    border-color: var(--accent, #00FF88);
+    color: var(--accent, #00FF88);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+/* Button pressed state */
+.bottom-bar-btn:active {
+    transform: translateY(0);
+}
+
+/* Button icon */
+.bottom-bar-btn .btn-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Button label */
+.bottom-bar-btn .btn-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+/* Desktop: Hide bottom control bar */
+@media (min-width: 641px) {
+    .bottom-control-bar {
+        display: none;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+    .bottom-control-bar,
+    .bottom-bar-btn {
+        transition: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .bottom-bar-btn {
+        border-width: 2px;
+        border-color: currentColor;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+.bottom-bar-btn:focus-visible {
+    outline: 2px solid var(--accent, #00FF88);
+    outline-offset: 2px;
+}

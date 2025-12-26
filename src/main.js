@@ -8,6 +8,9 @@ import "./styles/layout.css"; // Responsive layout
 import "./styles/fixes.css"; // <-- HUD/Leaflet z-index düzeltmesi
 import "./styles/accessibility.css"; // <-- Accessibility for elderly users (60-70 age group)
 import "./styles/animations.css"; // <-- Modern micro-interactions and transitions
+import "./styles/mobile-layout.css"; // <-- PHASE 0: Mobile-first foundation (SAFE ADDITIVE)
+import "./styles/bottomControlBar.css"; // <-- PHASE 1: Bottom control bar (SAFE ADDITIVE)
+import "./styles/bottomSheet.css"; // <-- PHASE 2: Bottom sheet system (SAFE ADDITIVE)
 
 import { createStore } from "./state/store.js";
 import { boot } from "./app/boot.js";
@@ -19,5 +22,21 @@ console.log(`[ISS Tracker] Theme initialized:`, themeManager.getCurrentTheme());
 
 const store = createStore();
 const rootEl = document.getElementById("app");
+
+// ========== PHASE 0: FEATURE FLAG (SAFE ADDITIVE) ==========
+window.FEATURE_MOBILE_LAYOUT = true;
+window.FEATURE_MOBILE_BOTTOM_BAR = true; // PHASE 1: Bottom control bar
+window.FEATURE_BOTTOM_SHEETS = true; // PHASE 2: Bottom sheet system
+
+if (window.FEATURE_MOBILE_LAYOUT && window.innerWidth <= 640) {
+    document.body.classList.add('mobile-ux-enabled');
+}
+window.addEventListener('resize', () => {
+    if (!window.FEATURE_MOBILE_LAYOUT) return;
+    window.innerWidth <= 640
+        ? document.body.classList.add('mobile-ux-enabled')
+        : document.body.classList.remove('mobile-ux-enabled');
+});
+// ===========================================================
 
 boot(store, rootEl);

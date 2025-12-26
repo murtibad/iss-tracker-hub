@@ -29,6 +29,7 @@ import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
 import { createNASALiveCard } from "../ui/components/NASALiveCard.js";
 import { createAuthModal, createUserButton } from "../ui/components/authModal.js";
 import { createHelpModal } from "../ui/components/helpModal.js"; // Help Modal
+import { createBottomControlBar } from "../ui/components/bottomControlBar.js"; // PHASE 1: Mobile bottom bar (SAFE ADDITIVE)
 import { schedulePassNotification, areNotificationsEnabled } from "../services/passNotification.js"; // Phase 5 Notifications
 import { onAuthChange, getUser, logout } from "../services/authService.js";
 import { showToast } from "../ui/components/toastManager.js"; // Phase 6 Feedback
@@ -549,6 +550,42 @@ export async function boot(store, rootEl) {
     }
   });
   if (landingHero.el) rootEl.appendChild(landingHero.el);
+
+  // ========== PHASE 1: BOTTOM CONTROL BAR (SAFE ADDITIVE) ==========
+  // Mobile-first thumb-zone control bar (only on mobile viewports)
+  const bottomBar = createBottomControlBar({
+    onISSFocus: () => {
+      // Focus on ISS
+      setFollowUI(true);
+      if (viewMode === '3d' && globe) {
+        try {
+          globe.setFocusMode('iss');
+        } catch (e) {
+          console.warn('Globe focus error', e);
+        }
+      }
+    },
+    onWorldView: () => {
+      // Toggle 2D/3D view
+      const newMode = viewMode === '2d' ? '3d' : '2d';
+      applyViewMode(newMode);
+    },
+    onLiveFeed: () => {
+      // Show NASA live feed (scroll to it or open as sheet in future)
+      nasaSection.scrollIntoView({ behavior: 'smooth' });
+    },
+    onSettings: () => {
+      // Open settings modal
+      settingsModal.open();
+    }
+  });
+
+  // Append to root only if feature is enabled
+  if (bottomBar.el) {
+    rootEl.appendChild(bottomBar.el);
+    console.log('[PHASE 1] Bottom control bar initialized');
+  }
+  // ================================================================
 
   async function calcPredictionNow({ forceLog = false } = {}) {
     const lat = localState.obsLat;
