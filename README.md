@@ -9,12 +9,18 @@ Real-time International Space Station tracking with immersive 3D visualization a
 
 ![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
-## 🆕 What's New in v1.2.2 "Stable Backup" (December 27, 2024)
+## 🆕 What's New in v1.2.2 "Astraea" (December 27, 2024)
 
-### 📸 Pre-Mobile UX Backup
-- **Stable Snapshot** - Current production-ready state backed up before mobile UX redesign
-- **No Functionality Changes** - This is a checkpoint release
-- **Planning Phase** - Preparing for mobile-first, gesture-driven UX enhancements
+### 💎 UI Refinement & HUD Polish
+- **Integrated API Status** - Real-time connection dots embedded directly into the Floating HUD.
+- **Smart Version Badge** - Version label moved inside the "beta" pill in the top bar for a cleaner map view.
+- **View Mode Relocation** - 2D/3D and Focus buttons moved to a "Safe Zone" (middle-right) to avoid overlaps.
+- **App Branding** - Official app logo added to the brand section in the top bar.
+
+### 📱 Bottom Sheet & Modal Improvements
+- **Dockable Sheets** - Settings and Help modals now dock neatly to the top-right on desktop.
+- **UX Cleanups** - Removed double headers and redundant card styling for seamless integration.
+- **Critical Fixes** - Resolved a boot-time crash in the Help modal container.
 
 ---
 

@@ -6,9 +6,9 @@ export const CONFIG = {
   // =====================
   // VERSION INFO
   // =====================
-  VERSION: "v1.2.0",
+  VERSION: "v1.2.2",
   VERSION_DATE: "2025-12",
-  VERSION_CODENAME: "Celestial",
+  VERSION_CODENAME: "Astraea",
 
   // =====================
   // PASS PREDICTION

@@ -350,7 +350,7 @@ export async function boot(store, rootEl) {
   const titleMain = buildEl("div", "t", title);
   titleMain.textContent = "ISS Tracker HUB";
   const s = buildEl("div", "s", title);
-  s.textContent = "beta";
+  s.textContent = `beta ${CONFIG.VERSION}`;
 
   const actions = buildEl("div", "hub-actions", topbar);
 
@@ -445,8 +445,6 @@ export async function boot(store, rootEl) {
 
   const termSub = { textContent: "" };  // Placeholder - dashboard manages this internally
 
-  // Version label
-  const version = buildEl("div", "hub-ver", overlay);
   // Pass Card Section - Sağ altta, kompakt
   const passSection = buildEl("div", "pass-section", overlay);
   passSection.id = "pass-section";
@@ -462,7 +460,7 @@ export async function boot(store, rootEl) {
 
   const passCard = createPassCard();
   passSection.appendChild(passCard.el);
-  version.textContent = CONFIG?.VERSION || "v0.2.2";
+
 
   // ========== NASA LIVE CARD - Sağ üst köşe, pass kartı üstünde ==========
   const nasaSection = buildEl("div", "nasa-section", overlay);

@@ -13,23 +13,7 @@
     position: fixed !important;
 }
 
-/* Version label - NEW POSITION (Top Right) */
-.hub-ver,
-.version-label {
-    position: fixed !important;
-    top: 70px !important;
-    /* Safe space below topbar */
-    right: 20px !important;
-    left: auto !important;
-    bottom: auto !important;
-    z-index: 1600 !important;
-    /* Above HUD */
-    background: rgba(10, 10, 20, 0.8) !important;
-    border: 1px solid var(--border) !important;
-    padding: 6px 12px !important;
-    opacity: 0.8 !important;
-    pointer-events: auto !important;
-}
+
 
 /* Ensure sheets are above HUD */
 .bottom-sheet-container {
@@ -64,19 +48,7 @@
     display: none !important;
 }
 
-/* Move version label to top-right */
-.hub-ver,
-.version-label {
-    top: 70px !important;
-    /* Below top bar */
-    right: 20px !important;
-    left: auto !important;
-    bottom: auto !important;
-    z-index: 100 !important;
-    opacity: 0.6 !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    border-radius: 4px !important;
-}
+
 
 /* View Mode Toggle - Move to Middle Right (Safe Zone) */
 #isshub-viewmode-toggle {
