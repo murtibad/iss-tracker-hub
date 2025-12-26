@@ -71,7 +71,7 @@ export function createFloatingHUD(options = {}) {
           <!-- Center: Status & Location -->
           <div class="hud-section status">
              <div class="hud-location-box">
-                <span class="hud-coord-label">LAT / LON</span>
+                <span class="hud-coord-label">${t('location') || 'KONUM'}</span>
                 <span class="hud-coord-value" data-location>--.--, --.--</span>
              </div>
              <div class="hud-meta-row">
