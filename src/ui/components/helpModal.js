@@ -172,6 +172,8 @@ export function createHelpModal() {
         }
     }
 
+    overlay.appendChild(modal); // Restore critical missing line
+
     render(); // Initial render so content is populated immediately
 
     return {
