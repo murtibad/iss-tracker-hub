@@ -27,9 +27,9 @@ import { createHelpSheet } from "../ui/helpModalSheet.js"; // PHASE 2: Help as b
 import { createAuthSheet } from "../ui/authModalSheet.js"; // PHASE 2: Auth as bottom sheet (SAFE ADDITIVE)
 import { createNetworkStatusBar } from "../ui/components/networkStatusBar.js";
 import { createLandingHero } from "../ui/components/landingHero.js";
-import { createPassCard } from "../ui/passCardView.js";
+// import { createPassCard } from "../ui/passCardView.js"; // Temporarily disabled
 import { createMobileNavBar } from "../ui/components/mobileNavBar.js";
-import { createNASALiveCard } from "../ui/components/NASALiveCard.js";
+// import { createNASALiveCard } from "../ui/components/NASALiveCard.js"; // Temporarily disabled
 import { createAuthModal, createUserButton } from "../ui/components/authModal.js";
 import { createHelpModal } from "../ui/components/helpModal.js"; // Help Modal
 import { createBottomControlBar } from "../ui/components/bottomControlBar.js"; // PHASE 1: Mobile bottom bar (SAFE ADDITIVE)
@@ -445,7 +445,9 @@ export async function boot(store, rootEl) {
 
   const termSub = { textContent: "" };  // Placeholder - dashboard manages this internally
 
-  // Pass Card Section - Sağ altta, kompakt
+  // ========== PASS CARD - TEMPORARILY DISABLED ==========
+  // TODO: Redesign pass card from scratch
+  /*
   const passSection = buildEl("div", "pass-section", overlay);
   passSection.id = "pass-section";
   passSection.style.cssText = `
@@ -460,9 +462,11 @@ export async function boot(store, rootEl) {
 
   const passCard = createPassCard();
   passSection.appendChild(passCard.el);
+  */
 
-
-  // ========== NASA LIVE CARD - Sağ üst köşe, pass kartı üstünde ==========
+  // ========== NASA LIVE CARD - TEMPORARILY DISABLED ==========
+  // TODO: Re-enable when NASA stream is working properly
+  /*
   const nasaSection = buildEl("div", "nasa-section", overlay);
   nasaSection.id = "nasa-section";
   nasaSection.style.cssText = `
@@ -488,6 +492,8 @@ export async function boot(store, rootEl) {
     opacity: 0.7;
   `;
   nasaNote.textContent = t('nasaNote') || "⚠️ Stream may have interruptions based on ISS signal status.";
+  */
+
 
   // ---------- Local state ----------
   const localState = {
@@ -538,17 +544,16 @@ export async function boot(store, rootEl) {
       error: false // Could track pass calc errors here
     }),
     onShowPass: () => {
+      // Pass card is temporarily disabled
+      console.log("[Hero] Pass card temporarily disabled");
+      /*
       const passSection = document.getElementById('pass-section');
       if (passSection && passSection.style.display !== 'none') {
-        // Scroll to pass card
         passSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Highlight for 2 seconds
         passSection.classList.add('highlight');
         setTimeout(() => passSection.classList.remove('highlight'), 2000);
-        // console.log("[Hero] Show Pass - scrolled to pass card");
-      } else {
-        // console.log("[Hero] Show Pass - card not visible yet");
       }
+      */
     },
     onLiveTrack: () => {
       // Enable follow mode and focus on ISS
@@ -578,8 +583,9 @@ export async function boot(store, rootEl) {
       applyViewMode(newMode);
     },
     onLiveFeed: () => {
-      // Show NASA live feed (scroll to it or open as sheet in future)
-      nasaSection.scrollIntoView({ behavior: 'smooth' });
+      // NASA card is temporarily disabled
+      // nasaSection.scrollIntoView({ behavior: 'smooth' });
+      console.log('[BottomBar] NASA Live Feed temporarily disabled');
     },
     onSettings: () => {
       // Open settings modal
@@ -639,17 +645,16 @@ export async function boot(store, rootEl) {
   }
 
   function renderPrediction() {
+    // Pass card is temporarily disabled
+    // TODO: Re-enable when pass card is redesigned
+    /*
     const p = localState.prediction;
 
-    // Pass section her zaman görünür (masaüstünde)
-    // Mobilde CSS tarafından kontrol edilir
     if (window.innerWidth > 768) {
       passSection.style.display = 'block';
     }
 
-    // Update pass card
     if (p && p.aosMs) {
-      // Calculate countdown
       const now = Date.now();
       const diffMs = p.aosMs - now;
       const diffSec = Math.max(0, Math.floor(diffMs / 1000));
@@ -664,13 +669,13 @@ export async function boot(store, rootEl) {
         countdownText
       });
     } else {
-      // Veri henüz yok - bekleme durumu
       passCard.setState({
         nextPass: null,
         nextVisiblePass: null,
         countdownText: localState.predictionBusy ? t('passCalculating') : '--:--:--'
       });
     }
+    */
   }
 
   // ------- MapLibre GL map -------
@@ -1340,14 +1345,17 @@ export async function boot(store, rootEl) {
       document.body.setAttribute('data-mobile-view', tabId);
 
       // Toggle section visibility based on active tab
-      nasaSection.style.display = tabId === 'nasa' ? 'block' : 'none';
-      passSection.style.display = tabId === 'passes' ? 'block' : 'none';
+      // nasaSection.style.display = tabId === 'nasa' ? 'block' : 'none'; // NASA disabled
+      // passSection.style.display = tabId === 'passes' ? 'block' : 'none'; // Pass card disabled
       dashboard.el.style.display = tabId === 'telemetry' ? 'flex' : 'none';
 
       // Pause/resume NASA video when not visible
+      // NASA card is temporarily disabled
+      /*
       if (tabId !== 'nasa') {
         // Videos are in iframes, they auto-manage when hidden
       }
+      */
     },
     onSettings: () => settingsModal.open()
   });

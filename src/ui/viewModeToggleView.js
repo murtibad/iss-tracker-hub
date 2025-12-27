@@ -33,14 +33,10 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
   const wrap = el("div", "view-toggle glass");
   wrap.id = "isshub-viewmode-toggle";
   wrap.style.cssText = `
-    position: fixed;
-    right: 350px;
-    bottom: 20px;
-    z-index: 1300;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-items: center;
+    align-items: flex-start;
   `;
 
   // 2D/3D Modu Butonu
@@ -106,21 +102,18 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
             border-radius: 8px;
             border: 1px solid var(--border);
             color: var(--text);
-            font-size: 14px; /* Secondary text allow 14px? User said NO < 18px primary/secondary. */
-            /* Checking rule: "No primary or secondary UI text may render below 18px" */
-            /* So this must be 18px. */
             font-size: 18px;
             font-weight: 700;
-            text-align: right;
+            text-align: left;
             pointer-events: none;
             position: absolute;
-            right: 60px; /* Left of the buttons */
+            left: 60px;
             top: 0;
             white-space: nowrap;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
-            height: 44px; /* Match button height */
+            height: 44px;
         `;
       wrap.appendChild(labelContainer);
     }
@@ -150,13 +143,13 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
             border-radius: 8px;
             border: 1px solid var(--border);
             color: var(--text);
-            font-size: 18px; /* Strict 18px */
+            font-size: 18px;
             font-weight: 700;
-            text-align: right;
+            text-align: left;
             pointer-events: none;
             position: absolute;
-            right: 60px;
-            top: 52px; /* Below the first label */
+            left: 60px;
+            top: 52px;
             white-space: nowrap;
             box-shadow: var(--shadow);
             display: flex;

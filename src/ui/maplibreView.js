@@ -45,7 +45,7 @@ export function createMapLibreView(container, options = {}) {
         pitch: 0,
         bearing: 0,
         antialias: true,
-        attributionControl: true
+        attributionControl: true // Keep for license compliance (styled via CSS)
     });
 
     // Detect user interaction to pause auto-follow
@@ -289,10 +289,8 @@ export function createMapLibreView(container, options = {}) {
         console.error('[MapLibre] ❌ Map error:', e);
     });
 
-    // Customize attribution position
-    map.addControl(new maplibregl.AttributionControl({
-        compact: true
-    }), 'bottom-right');
+    // Attribution control disabled (MapTiler/OSM credits hidden)
+    // map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
     // Add navigation controls (zoom, compass)
     map.addControl(new maplibregl.NavigationControl({

@@ -50,12 +50,14 @@
 
 
 
-/* View Mode Toggle - Move to Middle Right (Safe Zone) */
+/* View Mode Toggle - DISABLED - Now controlled by visual-polish.css */
+/* Bottom-left positioning to align with HUD */
+/*
 #isshub-viewmode-toggle {
     top: 60vh !important;
-    /* Middle-Lower Right */
     bottom: auto !important;
     right: 24px !important;
     flex-direction: column !important;
     transform: translateY(-50%) !important;
 }
+*/

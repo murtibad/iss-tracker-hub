@@ -491,10 +491,14 @@
     }
 
     /* View toggle - mobile position */
+    /* DISABLED - Now controlled by visual-polish.css */
+    /*
     .view-toggle {
-        bottom: 100px !important;
-        right: 10px !important;
+        bottom: 160px !important;
+        left: 24px !important;
+        right: auto !important;
     }
+    */
 }
 
 /* =====================================================
@@ -543,16 +547,19 @@
     }
 
     /* Desktop View Toggle Position */
+    /* DISABLED - Now controlled by visual-polish.css */
+    /*
     .view-toggle {
         display: flex;
         flex-direction: column;
         gap: 12px;
         position: fixed;
-        bottom: 140px;
-        /* Above Pass Card */
-        right: 24px;
+        bottom: 160px;
+        left: 24px;
+        right: auto;
         z-index: 1000;
     }
+    */
 
     /* Ensure specific overlapping preventions */
     #pass-section,

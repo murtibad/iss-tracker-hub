@@ -112,15 +112,18 @@ export function createHelpModal() {
 
         return `
             <button class="help-tab-btn" data-tab="${id}" style="
-                flex: 1;
-                padding: 16px; 
-                min-height: 54px; /* >44px */
+                display: inline-block;
+                min-width: 100px;
+                padding: 16px 20px; 
+                min-height: 54px;
                 background: transparent;
                 border: none;
-                font-size: 18px; /* Strict 18px */
+                border-right: 1px solid rgba(255,255,255,0.1);
+                font-size: 16px;
                 font-weight: 800;
                 cursor: pointer;
                 transition: all 0.2s;
+                white-space: nowrap;
                 ${activeStyle}
             ">
                 ${label}
@@ -172,9 +175,41 @@ export function createHelpModal() {
         }
     }
 
-    overlay.appendChild(modal); // Restore critical missing line
+    // Helper: Create Term/Tip Entry
+    function createTerm(title, text, hStyle, pStyle) {
+        return `
+            <div style="margin-bottom: 24px;">
+                <h4 style="${hStyle}">${title}</h4>
+                <p style="${pStyle}">${text}</p>
+            </div>
+        `;
+    }
 
-    render(); // Initial render so content is populated immediately
+    // Open/Close Functions
+    function open() {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.style.display === 'flex') {
+            close();
+        }
+    });
+
+    overlay.appendChild(modal);
+    render(); // Initial render
 
     return {
         el: overlay,

@@ -114,3 +114,215 @@ button[onclick*="livestream"] {
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
     --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.1) !important;
 }
+
+/* ======================================================================
+   SETTINGS MODAL FIX: Readability & Position
+   ====================================================================== */
+
+/* Settings Modal - More opaque for readability */
+.hub-modal.settings-modal,
+.bottom-sheet-container.docked .bottom-sheet {
+    background: rgba(15, 15, 25, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+:root[data-theme="light"] .hub-modal.settings-modal,
+:root[data-theme="light"] .bottom-sheet-container.docked .bottom-sheet {
+    background: rgba(255, 255, 255, 0.97) !important;
+}
+
+/* Desktop: Position near top-right settings button */
+@media (min-width: 641px) {
+    .bottom-sheet-container.docked.dock-top-right {
+        top: 80px !important;
+        right: 24px !important;
+        left: auto !important;
+    }
+
+    .bottom-sheet-container.docked .bottom-sheet {
+        width: 380px !important;
+        max-width: 380px !important;
+    }
+}
+
+/* Better animation - smooth spring effect */
+.hub-modal {
+    animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ======================================================================
+   HELP MODAL FIX: Better Readability & Spacing
+   ====================================================================== */
+
+/* Help Modal - More opaque background */
+.help-modal {
+    background: rgba(15, 15, 25, 0.96) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+:root[data-theme="light"] .help-modal {
+    background: rgba(255, 255, 255, 0.97) !important;
+}
+
+/* Help Content - Better spacing and readability */
+.help-content {
+    padding: 32px !important;
+    line-height: 1.8 !important;
+}
+
+.help-content h3,
+.help-content h4 {
+    margin-top: 32px !important;
+    margin-bottom: 16px !important;
+    line-height: 1.4 !important;
+}
+
+.help-content h3:first-child,
+.help-content h4:first-child {
+    margin-top: 0 !important;
+}
+
+.help-content p {
+    margin-bottom: 20px !important;
+    line-height: 1.8 !important;
+}
+
+/* Help Tabs - Better touch targets */
+.help-tab-btn {
+    white-space: nowrap !important;
+    padding: 16px 20px !important;
+    display: inline-block !important;
+    min-width: 100px !important;
+}
+
+/* Help Modal - Force proper structure */
+.help-modal {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.help-tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+}
+
+.help-header {
+    flex-shrink: 0 !important;
+}
+
+.help-content {
+    display: block !important;
+}
+
+/* All help content elements - prevent overlap */
+.help-content * {
+    display: block !important;
+    position: relative !important;
+}
+
+.help-content h3 {
+    display: block !important;
+    margin: 24px 0 12px 0 !important;
+    font-size: 20px !important;
+    line-height: 1.4 !important;
+}
+
+.help-content h4 {
+    display: block !important;
+    margin: 20px 0 10px 0 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+}
+
+.help-content p {
+    display: block !important;
+    margin: 0 0 16px 0 !important;
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+}
+
+.help-content div {
+    display: block !important;
+    margin-bottom: 16px !important;
+}
+
+/* Crew board container */
+#crew-board-container {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* ======================================================================
+   MAP ATTRIBUTION: Subtle but compliant styling
+   ====================================================================== */
+
+.maplibregl-ctrl-attrib {
+    position: fixed !important;
+    bottom: 4px !important;
+    right: 4px !important;
+    font-size: 9px !important;
+    opacity: 0.4 !important;
+    background: transparent !important;
+    padding: 2px 6px !important;
+    transition: opacity 0.3s ease !important;
+    z-index: 10 !important;
+}
+
+.maplibregl-ctrl-attrib:hover {
+    opacity: 1 !important;
+}
+
+.maplibregl-ctrl-attrib a {
+    color: var(--muted) !important;
+    text-decoration: none !important;
+}
+
+.maplibregl-ctrl-attrib a:hover {
+    color: var(--accent) !important;
+}
+
+/* Hide the toggle button */
+.maplibregl-ctrl-attrib-button {
+    display: none !important;
+}
+
+/* Compact mode always */
+.maplibregl-ctrl-attrib.maplibregl-compact {
+    min-height: auto !important;
+}
+
+/* ======================================================================
+   VIEW TOGGLE: Move to bottom-left (near HUD)
+   ====================================================================== */
+
+.view-toggle,
+div.view-toggle,
+.view-toggle.glass,
+#isshub-viewmode-toggle {
+    position: fixed !important;
+    left: 24px !important;
+    bottom: 160px !important;
+    right: auto !important;
+    top: auto !important;
+    width: auto !important;
+    z-index: 1300 !important;
+    transform: none !important;
+    animation: none !important;
+    /* Disable fadeInUpSmooth that causes vertical offset */
+}
