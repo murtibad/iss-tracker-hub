@@ -429,6 +429,27 @@ export async function boot(store, rootEl) {
     }
   });
 
+  // ========== LANGUAGE CHANGE LISTENER - UPDATE HEADER BUTTONS ==========
+  window.addEventListener('language-change', () => {
+    // Update Settings button
+    settingsBtn.innerHTML = `${ICONS.settings} <span>${t('settings')}</span>`;
+    settingsBtn.title = t('settings');
+    settingsBtn.setAttribute("aria-label", t('settings'));
+
+    // Update Help button
+    helpBtn.innerHTML = `${helpIcon} <span>${t('helpTitle').split(' ')[0]}</span>`;
+    helpBtn.title = t('helpTitle');
+    helpBtn.setAttribute("aria-label", t('helpTitle'));
+
+    // Update tracking text
+    const modeLabel = t('follow') === 'Takip' ? 'Modu' : 'Mode';
+    followTxt.innerHTML = trackEnabled
+      ? `<span style="font-weight:400; opacity:0.8">ISS ${modeLabel}:</span> <strong>${t('on')}</strong>`
+      : `<span style="font-weight:400; opacity:0.8">ISS ${modeLabel}:</span> <strong>${t('off')}</strong>`;
+
+    console.log('[Boot] Language changed, header updated');
+  });
+
   // ========== FLOATING HUD: Compact Telemetry Display ==========
   const dashboard = createFloatingHUD({ store }); // Pass store for API monitoring
   rootEl.appendChild(dashboard.el);

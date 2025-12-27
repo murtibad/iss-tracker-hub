@@ -41,8 +41,25 @@ export function createFloatingHUD(options = {}) {
   card.appendChild(style);
 
 
+  // Theme application function
+  function applyTheme() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      card.style.background = 'rgba(255, 255, 255, 0.95)';
+      card.style.borderColor = 'rgba(0, 0, 0, 0.15)';
+      card.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)';
+    } else {
+      card.style.background = '';
+      card.style.borderColor = '';
+      card.style.boxShadow = '';
+    }
+  }
+
   // Render Function - Simplified HUD (Speed + Altitude only)
   const render = () => {
+    // Store style before innerHTML wipe
+    const existingStyle = card.querySelector('style');
+
     card.innerHTML = `
       <div class="hud-dashboard">
         <!-- Decoration: Top Border Line -->
@@ -65,6 +82,16 @@ export function createFloatingHUD(options = {}) {
         </div>
       </div>
     `;
+
+    // Re-add style element
+    if (existingStyle) {
+      card.insertBefore(existingStyle, card.firstChild);
+    } else {
+      card.insertBefore(style, card.firstChild);
+    }
+
+    // Apply current theme
+    applyTheme();
   };
 
   render(); // Initial Render
@@ -80,6 +107,11 @@ export function createFloatingHUD(options = {}) {
     render();
     // Re-update data display
     if (lastData.velocity) update(lastData);
+  });
+
+  // Theme Change Listener - Apply theme when it changes
+  window.addEventListener('themeChanged', () => {
+    applyTheme();
   });
 
   function update(data) {

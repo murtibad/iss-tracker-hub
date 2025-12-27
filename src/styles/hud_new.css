@@ -3,15 +3,19 @@
 .floating-hud {
     width: 100%;
     max-width: 600px;
-    background: rgba(10, 10, 16, 0.85) !important;
+    position: fixed !important;
+    background: rgba(10, 10, 16, 0.95) !important;
     border: 1px solid var(--border);
     border-radius: 4px;
     /* Sharper corners */
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     padding: 0;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), var(--shadow);
     transition: all 0.3s ease;
+    z-index: 1500 !important;
+    /* HUD kartı tüm harita katmanlarının üstünde olmalı */
 }
 
 .hud-dashboard {
@@ -190,4 +194,39 @@
     .hud-label {
         font-size: 8px;
     }
+}
+
+/* ====================================================================
+   LIGHT MODE SUPPORT
+   ==================================================================== */
+
+:root[data-theme="light"] .floating-hud {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+:root[data-theme="light"] .hud-section.telemetry {
+    border-right-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .hud-label {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .hud-value {
+    color: #1a1a2e;
+    text-shadow: none;
+}
+
+:root[data-theme="light"] .hud-unit {
+    color: var(--accent);
+}
+
+:root[data-theme="light"] .hud-coord-value {
+    color: #1a1a2e;
+}
+
+:root[data-theme="light"] .terminal-line {
+    border-bottom-color: rgba(0, 0, 0, 0.05);
 }

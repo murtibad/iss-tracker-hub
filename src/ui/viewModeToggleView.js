@@ -2,6 +2,8 @@
 // TR: 2D / 3D görünüm toggle butonu + Odak Modu
 // EN: 2D / 3D view toggle button + Focus Mode
 
+import { t } from '../i18n/i18n.js';
+
 function el(tag, className) {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -117,7 +119,7 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
         `;
       wrap.appendChild(labelContainer);
     }
-    labelContainer.textContent = mode === "3d" ? "Mod: 3D Küre" : "Mod: 2D Harita";
+    labelContainer.textContent = mode === "3d" ? `${t('mode')}: ${t('mode3d')}` : `${t('mode')}: ${t('mode2d')}`;
 
     // Odak butonu sadece 3D modda görünür
     if (mode === "3d") {
@@ -166,14 +168,14 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
       focusBtn.style.background = "rgba(255, 100, 50, 0.4)";
       focusBtn.style.borderColor = "rgba(255, 150, 100, 0.8)";
       focusBtn.style.color = "#ffaa66";
-      focusLabel.textContent = "Odak: ISS";
+      focusLabel.textContent = `${t('focus')}: ${t('focusISS')}`;
     } else {
       focusBtn.innerHTML = iconISS;
       focusBtn.title = "Focus on ISS";
       focusBtn.style.background = "rgba(0, 180, 255, 0.3)";
       focusBtn.style.borderColor = "rgba(0, 200, 255, 0.6)";
       focusBtn.style.color = "#00d4ff";
-      focusLabel.textContent = "Odak: Dünya";
+      focusLabel.textContent = `${t('focus')}: ${t('focusEarth')}`;
     }
   }
 
@@ -205,6 +207,14 @@ export function createViewModeToggle({ initialMode = "2d", onChange, onFocusChan
   focusBtn.addEventListener("click", (e) => {
     e.preventDefault();
     setFocusMode(focusMode === "iss" ? "earth" : "iss");
+  });
+
+  // Language change listener - update labels dynamically
+  window.addEventListener('language-change', () => {
+    render();
+    if (mode === "3d") {
+      renderFocusBtn();
+    }
   });
 
   render();

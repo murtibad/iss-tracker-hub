@@ -290,6 +290,14 @@ body {
   background: linear-gradient(135deg, rgba(255, 54, 255, 0.9), rgba(57, 255, 20, 0.8));
 }
 
+/* Dark mode logo - blend with dark background */
+:root[data-theme="dark"] .hub-logo {
+  background: linear-gradient(135deg,
+      rgba(15, 15, 25, 0.95),
+      rgba(25, 25, 35, 0.9));
+  border: 1px solid var(--border);
+}
+
 .hub-title {
   display: flex;
   flex-direction: row;
@@ -460,9 +468,9 @@ body {
   grid-row: 1;
 }
 
-  border-radius: 12px 12px 0 0;
-  border-bottom: none;
-  /* Connect to bottom edge */
+border-radius: 12px 12px 0 0;
+border-bottom: none;
+/* Connect to bottom edge */
 }
 
 /* Mobile Responsive */
@@ -2114,9 +2122,9 @@ select:focus-visible,
   animation: slideDown 0.3s ease;
 }
 
-  margin: 8px 0;
-  opacity: 0.7;
-  font-size: 12px;
+margin: 8px 0;
+opacity: 0.7;
+font-size: 12px;
 }
 
 @keyframes slideDown {

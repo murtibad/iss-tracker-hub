@@ -69,7 +69,7 @@ export function createSettingsModal(options = {}) {
   }).join('')}
           </div>
           <div class="settings-hint" style="font-size:10px; opacity:0.6; margin-top:6px;">
-            🔒 = ${getCurrentLanguage() === 'tr' ? 'Yakında eklenecek' : 'Coming soon'}
+            🔒 = ${t('comingSoon')}
           </div>
         </div>
 
@@ -77,15 +77,15 @@ export function createSettingsModal(options = {}) {
         <div class="settings-group">
           <div class="settings-label">${t('theme')}</div>
           <div class="settings-controls" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-              <button class="settings-btn" data-theme="light" aria-label="Light theme" style="font-size:11px; padding:6px;">☀️ Light</button>
-              <button class="settings-btn active" data-theme="dark" aria-label="Dark theme" style="font-size:11px; padding:6px;">🌙 Dark</button>
-              <button class="settings-btn" data-theme="system" aria-label="System theme" style="font-size:11px; padding:6px;">💻 System</button>
+              <button class="settings-btn" data-theme="light" aria-label="${t('themeLight')}" style="font-size:11px; padding:6px;">☀️ ${t('themeLight')}</button>
+              <button class="settings-btn active" data-theme="dark" aria-label="${t('themeDark')}" style="font-size:11px; padding:6px;">🌙 ${t('themeDark')}</button>
+              <button class="settings-btn" data-theme="system" aria-label="${t('themeSystem')}" style="font-size:11px; padding:6px;">💻 ${t('themeSystem')}</button>
           </div>
         </div>
 
         <!-- Accent Color Section -->
         <div class="settings-group">
-            <div class="settings-label">Color</div>
+            <div class="settings-label">${t('color')}</div>
             <div class="settings-controls" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
                 <button class="settings-btn color-btn" data-color="cyan" style="background:#00f3ff; height:24px; border-radius:4px;"></button>
                 <button class="settings-btn color-btn" data-color="pink" style="background:#ff00ff; height:24px; border-radius:4px;"></button>

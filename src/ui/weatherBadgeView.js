@@ -23,7 +23,7 @@ export function createWeatherBadge() {
   wrap.style.gap = "4px";
 
   const title = el("div", "weather-title");
-  title.textContent = t('weather')?.visLabel || "Hava durumu";
+  title.textContent = t('weather.visLabel') || "Hava durumu";
   title.style.fontSize = "18px";
   title.style.fontWeight = "900";
   title.style.color = "var(--accent)";
@@ -67,10 +67,10 @@ export function createWeatherBadge() {
       const isGood = c <= 2;
 
       if (isGood) {
-        visLine.textContent = t('weather')?.visGood || "👀 Good View";
+        visLine.textContent = t('weather.visGood') || "👀 Good View";
         visLine.style.color = "var(--good)"; // Green/Teal
       } else {
-        visLine.textContent = t('weather')?.visPoor || "☁️ Poor View";
+        visLine.textContent = t('weather.visPoor') || "☁️ Poor View";
         visLine.style.color = "var(--warning)"; // Orange/Yellow
       }
     } else {

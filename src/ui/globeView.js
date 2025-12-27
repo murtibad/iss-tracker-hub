@@ -1,6 +1,7 @@
 // src/ui/globeView.js
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { t } from "../i18n/i18n.js";
 
 let globe = null;
 let followEnabled = false;
@@ -10,7 +11,7 @@ let issModelLoaded = null;
 let focusMode = 'earth';
 let globeContainer = null;
 
-const ISS_ORBIT_ALTITUDE = 0.15;
+const ISS_ORBIT_ALTITUDE = 0.01; // Lowered to align with trajectory visualizat ion
 
 // State
 const issData = { lat: 0, lng: 0, alt: ISS_ORBIT_ALTITUDE, type: "iss" };
@@ -132,7 +133,7 @@ export async function initGlobe(parentContainer) {
       const accentColor = typeof color === 'string' ? color : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
 
       // 1. Background Color - Space-like dark blue-gray for light, BLACK for dark
-      globe.backgroundColor(isLight ? '#1a1a2e' : '#000005');
+      globe.backgroundColor(isLight ? '#f5f5f7' : '#000005');
 
       // 2. Atmosphere glow - accent color
       globe.atmosphereColor(accentColor);
@@ -140,8 +141,8 @@ export async function initGlobe(parentContainer) {
       // 3. Update all celestial objects via stored references
       const env = window._globeEnv;
       if (env) {
-        // Stars - very dark for light theme (space feel), white on dark
-        env.starsMat.color.set(isLight ? 0x666688 : 0xffffff);
+        // Stars - darker and more visible in light mode
+        env.starsMat.color.set(isLight ? 0x555566 : 0xffffff);
         env.starsMat.opacity = isLight ? 0.7 : 0.9;
 
         // Moon and glow
@@ -169,11 +170,45 @@ export async function initGlobe(parentContainer) {
       // 4. Trajectory Colors
       window._currentThemeAccent = accentColor;
       if (window._updateTrajectoryColors) window._updateTrajectoryColors();
+
+      // 5. Update HUD card styling for theme consistency
+      const hudCard = document.querySelector('.floating-hud');
+      if (hudCard) {
+        if (isLight) {
+          hudCard.style.setProperty('background', 'rgba(255, 255, 255, 0.95)', 'important');
+          hudCard.style.setProperty('border-color', 'rgba(0, 0, 0, 0.15)', 'important');
+          hudCard.style.setProperty('box-shadow', '0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)', 'important');
+        } else {
+          hudCard.style.setProperty('background', 'rgba(10, 10, 16, 0.95)', 'important');
+          hudCard.style.setProperty('border-color', '', '');
+          hudCard.style.setProperty('box-shadow', '', '');
+        }
+        console.log('[HUD] Theme updated:', isLight ? 'LIGHT' : 'DARK', 'bg:', hudCard.style.background);
+      }
     });
 
     // Initial theme sync
     const initialAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     if (initialAccent) globe.atmosphereColor(initialAccent);
+
+    // Apply initial theme to HUD immediately
+    const initialTheme = document.documentElement.getAttribute('data-theme');
+    const isLightInitial = initialTheme === 'light';
+    const initialHudCard = document.querySelector('.floating-hud');
+    if (initialHudCard) {
+      if (isLightInitial) {
+        initialHudCard.style.setProperty('background', 'rgba(255, 255, 255, 0.95)', 'important');
+        initialHudCard.style.setProperty('border-color', 'rgba(0, 0, 0, 0.15)', 'important');
+        initialHudCard.style.setProperty('box-shadow', '0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)', 'important');
+      }
+      console.log('[HUD] Initial theme applied:', isLightInitial ? 'LIGHT' : 'DARK');
+    }
+
+    // Language change listener - update trajectory legend
+    window.addEventListener('language-change', () => {
+      createOrUpdateLegend();
+      console.log('[Globe] Language changed, legend updated');
+    });
 
     globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
 
@@ -212,11 +247,11 @@ export async function initGlobe(parentContainer) {
             starsGeo.setAttribute("size", new THREE.Float32BufferAttribute(sizes, 1));
 
             const starsMat = new THREE.PointsMaterial({
-              color: isLightInit ? 0x666688 : 0xffffff, // Space-tinted stars on light, white on dark
+              color: isLightInit ? 0x555566 : 0xffffff, // Darker, more visible stars for light mode
               size: 1.5,
               sizeAttenuation: false,
               transparent: true,
-              opacity: isLightInit ? 0.7 : 0.9
+              opacity: isLightInit ? 0.7 : 0.9 // Higher opacity in light mode for visibility
             });
             const stars = new THREE.Points(starsGeo, starsMat);
             stars.name = 'starfield';
@@ -611,7 +646,7 @@ function getFutureColor() {
 }
 
 // Yükseklik - ISS ile AYNI OLMALI
-const TRAJECTORY_ALTITUDE = 0.15; // ISS_ORBIT_ALTITUDE ile aynı
+const TRAJECTORY_ALTITUDE = 0.005; // Yüzeye yakın çizim (Ground track)
 
 /**
  * Antimeridian (180°/-180°) longitude değerini normalize eder
@@ -725,8 +760,8 @@ function splitAtAntimeridian(coords) {
 // ========== ARROW ANIMATION SYSTEM ==========
 // Animation state for 3D globe arrows
 let arrowAnimationId = null;
-const ARROW_SPACING_3D = 25.0; // Degrees between arrows (visual density) - Increased from 8.0
-const ARROW_SPEED_3D = 0.012; // Animation speed (degrees per ms) - Increased to match spacing
+const ARROW_SPACING_3D = 35.0; // Degrees between arrows - increased for cleaner look
+const ARROW_SPEED_3D = 0.008; // Animation speed (degrees per ms) - slower for smoother motion
 let trajectoryCoords = { past: [], future: [] }; // Store coords for animation
 
 /**
@@ -778,10 +813,11 @@ function getBearingFromPoints(p1, p2) {
 
 /**
  * Generate arrow points along a path with interpolation
+ * Generate arrow points along a path with interpolation and target look-ahead
  * @param {Array<Array>} path - Array of [lat, lng, alt] coordinates
  * @param {number} startOffset - Starting offset for animation phase
  * @param {string} color - Arrow color
- * @returns {Array} Array of arrow point objects for htmlElementsData
+ * @returns {Array} Array of arrow point objects
  */
 function generateArrowPoints(path, startOffset, color) {
   if (!path || path.length < 2) return [];
@@ -801,9 +837,12 @@ function generateArrowPoints(path, startOffset, color) {
     }
   }
 
+  // Calculate total path length
+  const totalPathLength = segLens.reduce((sum, len) => sum + len, 0);
+
   // Walk the path and place arrows
   let pathDist = 0;
-  let nextArrowDist = startOffset;
+  let nextArrowDist = startOffset % totalPathLength; // Wrap within path length
 
   for (let i = 0; i < segLens.length; i++) {
     const segLen = segLens[i];
@@ -816,21 +855,30 @@ function generateArrowPoints(path, startOffset, color) {
     const segEndDist = pathDist + segLen;
 
     // Place arrows within this segment
-    while (nextArrowDist < segEndDist) {
+    while (nextArrowDist < segEndDist && nextArrowDist < totalPathLength) {
       const fraction = (nextArrowDist - segStartDist) / segLen;
       const p1 = path[i];
       const p2 = path[i + 1];
 
+      // Current position
       const lat = p1[0] + (p2[0] - p1[0]) * fraction;
       const lng = p1[1] + (p2[1] - p1[1]) * fraction;
-      const alt = p1[2]; // Use altitude from path
-      const bearing = getBearingFromPoints([p1[0], p1[1]], [p2[0], p2[1]]);
+
+      // Target position (slightly ahead) for orientation
+      // Use a small epsilon ahead to calculate tangent
+      const epsilon = 0.01;
+      const fractionTarget = Math.min(1, fraction + epsilon);
+      const targetLat = p1[0] + (p2[0] - p1[0]) * fractionTarget;
+      const targetLng = p1[1] + (p2[1] - p1[1]) * fractionTarget;
+
+      const alt = p1[2] || TRAJECTORY_ALTITUDE;
 
       points.push({
         lat,
         lng,
         alt,
-        rotation: bearing + 90, // Adjust rotation by 90 degrees to match SVG orientation
+        targetLat,
+        targetLng,
         color
       });
 
@@ -842,14 +890,28 @@ function generateArrowPoints(path, startOffset, color) {
   return points;
 }
 
+// ThreeJS rendering group for arrows
+let arrowsGroup = new THREE.Group();
+
 /**
  * Start arrow animation loop
- * Animates arrows along past and future trajectories using htmlElementsData
+ * Uses direct ThreeJS meshes for correct 3D orientation
  */
 function startArrowAnimation() {
   if (arrowAnimationId) cancelAnimationFrame(arrowAnimationId);
-
   if (!globe) return;
+
+  // Ensure group is in scene
+  if (!globe.scene().children.includes(arrowsGroup)) {
+    globe.scene().add(arrowsGroup);
+  }
+
+  // MUCH LARGER ARROWS
+  // Radius: 1.5, Height: 4.0 (Relative to Sphere R=100)
+  // This ensures they are visible even when zoomed out
+  const arrowGeometry = new THREE.ConeGeometry(1.5, 4.0, 8);
+  // Rotate geometry so Tip points to +Z (for lookAt)
+  arrowGeometry.rotateX(Math.PI / 2);
 
   const animate = () => {
     const now = Date.now();
@@ -858,40 +920,53 @@ function startArrowAnimation() {
     // Combine past and future arrow points
     const allArrows = [];
 
-    // Generate past arrows (orange)
+    // Past arrows: ANIMATED (backward loop now fixed in generateArrowPoints)
     if (trajectoryCoords.past && trajectoryCoords.past.length > 0) {
       const pastArrows = generateArrowPoints(trajectoryCoords.past, phase, TRAJECTORY_COLORS.past);
       allArrows.push(...pastArrows);
     }
 
-    // Generate future arrows (cyan/theme color)
+    // Future arrows: ANIMATED
     if (trajectoryCoords.future && trajectoryCoords.future.length > 0) {
       const futureArrows = generateArrowPoints(trajectoryCoords.future, phase, getFutureColor());
       allArrows.push(...futureArrows);
     }
 
-    // Update globe with new arrow positions
-    if (globe.htmlElementsData) {
-      globe
-        .htmlElementsData(allArrows)
-        .htmlElement(d => {
-          const el = document.createElement('div');
-          el.innerHTML = createArrowSvg(d.color, 14);
-          el.style.pointerEvents = 'none';
-          el.style.transform = `rotate(${d.rotation}deg)`;
-          el.style.transformOrigin = 'center';
-          return el;
-        })
-        .htmlLat(d => d.lat)
-        .htmlLng(d => d.lng)
-        .htmlAltitude(d => d.alt);
-    }
+    // Rebuild arrows mesh
+    // Note: Recreating meshes every frame is not ideal for performance but simplified for correctness.
+    // Optimization: Pool meshes if needed. For ~20 arrows it's fine.
+
+    // Clear old arrows
+    arrowsGroup.clear(); // ThreeJS r123+ clear()
+
+    allArrows.forEach(d => {
+      const material = new THREE.MeshLambertMaterial({
+        color: d.color,
+        transparent: false, // Solid visibility
+        opacity: 1.0,
+        emissive: d.color,
+        emissiveIntensity: 0.8, // Bright glow
+        flatShading: true
+      });
+
+      const mesh = new THREE.Mesh(arrowGeometry, material);
+
+      // Position
+      const pos = globe.getCoords(d.lat, d.lng, d.alt);
+      mesh.position.set(pos.x, pos.y, pos.z);
+
+      // Orientation
+      const target = globe.getCoords(d.targetLat, d.targetLng, d.alt);
+      mesh.lookAt(target.x, target.y, target.z);
+
+      arrowsGroup.add(mesh);
+    });
 
     arrowAnimationId = requestAnimationFrame(animate);
   };
 
   animate();
-  console.log('[Trajectory] Arrow animation started');
+  console.log('[Trajectory] Arrow animation started (ThreeJS Mode)');
 }
 
 /**
@@ -904,37 +979,37 @@ function createOrUpdateLegend() {
     legend = document.createElement('div');
     legend.id = 'trajectory-legend';
     legend.style.cssText = `
-      position: fixed;
-      bottom: 130px;
-      left: 16px;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(10px);
-      border-radius: 8px;
-      padding: 8px 12px;
-      z-index: 90;
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 10px;
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      pointer-events: none;
-    `;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop - filter: blur(10px);
+  border - radius: 8px;
+  padding: 8px 12px;
+  z - index: 90;
+  font - family: 'Inter', system - ui, sans - serif;
+  font - size: 10px;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box - shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  pointer - events: none;
+  `;
 
     legend.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 8px; opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
-        🛰️ Yörünge Çizgileri
-      </div>
+    < div style = "font-weight: 600; margin-bottom: 8px; opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;" >
+        🛰️ ${t('trajectoryLegend')}
+      </div >
       <div style="display: flex; align-items: center; margin-bottom: 6px;">
         <div style="width: 24px; height: 3px; background: ${TRAJECTORY_COLORS.past}; border-radius: 2px; margin-right: 10px;"></div>
-        <span>Geçmiş Yol</span>
+        <span>${t('trajectoryPast')}</span>
       </div>
       <div style="display: flex; align-items: center;">
         <div id="legend-future-line" style="width: 24px; height: 3px; background: ${getFutureColor()}; border-radius: 2px; margin-right: 10px; position: relative;">
           <span style="position: absolute; right: -6px; top: -4px; font-size: 10px;">▸</span>
         </div>
-        <span>Gelecek Yol →</span>
+        <span>${t('trajectoryFuture')} →</span>
       </div>
-    `;
+  `;
 
     // Globe container'ın parent'ına ekle
     const container = document.querySelector('#globe-3d-canvas-container')?.parentElement || document.body;
@@ -1017,34 +1092,49 @@ function renderTrajectoryLines() {
     }
 
     const segments = splitAtAntimeridian(futureWithCurrent);
-    // splitAtAntimeridian already returns [[lat, lng, alt], ...] format
+
+    // ========== CREATE DASHED EFFECT ==========
+    // Globe.gl's pathDash doesn't work reliably, so we manually create gaps
+    // by only rendering every other small segment
+    const renderedChunks = []; // Track rendered segments for arrow placement
+
     segments.forEach(segment => {
-      allPaths.push({
-        coords: segment,
-        color: getFutureColor(),
-        type: 'future'
-      });
+      // Split each long segment into small chunks
+      const chunkSize = 3; // Smaller chunks for tighter dash pattern
+      for (let i = 0; i < segment.length; i += chunkSize) {
+        const chunkIndex = Math.floor(i / chunkSize);
+        // Render only odd chunks (creates dash-gap-dash pattern)
+        if (chunkIndex % 2 === 1) {
+          const chunk = segment.slice(i, i + chunkSize);
+          if (chunk.length >= 2) { // Need at least 2 points for a line
+            allPaths.push({
+              coords: chunk,
+              color: getFutureColor() + '99', // Semi-transparent
+              type: 'future'
+            });
+            renderedChunks.push(...chunk); // Add to rendered list for arrows
+          }
+        }
+      }
     });
 
-    // Store flattened coords for arrow animation
-    trajectoryCoords.future = segments.flat();
+    // Store ONLY rendered chunks for arrow animation (prevents floating arrows in gaps)
+    trajectoryCoords.future = renderedChunks;
   }
 
   // ========== ÇİZGİLERİ RENDER ET ==========
-  // Accessors'ları ayarla
+  // Accessors'ları ayarla - 2D modundaki görünüme benzer stil
   globe
     .pathPoints(d => d.coords)
     .pathPointLat(p => p[0])
     .pathPointLng(p => p[1])
-    .pathPointAlt(p => p[2])
-    .pathColor(d => d.color)
-    .pathStroke(d => d.type === 'past' ? 2.5 : 3)
-    // Disable dash animation to prevent eye strain and sync issues
-    // Only future path is dashed (static)
-    .pathDashLength(d => d.type === 'future' ? 0.05 : 1)     // Small dashes for future, solid for past
-    .pathDashGap(d => d.type === 'future' ? 0.05 : 0)        // Small gaps for future
-    .pathDashAnimateTime(0) // STOP ANIMATION - Fixes desync and eye strain
-    .pathResolution(8); // Higher resolution for smoother curves
+    .pathPointAlt(p => p[2] || TRAJECTORY_ALTITUDE)
+    .pathColor(d => d.color) // Color already includes alpha where needed
+    .pathStroke(d => d.type === 'past' ? 3 : 2)
+    .pathDashLength(1) // Not using dash API, manual segments instead
+    .pathDashGap(0)
+    .pathDashAnimateTime(0)
+    .pathResolution(512); // Maximum resolution for smooth curves
 
   // Veriyi ayarla - requestAnimationFrame ile globe'un hazır olmasını garantiliyoruz
   requestAnimationFrame(() => {

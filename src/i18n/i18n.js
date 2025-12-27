@@ -19,6 +19,10 @@ export const DICTIONARY = {
         // UI Components
         settings: "Settings",
         theme: "Theme",
+        themeLight: "Light",
+        themeDark: "Dark",
+        themeSystem: "System",
+        color: "Color",
         language: "Language",
         units: "Units",
         crew: "Crew",
@@ -273,7 +277,25 @@ export const DICTIONARY = {
             bio5: "Flight Engineer (NASA)",
             bio6: "Flight Engineer (NASA)",
             bio7: "Flight Engineer (Roscosmos)"
-        }
+        },
+
+        // Trajectory Legend
+        trajectoryLegend: "Trajectory Lines",
+        trajectoryPast: "Past Path",
+        trajectoryFuture: "Future Path",
+
+        // View Mode Toggle
+        mode: "Mode",
+        mode2d: "2D Map",
+        mode3d: "3D Globe",
+
+        // Focus Mode  
+        focus: "Focus",
+        focusEarth: "Earth",
+        focusISS: "ISS",
+
+        // Coming Soon
+        comingSoon: "Coming soon"
     },
     tr: {
         // Genel
@@ -288,6 +310,10 @@ export const DICTIONARY = {
         // UI Bileşenleri
         settings: "Ayarlar",
         theme: "Tema",
+        themeLight: "Açık",
+        themeDark: "Koyu",
+        themeSystem: "Sistem",
+        color: "Renk",
         language: "Dil",
         units: "Birimler",
         crew: "Mürettebat",
@@ -542,7 +568,25 @@ export const DICTIONARY = {
             bio5: "Uçuş Mühendisi (NASA)",
             bio6: "Uçuş Mühendisi (NASA)",
             bio7: "Uçuş Mühendisi (Ruscosmos)"
-        }
+        },
+
+        // Yörünge Açıklaması
+        trajectoryLegend: "Yörünge Çizgileri",
+        trajectoryPast: "Geçmiş Yol",
+        trajectoryFuture: "Gelecek Yol",
+
+        // Görünüm Modu
+        mode: "Mod",
+        mode2d: "2D Harita",
+        mode3d: "3D Küre",
+
+        // Odak Modu
+        focus: "Odak",
+        focusEarth: "Dünya",
+        focusISS: "ISS",
+
+        // Yakında Eklenecek
+        comingSoon: "Yakında eklenecek"
     },
     // Scalable Structure for 18 Languages (Restored)
     de: {}, fr: {}, es: {}, it: {}, ru: {}, ja: {}, zh: {}, pt: {}, hi: {},

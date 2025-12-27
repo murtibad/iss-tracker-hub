@@ -21,11 +21,11 @@
 }
 
 
-/* Ensure HUD doesn't overlap with bottom control bar on mobile */
+/* Mobile: HUD at bottom to avoid control bar */
 @media (max-width: 640px) {
     body.mobile-ux-enabled .floating-hud {
         bottom: 90px !important;
-        /* Above bottom control bar (72px) + margin */
+        top: auto !important;
         left: 12px !important;
         right: auto !important;
         max-width: calc(100vw - 24px) !important;
@@ -37,6 +37,8 @@
     .floating-hud {
         bottom: 24px !important;
         left: 24px !important;
+        top: auto !important;
+        right: auto !important;
         max-width: 480px !important;
     }
 }

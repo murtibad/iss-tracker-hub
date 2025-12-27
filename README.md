@@ -2,29 +2,40 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://murtibad.github.io/iss-tracker-hub/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.2.2-orange)](package.json)
+[![Version](https://img.shields.io/badge/version-1.3.0-orange)](package.json)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Real-time International Space Station tracking with immersive 3D visualization and personalized pass predictions.
 
 ![ISS Tracker Hub](https://img.shields.io/badge/ISS-Tracker%20Hub-00d4ff?style=for-the-badge&logo=nasa&logoColor=white)
 
-## 🆕 What's New in v1.2.2 "Astraea" (December 27, 2024)
+## 🆕 What's New in v1.3.0 "Stellar" (December 27, 2024)
 
-### 💎 UI Refinement & HUD Polish
-- **Integrated API Status** - Real-time connection dots embedded directly into the Floating HUD.
-- **Smart Version Badge** - Version label moved inside the "beta" pill in the top bar for a cleaner map view.
-- **View Mode Relocation** - 2D/3D and Focus buttons moved to a "Safe Zone" (middle-right) to avoid overlaps.
-- **App Branding** - Official app logo added to the brand section in the top bar.
+### 🌍 Major 3D Visualization Overhaul
+- **Trajectory Accuracy** - Fixed "flying lines" issue by reducing trajectory altitude from 0.15 to 0.005 (ground track visualization)
+- **ISS Alignment** - ISS model altitude lowered to 0.01 to align with trajectory lines instead of floating independently
+- **Manual Dashed Rendering** - Implemented custom segment chunking for future path (replacing unreliable `pathDash` API)
+  - Future trajectory now displays clear, evenly-spaced dashes with visible gaps
+  - Chunk size optimized to 3 points for tight, precise pattern
 
-### 📱 Bottom Sheet & Modal Improvements
-- **Dockable Sheets** - Settings and Help modals now dock neatly to the top-right on desktop.
-- **UX Cleanups** - Removed double headers and redundant card styling for seamless integration.
-- **Critical Fixes** - Resolved a boot-time crash in the Help modal container.
+### 🎯 Arrow Animation System Rewrite
+- **Complete ThreeJS Rebuild** - Replaced HTML element arrows with native ThreeJS `ConeGeometry` meshes
+  - Arrows now correctly positioned on trajectory using `globe.getCoords()` world coordinates
+  - Perfect orientation using `lookAt()` method pointing to local tangent
+- **Backward Loop Fix** - Arrows no longer reverse at path end (calculated total path length with modulo wrapping)
+- **Floating Arrows Fix** - Arrows only render on visible dashed segments (tracked via `renderedChunks`)
+- **Size Optimization** - Increased arrow size 4x (radius: 1.5, height: 4.0) for clear visibility at all zoom levels
+- **Brightness Enhancement** - Emissive materials with 0.8 intensity for vibrant glow
+
+### 🔧 Critical Fixes
+- **Auth Modal Duplicate Card** - Fixed nested card display using CSS injection (`.auth-sheet-embedded` class)
+  - Hidden inner `.auth-header` to prevent double title bars
+  - Reset container styles (background, border, shadow) for clean BottomSheet integration
+- **Weather i18n Keys** - Corrected translation calls from `t('weather')` to `t('weather.visLabel')` format
 
 ---
 
-## 📦 Previous Updates (v1.2.1 "Cleanup")
+## 📦 Previous Updates (v1.2.2 "Astraea")
 
 ### 🧹 Code Cleanup & Optimization
 - **Terminal/Debug Removal** - Removed all terminal and debug panel code for cleaner codebase
